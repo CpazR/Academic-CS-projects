@@ -1,0 +1,24 @@
+CS315 Project 5: Family Tree
+Written in Java by Nicholas Reel
+Makefile based on template provided by Raphael Finkel
+
+Overview:
+Given an piped input of commands, the program will store parse each line into one of two commands:
+
+Family:
+Format: Family *FamilyNumber* Husband *PersonNumber* Wife *PersonNumber* (Optional params) Child *PersonNumber* (can be repeated up to 10 times)
+Will add a family with a unique "Family Number" with persons with their corresponding numbers.
+If person already exists, so long as it doesn't result in multiple marriages, sets of parents, that existing person will be wired to the new family through parentage or marriage.
+
+Relate:
+Format: Relate *PersonANumber* *PersonBNumber*
+Will attempt to find the relation from person A to person B.
+If persons are not related, user will be alerted.
+
+Descendants:
+Format: Descendants *PersonANumber*
+Will list all descendants of person A.
+
+Ancestors:
+Format: Ancestors *PersonANumber*
+Will list all ancestor of person A.

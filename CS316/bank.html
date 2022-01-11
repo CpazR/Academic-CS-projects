@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>First Bank of HTML&#x2122;</title>
+
+    <style>
+        /* styling for the primary bank terms */
+        .bank-table {
+            background-color: lightgreen;
+        }
+
+        /* styling for terms with multiple definitions depending on context */
+        .definition-table {
+            background-color: beige;
+        }
+
+        /* styling for italisized words, typically when giving and example of a term */
+        em {
+            color: red;
+        }
+    </style>
+</head>
+
+<!-- Body containing all specified sections of page -->
+
+<body>
+    <!-- Welcome header -->
+    <h1>Welcome to the First Bank of HTML&#x2122;</h1>
+    <p>
+        Where all our clients are served!
+        <br /><mark>This website if under construction, as is our bank.</mark>
+    </p>
+
+    <h2>Services offered</h2>
+    <ol type="1">
+        <li>See your account information</li>
+        <li>Deposit money</li>
+        <li>Withdraw money</li>
+        <li>
+            Pay bills online
+            <ul>
+                <li>From one of your accounts</li>
+                <li>By starting a loan</li>
+                <li>By entering a lottery to cover the bill</li>
+            </ul>
+        </li>
+        <li>Get a loan</li>
+        <li>View funny pictures of cats</li>
+    </ol>
+
+    <h2>Log into your account</h2>
+
+    <!-- TERM TABLE -->
+    <h2>Banking terms defined</h2>
+    <table class="bank-table">
+        <!-- HEADERS -->
+        <tr>
+            <th>Term</th>
+            <th>Simple definition</th>
+            <th>Sample usage</th>
+        </tr>
+        <!-- ROWS -->
+        <tr>
+            <td>Bank</td>
+            <td>Institution to store your money</td>
+            <td>My <em>bank</em> is the First Bank of HTML.</td>
+        </tr>
+        <tr>
+            <td>Money</td>
+            <td>Item you can use to buy food</td>
+            <td>I spent all my <em>money</em> on yogurt.</td>
+        </tr>
+        <tr>
+            <td>Loan</td>
+            <td>The Bank gives you money, which you pay back double</td>
+            <td>
+                I need a <em>loan</em> like the Lone Ranger needs an lawn
+                mower.
+            </td>
+        </tr>
+        <tr>
+            <td>Brokerage</td>
+            <td>Institution that help you go broke</td>
+            <td>My bank is not a <em>brokerage</em>.</td>
+        </tr>
+        <tr>
+            <td>Security</td>
+            <td>
+                <table class="definition-table">
+                    <tr>
+                        <td>(banking)</td>
+                        <td>a stock</td>
+                    </tr>
+                    <tr>
+                        <td>(otherwise)</td>
+                        <td>a feeling of safety</td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                I don't feel <em>secure</em> when I buy <em>securities</em>
+            </td>
+        </tr>
+        <tr>
+            <!-- Thanks w3schools! https://www.w3schools.com/tags/att_td_colspan.asp-->
+            <td colspan="3">
+                Cat: An individual of the species Felis domisticus, known for its playfulness, alergenic properties, and
+                aloofness. "<em>He</em> walked by <em>himself</em>, and all places were alike to <em>him</em>."
+            </td>
+        </tr>
+        <tr>
+            <td>Stock</td>
+            <td>
+                <table class="definition-table">
+                    <tr>
+                        <td>(banking)</td>
+                        <td>part ownership in a company, like a bank</td>
+                    </tr>
+                    <tr>
+                        <td>(also)</td>
+                        <td>where you are put when you go broke</td>
+                    </tr>
+                    <tr>
+                        <td>(and)</td>
+                        <td>to fill the refrigerator</td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                I like to stock up on yogurt before they put me in the
+                <em>stocks</em> for losing all my money on <em>stocks</em>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

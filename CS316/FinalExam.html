@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        table,
+        th,
+        td {
+            padding: 3px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<script>
+    function init() {
+        draw();
+        initDataTable();
+    }
+</script>
+
+<body onload="init()">
+    <p>
+        Sources used: <br>
+        Course assignments, <br>
+        W3schools, <br>
+        lecture notes,<br><br>
+
+        I have not spoken with other people about this exam, and I will not speak<br>
+        with others who have not yet finished the exam. I have only used the<br>
+        allowed amount of time on the exam.<br>
+        -- Nicholas Reel
+    </p>
+
+    <h1 id="q1">Question 1:</h1>
+    <!-- QA -->
+    <div>
+        It is an ancient
+        <span class="tooltip" style="background-color:pink; color:blue">
+            mariner
+            <span class="tooltiptext">albatross-killer</span>
+        </span>
+        , and he stoppeth one of three.
+    </div>
+    <!-- QB -->
+    <div style="text-shadow: 2px 2px brown">
+        It is an ancient mariner, and he stoppeth one of three.
+    </div>
+    <!-- QC -->
+    <div>
+        <table>
+            <tr>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="background-color:lightblue">water</td>
+            </tr>
+            <tr>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+            </tr>
+            <tr>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+                <td>water</td>
+            </tr>
+        </table>
+    </div>
+
+    <h1 id="q2">Question 2:</h1>
+    <div class=’container-fluid’>
+        <!-- QA -->
+        <div class="col-sm-12">
+            It is an ancient mariner, and he stoppeth one of three.
+        </div>
+        <!-- QB -->
+        <button type="button" class="btn btn-success">about</button>
+        <button type="button" class="btn btn-danger">reel</button>
+        <button type="button" class="btn btn-primary">rout</button>
+        <!-- QC -->
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                menu
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href="#q1">drifts</a>
+                <a class="dropdown-item" href="#q2">snowy</a>
+                <a class="dropdown-item" href="#q3">clifts</a>
+            </div>
+        </div>
+        <!-- QD -->
+        It is an ancient mariner, and he
+        <span data-toggle="tooltip" title="with his skinny hand.">
+            stoppeth
+        </span>
+        one of three.
+    </div>
+
+    <h1 id="q3">Question 3:</h1>
+    <table id="servicesTable" class="table table-striped table-bordered table-compact table-hover
+		table-sm">
+        <thead>
+            <tr>
+                <th>Port number</th>
+                <th>Service name</th>
+                <th>Protocol version</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>X</td>
+                <td>X</td>
+                <td>X</td>
+            </tr>
+        </tbody>
+    </table>
+    <script>
+        function initDataTable() {
+            let theTable = $('#servicesTable').DataTable({
+                "ajax": {
+                    "url": "http://www.cs.uky.edu/~raphael/courses/CS316/examples/services.cgi",
+                },
+                "columnDefs": [
+                    {
+                        "targets": 0,
+                        "render": function (data, type, row, meta) {
+                            // data should be an array of json data
+                            return data[1];
+                        }
+                    },
+                    {
+                        "targets": 1,
+                        "render": function (data, type, row, meta) {
+                            // data should be an array of json data
+                            if (data[3] != "")
+                                return data[0] + " - " + data[3]; // append 4th index of data as a sort of "subname" if exists
+                            else
+                                return data[0];
+                        }
+                    },
+                    {
+                        "targets": 2,
+                        "render": function (data, type, row, meta) {
+                            // data should be an array of json data
+                            return data[2];
+                        }
+                    },
+                ],
+            });
+            theTable.draw();
+        };
+    </script>
+
+    <h1>Question 4:</h1>
+    <canvas id='examCanvas' width="500" height="500" style="border: 2px solid green;">
+    </canvas>
+    <script>
+        function draw() {
+            var canvas = document.getElementById('examCanvas');
+            if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+
+                // QA
+                ctx.fillStyle = "blue";
+                ctx.beginPath();
+                ctx.arc(250, 250, 200, 0, Math.PI * 2, true);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.fill();
+                // QB
+                ctx.fillStyle = "red";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(500, 300, 50, 0, Math.PI * 2, true);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.fill();
+                // QC
+                ctx.outline = "brown";
+                ctx.strokeRect(100, 50, 30, 30);
+                // QD
+                ctx.font = "19px sans-serif"; // using default font
+                ctx.textAlign = "center";
+                ctx.fillText("sadder and wiser", 250, 400);
+            }
+        }
+    </script>
+
+    <h1>Question 5:</h1>
+    <!-- QA -->
+    <button id="mist" type="button" class="btn btn-danger">mist</button>
+    <button id="snow" type="button" class="btn btn-danger">snow</button>
+    <button id="cold" type="button" class="btn btn-danger">cold </button>
+
+    <script>
+        $(document).ready(function () {
+
+            // QB
+            $('#mist').click(function () {
+                $('#snow').removeClass('btn-danger');
+                $('#snow').addClass('btn-success');
+            });
+            // QC
+            $('#snow').click(function () {
+                $('#cold').html("wonderous");// perhaps append 4th index as 
+                $('#cold').removeClass('btn-danger');
+                $('#cold').addClass('btn-primary');
+            });
+            // QD
+            $('#cold').click(function () {
+                $('#mist').hide();
+                $('#snow').removeClass('btn-success');
+                $('#snow').addClass('btn-danger');
+            });
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
+    </script>
+</body>
+
+</html>

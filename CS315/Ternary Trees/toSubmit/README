@@ -1,0 +1,23 @@
+CS315 Project 2: Ternary Trees
+Written in Java by Nicholas Reel
+Makefile based on template provided by Raphael Finkel
+
+Overview:
+Given a max limit of integers, the program ask for numbers and will sort them into a ternary tree.
+
+For example, using numbers given in assignment hand out, if given the input 20 then the following:
+4 6 4 18 8 2 14 7 15 5 19 12 15 5 9 0 17 2 2 19
+
+Would be sorted and printed as:
+Tree{ (((0 (2) 2) 2 4) 4 (5 5) 6 ((7) 8 ((9 12) 14 (15) 15 (17)) 18 (19 19))) }
+
+
+However, if there is an additional argument provided, that argument will be used to search for a subtree starting at the first found instance of the given value.
+For example, if also given the values "20 9" as input, and inputting the following:
+4 6 4 18 8 2 14 7 15 5 19 12 15 5 9 0 17 2 2 19
+
+The following would be printed out:
+Tree{ (((0 (2) 2) 2 4) 4 (5 5) 6 ((7) 8 ((9 12) 14 (15) 15 (17)) 18 (19 19))) }
+
+
+Tree from first found node with value '9' (null if not found): (9 12)

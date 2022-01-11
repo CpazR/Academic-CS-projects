@@ -1,0 +1,11 @@
+CS315 Project 3: kd Tree
+Written in Java by Nicholas Reel
+Makefile based on template provided by Raphael Finkel
+
+Overview:
+Given a max dimension `k`, number of datapoints `n`, and number of probes `p`, generate and probe a kd tree given input provided by the user.
+
+This input can also be piped into the program in various manners, so long as integers are being inputted.
+
+What will be printed is the result of the probes.
+Which will find the first available bucket for a provided point.

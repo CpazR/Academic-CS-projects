@@ -1,0 +1,19 @@
+CS315 Project 1: Trains
+Written in Java by Nicholas Reel
+Makefile based on template provided by Raphael Finkel
+
+Concept:
+Given user input, of number of trains, cars, and steps, shuffle train cars around.
+
+Trains are illustrated as linked lists
+Cars are illustrated as nodes in a given list.
+The size of the cars are the values of these nodes.
+
+The size of the cars must be organized as such from front to rear: 1 ... # of cars.
+
+This is illustrated as more valuable cargo is packed in the rear cars.
+
+Cars will be removed from either the front or rear of the train.
+
+This will update the values of the trains, which is the sum of each cars position times their size (value).
+This will repeat for n steps, or until any of the trains are empty.

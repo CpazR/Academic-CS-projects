@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script>
+        function addThem() {
+            var result = 'no result';
+            document.getElementsById('result').innerText = result;
+            var firstNumber = partseInt(document.getElementsById('first').innerText);
+            var secondNumber = partseInt(document.getElementsById('second').innerText);
+            result = 'Sum of ' + firstNumber + 'and ' + secondNumber + 'is: ' (firstNumber + secondNumber);
+            document.getElementsById('result').innerText = result;
+        }
+    </script>
+</head>
+
+<body>
+    <h1> I need two integers</h1>
+    <input type='number' id='first' onekeyup='addThem();'>
+    <br>
+    <input type='number' id='second' onekeyup='addThem();'>
+    <br>
+    <span id='result'></span>
+</body>
+
+</html>

@@ -1,0 +1,49 @@
+Family 1 Husband 1 Wife 4 Child 7 Child 8
+Relate 1 4
+Relate 1 9
+Family 99 Husband 1 Wife 0
+Family 99 Husband 0 Wife 4
+Family 99 Husband 0 Wife 0 Child 7
+Family 1 Husband 2 Wife 2
+Family 2 Husband 2 Wife 3 Child 13 Child 14 Child 1 Child 15
+Family 3 Husband 9 Wife 10 Child 2 Child 16
+Family 4 Husband 11 Wife 12 Child 3 Child 17
+Family 5 Husband 5 Wife 6 Child 4 Child 19 Child 20
+Family 6 Husband 13 Wife 18 
+Family 7 Husband 19 Wife 24 Child 21 Child 22 Child 23
+Family 8 Husband 25 Wife 20 Child 28
+Family 9 Husband 16 Wife 26 Child 30 Child 31
+Family 10 Husband 27 Wife 17 Child 33 Child 32
+Family 14 Husband 40 Wife 39 Child 10 Child 42
+Family 23 Husband 46 Wife 45 Child 47
+Family 24 Husband 50 Wife 49 
+Family 22 Husband 44 Wife 51 Child 45 Child 48 Child 49
+Family 21 Husband 43 Wife 42 Child 44 Child 41
+Family 20 Husband 54 Wife 0 Child 40 Child 52 Child 53
+Family 27 Husband 57 Wife 55 
+Family 29 Husband 61 Wife 60 Child 62
+Family 30 Husband 63 Wife 64 Child 65
+Family 31 Husband 67 Wife 66 Child 69 Child 68
+Family 32 Husband 70 Wife 71 Child 72 Child 73
+Family 28 Husband 59 Wife 58 Child 60 Child 63 Child 66 Child 70
+Family 33 Husband 75 Wife 74 Child 76
+Family 35 Husband 78 Wife 79 Child 80
+Family 36 Husband 78 Wife 0 
+Family 34 Husband 0 Wife 77 Child 78
+Family 26 Husband 56 Wife 55 Child 58 Child 74 Child 77 Child 81
+Family 41 Husband 91 Wife 90 Child 92
+Family 40 Husband 88 Wife 89 Child 90 Child 94 Child 93
+Family 42 Husband 95 Wife 0 
+Family 38 Husband 84 Wife 85 Child 88 Child 87 Child 95
+Family 37 Husband 83 Wife 82 Child 84
+Family 19 Husband 0 Wife 0 Child 82 Child 55 Child 39
+Family 71 Husband 33 Wife 0 
+Family 13 Husband 0 Wife 0 Child 9
+Family 17 Husband 30 Wife 29 Child 34 Child 35 Child 36
+Family 18 Husband 0 Wife 31 Child 38
+Family 15 Husband 0 Wife 0 Child 11
+Family 16 Husband 0 Wife 0 Child 12
+Family 11 Husband 0 Wife 0 Child 5
+Family 12 Husband 0 Wife 0 Child 6
+Relate 1 55
+Relate 95 2

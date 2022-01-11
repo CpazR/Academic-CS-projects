@@ -1,0 +1,517 @@
+Step: 0
+	Train #3 received a front car of size 1 from Train #3
+	The value of train #0: 30
+	The value of train #1: 30
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 1
+	Train #3 received a front car of size 1 from Train #1
+	The value of train #0: 30
+	The value of train #1: 24
+	The value of train #2: 30
+	The value of train #3: 37
+	The value of train #4: 30
+Step: 2
+	Train #1 received a rear car of size 5 from Train #3
+	The value of train #0: 30
+	The value of train #1: 34
+	The value of train #2: 30
+	The value of train #3: 37
+	The value of train #4: 30
+Step: 3
+	Train #0 received a front car of size 1 from Train #3
+	The value of train #0: 37
+	The value of train #1: 34
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 4
+	Train #1 received a rear car of size 5 from Train #2
+	The value of train #0: 37
+	The value of train #1: 45
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 5
+	Train #2 received a rear car of size 5 from Train #0
+	The value of train #0: 37
+	The value of train #1: 45
+	The value of train #2: 41
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 6
+	Train #1 received a front car of size 5 from Train #2
+	The value of train #0: 37
+	The value of train #1: 57
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 7
+	Train #1 received a rear car of size 4 from Train #3
+	The value of train #0: 37
+	The value of train #1: 69
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 8
+	Train #1 received a front car of size 4 from Train #1
+	The value of train #0: 37
+	The value of train #1: 69
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 9
+	Train #0 received a rear car of size 4 from Train #0
+	The value of train #0: 48
+	The value of train #1: 69
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 10
+	Train #3 received a front car of size 1 from Train #3
+	The value of train #0: 48
+	The value of train #1: 69
+	The value of train #2: 30
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 11
+	Train #2 received a rear car of size 3 from Train #3
+	The value of train #0: 48
+	The value of train #1: 69
+	The value of train #2: 39
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 12
+	Train #2 received a front car of size 4 from Train #1
+	The value of train #0: 48
+	The value of train #1: 57
+	The value of train #2: 50
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 13
+	Train #2 received a rear car of size 5 from Train #1
+	The value of train #0: 48
+	The value of train #1: 57
+	The value of train #2: 63
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 14
+	Train #2 received a rear car of size 4 from Train #2
+	The value of train #0: 48
+	The value of train #1: 57
+	The value of train #2: 76
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 15
+	Train #3 received a front car of size 4 from Train #0
+	The value of train #0: 37
+	The value of train #1: 57
+	The value of train #2: 76
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 16
+	Train #3 received a rear car of size 3 from Train #0
+	The value of train #0: 37
+	The value of train #1: 57
+	The value of train #2: 76
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 17
+	Train #1 received a front car of size 3 from Train #3
+	The value of train #0: 37
+	The value of train #1: 68
+	The value of train #2: 76
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 18
+	Train #0 received a front car of size 4 from Train #3
+	The value of train #0: 48
+	The value of train #1: 68
+	The value of train #2: 76
+	The value of train #3: 30
+	The value of train #4: 30
+Step: 19
+	Train #3 received a front car of size 4 from Train #2
+	The value of train #0: 48
+	The value of train #1: 68
+	The value of train #2: 63
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 20
+	Train #2 received a rear car of size 3 from Train #2
+	The value of train #0: 48
+	The value of train #1: 68
+	The value of train #2: 75
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 21
+	Train #3 received a front car of size 4 from Train #0
+	The value of train #0: 37
+	The value of train #1: 68
+	The value of train #2: 75
+	The value of train #3: 51
+	The value of train #4: 30
+Step: 22
+	Train #0 received a rear car of size 4 from Train #1
+	The value of train #0: 48
+	The value of train #1: 68
+	The value of train #2: 75
+	The value of train #3: 51
+	The value of train #4: 30
+Step: 23
+	Train #2 received a front car of size 4 from Train #3
+	The value of train #0: 48
+	The value of train #1: 68
+	The value of train #2: 89
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 24
+	Train #1 received a front car of size 4 from Train #2
+	The value of train #0: 48
+	The value of train #1: 81
+	The value of train #2: 75
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 25
+	Train #0 received a rear car of size 3 from Train #1
+	The value of train #0: 59
+	The value of train #1: 81
+	The value of train #2: 75
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 26
+	Train #3 received a front car of size 3 from Train #2
+	The value of train #0: 59
+	The value of train #1: 81
+	The value of train #2: 63
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 27
+	Train #0 received a front car of size 3 from Train #3
+	The value of train #0: 71
+	The value of train #1: 81
+	The value of train #2: 63
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 28
+	Train #2 received a front car of size 4 from Train #1
+	The value of train #0: 71
+	The value of train #1: 68
+	The value of train #2: 76
+	The value of train #3: 40
+	The value of train #4: 30
+Step: 29
+	Train #3 received a front car of size 3 from Train #1
+	The value of train #0: 71
+	The value of train #1: 57
+	The value of train #2: 76
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 30
+	Train #3 received a front car of size 3 from Train #0
+	The value of train #0: 59
+	The value of train #1: 57
+	The value of train #2: 76
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 31
+	Train #2 received a rear car of size 2 from Train #1
+	The value of train #0: 59
+	The value of train #1: 57
+	The value of train #2: 88
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 32
+	Train #1 received a rear car of size 5 from Train #1
+	The value of train #0: 59
+	The value of train #1: 70
+	The value of train #2: 88
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 33
+	Train #0 received a rear car of size 5 from Train #1
+	The value of train #0: 73
+	The value of train #1: 70
+	The value of train #2: 88
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 34
+	Train #1 received a rear car of size 2 from Train #0
+	The value of train #0: 73
+	The value of train #1: 81
+	The value of train #2: 88
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 35
+	Train #0 received a front car of size 2 from Train #2
+	The value of train #0: 85
+	The value of train #1: 81
+	The value of train #2: 76
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 36
+	Train #0 received a rear car of size 5 from Train #1
+	The value of train #0: 101
+	The value of train #1: 81
+	The value of train #2: 76
+	The value of train #3: 61
+	The value of train #4: 30
+Step: 37
+	Train #2 received a front car of size 3 from Train #3
+	The value of train #0: 101
+	The value of train #1: 81
+	The value of train #2: 89
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 38
+	Train #1 received a front car of size 2 from Train #1
+	The value of train #0: 101
+	The value of train #1: 81
+	The value of train #2: 89
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 39
+	Train #2 received a rear car of size 1 from Train #0
+	The value of train #0: 101
+	The value of train #1: 81
+	The value of train #2: 101
+	The value of train #3: 50
+	The value of train #4: 30
+Step: 40
+	Train #3 received a front car of size 5 from Train #0
+	The value of train #0: 85
+	The value of train #1: 81
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 41
+	Train #1 received a rear car of size 2 from Train #2
+	The value of train #0: 85
+	The value of train #1: 93
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 42
+	Train #0 received a rear car of size 1 from Train #0
+	The value of train #0: 97
+	The value of train #1: 93
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 43
+	Train #1 received a front car of size 2 from Train #1
+	The value of train #0: 97
+	The value of train #1: 93
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 44
+	Train #1 received a rear car of size 4 from Train #0
+	The value of train #0: 97
+	The value of train #1: 108
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 45
+	Train #1 received a rear car of size 1 from Train #2
+	The value of train #0: 97
+	The value of train #1: 121
+	The value of train #2: 101
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 46
+	Train #2 received a rear car of size 5 from Train #1
+	The value of train #0: 97
+	The value of train #1: 121
+	The value of train #2: 118
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 47
+	Train #2 received a front car of size 1 from Train #1
+	The value of train #0: 97
+	The value of train #1: 108
+	The value of train #2: 132
+	The value of train #3: 63
+	The value of train #4: 30
+Step: 48
+	Train #3 received a front car of size 1 from Train #2
+	The value of train #0: 97
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 73
+	The value of train #4: 30
+Step: 49
+	Train #0 received a rear car of size 2 from Train #3
+	The value of train #0: 111
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 73
+	The value of train #4: 30
+Step: 50
+	Train #3 received a front car of size 2 from Train #0
+	The value of train #0: 97
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 85
+	The value of train #4: 30
+Step: 51
+	Train #1 received a front car of size 4 from Train #1
+	The value of train #0: 97
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 85
+	The value of train #4: 30
+Step: 52
+	Train #3 received a front car of size 1 from Train #0
+	The value of train #0: 85
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 53
+	Train #1 received a front car of size 4 from Train #1
+	The value of train #0: 85
+	The value of train #1: 108
+	The value of train #2: 118
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 54
+	Train #0 received a front car of size 4 from Train #1
+	The value of train #0: 100
+	The value of train #1: 93
+	The value of train #2: 118
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 55
+	Train #2 received a front car of size 5 from Train #2
+	The value of train #0: 100
+	The value of train #1: 93
+	The value of train #2: 118
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 56
+	Train #2 received a front car of size 4 from Train #0
+	The value of train #0: 85
+	The value of train #1: 93
+	The value of train #2: 135
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 57
+	Train #1 received a rear car of size 1 from Train #3
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 135
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 58
+	Train #2 received a rear car of size 4 from Train #3
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 153
+	The value of train #3: 97
+	The value of train #4: 30
+Step: 59
+	Train #2 received a front car of size 1 from Train #3
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 169
+	The value of train #3: 85
+	The value of train #4: 30
+Step: 60
+	Train #2 received a rear car of size 3 from Train #2
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 188
+	The value of train #3: 85
+	The value of train #4: 30
+Step: 61
+	Train #3 received a rear car of size 3 from Train #3
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 188
+	The value of train #3: 99
+	The value of train #4: 30
+Step: 62
+	Train #2 received a front car of size 3 from Train #2
+	The value of train #0: 85
+	The value of train #1: 105
+	The value of train #2: 188
+	The value of train #3: 99
+	The value of train #4: 30
+Step: 63
+	Train #3 received a front car of size 1 from Train #1
+	The value of train #0: 85
+	The value of train #1: 93
+	The value of train #2: 188
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 64
+	Train #2 received a front car of size 3 from Train #2
+	The value of train #0: 85
+	The value of train #1: 93
+	The value of train #2: 188
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 65
+	Train #0 received a front car of size 2 from Train #1
+	The value of train #0: 98
+	The value of train #1: 81
+	The value of train #2: 188
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 66
+	Train #2 received a rear car of size 5 from Train #3
+	The value of train #0: 98
+	The value of train #1: 81
+	The value of train #2: 210
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 67
+	Train #2 received a rear car of size 4 from Train #2
+	The value of train #0: 98
+	The value of train #1: 81
+	The value of train #2: 232
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 68
+	Train #0 received a rear car of size 3 from Train #0
+	The value of train #0: 113
+	The value of train #1: 81
+	The value of train #2: 232
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 69
+	Train #1 received a rear car of size 1 from Train #3
+	The value of train #0: 113
+	The value of train #1: 92
+	The value of train #2: 232
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 70
+	Train #2 received a front car of size 1 from Train #3
+	The value of train #0: 113
+	The value of train #1: 92
+	The value of train #2: 252
+	The value of train #3: 99
+	The value of train #4: 30
+Step: 71
+	Train #3 received a front car of size 1 from Train #1
+	The value of train #0: 113
+	The value of train #1: 81
+	The value of train #2: 252
+	The value of train #3: 112
+	The value of train #4: 30
+Step: 72
+	Train #0 received a rear car of size 2 from Train #1
+	The value of train #0: 128
+	The value of train #1: 81
+	The value of train #2: 252
+	The value of train #3: 112
+	The value of train #4: 30
+Train #1 is empty, exiting program
+	The value of train #0: 128
+	The value of train #1: 81
+	The value of train #2: 252
+	The value of train #3: 112
+	The value of train #4: 30

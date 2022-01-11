@@ -1,0 +1,11 @@
+CS315 Project 4: Word Counter
+Written in Java by Nicholas Reel
+Makefile based on template provided by Raphael Finkel
+
+Overview:
+Given an piped input of strings, the program will store each instance of a word in a hashtable. With recurring instances being listed as a "duplicates" counter for each node.
+When hashing words might occasionally collide in the table. In the event this happens, adjacent indices are checked to see if they are populated, if not, they are used instead.
+
+When printed, given sorting criteria (ASCII alphabetical or duplicates) it will sort, print each of the sorted notes one at a time, then discard the sorted array.
+
+The result is an alphabetically sorted list starting with capital (A-Z) words, followed by lowercase (a-z) words. Then a list sorted by occurrences starting from most occurred.
