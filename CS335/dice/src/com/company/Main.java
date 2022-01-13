@@ -28,7 +28,7 @@ public class Main {
         }
 
         // Sum up the dice
-        int diceRollSum = allDiceRolls.stream().reduce(Integer::sum).orElseThrow();
+        int diceRollSum = Collections.frequency(allDiceRolls, 1);
 
         // Check if "snake eyes" was rolled by checking sum
         if (diceRollSum == 6) {
@@ -49,13 +49,13 @@ public class Main {
             if (runSimulation()) {
                 totalSnakeEyes++;
             }
-            System.out.println("Ran " +i + " times");
         }
 
         System.out.println(nTimes + ": " + totalSnakeEyes + " snake eyes");
     }
 
     public static void main(String[] args) {
+        System.out.println("Base cases:");
         // Run 100 times
         repeatedTest(100);
 
@@ -67,5 +67,15 @@ public class Main {
 
         // Run 100000 times
         repeatedTest(100000);
+
+        System.out.println("Additional cases to better illustrate exponential probability scale:");
+
+        repeatedTest(1000000);
+
+        repeatedTest(2500000);
+
+        repeatedTest(5000000);
+
+        repeatedTest(10000000);
     }
 }
