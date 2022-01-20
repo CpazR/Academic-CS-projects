@@ -7,12 +7,11 @@ public class Main {
 
     public static void main(String[] args) {
         // Sieve of one million elements
-        // Will take a while. Run with smaller size to get the same idea.
-        PrimeSieve sieve = new PrimeSieve(100000);
+        PrimeSieve sieve = new PrimeSieve(1000000);
 
         sieve.run();
 
-        // Draw histogram
+        // Draw histogram with 10 intervals
         sieve.histogram(10);
     }
 
@@ -34,8 +33,11 @@ class PrimeSieve {
         }
     }
 
+    /**
+     * Helper method for the iteration over multiples of `divideBy`
+     */
     void sieveMethod(int divideBy) {
-        for (int i = divideBy; i < this.isPrime.length; i++) {
+        for (int i = divideBy; i < this.isPrime.length; i += divideBy) {
             // if there is a remainder, label at index i, not a prime
             if (i != divideBy && i % divideBy == 0) {
                 this.isPrime[i] = false;
