@@ -30,21 +30,16 @@ class CalculatorApplicationContext extends JFrame {
         // Set up the input field
         inputField.setSize(120, 30);
         inputField.setLocation(getPercentagePosition(inputField, 50, 30));
-        inputField.setAlignmentX(JTextField.CENTER_ALIGNMENT);
-        inputField.setAlignmentY(JTextField.BOTTOM_ALIGNMENT);
         this.add(inputField);
 
         inputButton.setSize(100, 50);
         inputButton.setLocation(getPercentagePosition(inputButton, 50));
-        inputButton.setAlignmentX(JButton.CENTER_ALIGNMENT);
-        inputButton.setAlignmentY(JButton.BOTTOM_ALIGNMENT);
         this.add(inputButton);
 
         // Set up the output field
-        outputField.setSize(100, 50);
-        outputField.setLocation(getPercentagePosition(outputField, 50, 80));
-        outputField.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
-        outputField.setAlignmentY(JTextArea.BOTTOM_ALIGNMENT);
+        outputField.setSize(getWidth(), 150);
+        outputField.setLocation(getPercentagePosition(outputField, 50, 85));
+        outputField.setEditable(false);
         this.add(outputField);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.revalidate();
