@@ -1,17 +1,55 @@
 package com.company;
 
+import javax.swing.*;
+
 public class Card {
 
     enum Suit {
-        HEARTS(0),
-        DIAMONDS(1),
-        CLUBS(2),
-        SPADES(3);
+        HEARTS(0, "hearts", "red"),
+        DIAMONDS(1, "diamonds", "red"),
+        CLUBS(2, "clubs", "black"),
+        SPADES(3, "spades", "black");
 
-        private int value;
+        private final String name;
 
-        Suit(int suitNumber) {
-            this.value = suitNumber;
+        Suit(int suitNumber, String suitName, String color) {
+            name = suitName;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
+    enum Value {
+        A(1, "ace"),
+        TWO(2, "2"),
+        THREE(3, "3"),
+        FOUR(4, "4"),
+        FIVE(5, "5"),
+        SIX(6, "6"),
+        SEVEN(7, "7"),
+        EIGHT(8, "8"),
+        NINE(9, "9"),
+        TEN(10, "10"),
+        JACK(11, "jack"),
+        QUEEN(12, "queen"),
+        KING(13, "king");
+
+        private final String name;
+
+        Value(int valueIndex, String valueName) {
+            name = valueName;
+        }
+
+        static Value valueOf(int index) {
+            return values()[index - 1];
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 
@@ -23,17 +61,22 @@ public class Card {
      * <br> 12 = Queen </br>
      * <br> 13 = King </br>
      */
-    int numericalValue = 0;
+    private final Value value;
+    private final Suit suit;
+    private final Icon cardImage;
 
-    Suit suit = null;
-
-    Card(Suit suit, int number) {
+    Card(Suit suit, Value number) {
         this.suit = suit;
-        this.numericalValue = number;
+        this.value = number;
+        this.cardImage = new ImageIcon(".\\assets\\" + this.value + "_of_" + this.suit + "_icon.png");
+    }
+
+    public Icon getCardImage() {
+        return cardImage;
     }
 
     @Override
     public String toString() {
-        return "Suit: " + suit.name() + "\nValue: " + numericalValue;
+        return "Suit: " + suit.name() + " Value: " + value;
     }
 }

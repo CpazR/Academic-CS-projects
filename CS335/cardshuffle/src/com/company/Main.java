@@ -9,14 +9,16 @@ public class Main {
 
     public static void main(String[] args) {
         var deck = new CardDeck();
-        var context = new ApplicationContext(deck);
+        new ApplicationContext(deck);
     }
 }
 
-
 class ApplicationContext extends JFrame implements ActionListener {
 
-    private final JTextArea[][] cards = new JTextArea[3][12];
+    private final GridLayout cardLayout = new GridLayout(CardDeck.SUIT_COUNT, CardDeck.CARD_SUIT_COUNT);
+    private final JLabel[][] cards = new JLabel[CardDeck.SUIT_COUNT][CardDeck.CARD_SUIT_COUNT];
+
+    private final FlowLayout buttonLayout = new FlowLayout();
     private final JButton shuffleButton = new JButton("Shuffle");
     private final JButton resetButton = new JButton("Reset");
     private final JButton quitButton = new JButton("Quit");
@@ -31,47 +33,47 @@ class ApplicationContext extends JFrame implements ActionListener {
     private void windowSetup() {
         this.setTitle("Card Shuffling");
         this.setLayout(null);
-        this.setSize(1280, 720);
+        this.setSize(1080, 600);
         this.setVisible(true);
 
-        var cardPanel = new JPanel();
-        cardPanel.setSize(1280, 620);
-        cardPanel.setAlignmentY(0f);
-
-        for (int suitCount = 0; suitCount < 3; suitCount++) {
-            for (int cardCount = 0; cardCount < 12; cardCount++) {
-                cards[suitCount][cardCount] = new JTextArea();
-                var cardField = cards[suitCount][cardCount];
-                cardField.setSize(100, 150);
-
-                var currentCard = deck.getCardList().get(suitCount * cardCount);
-                cardField.setText(currentCard.toString());
-
-                setComponentPercentagePositionRelative(cardField, cardPanel, 1 / (cardCount + 1), 1 / (suitCount + 1));
-                cardPanel.add(cardField);
-            }
-        }
-
-        shuffleButton.setSize(80, 50);
-        shuffleButton.setAlignmentX(.4f);
-        resetButton.setSize(80, 50);
-        resetButton.setAlignmentX(.5f);
-        quitButton.setSize(80, 50);
-        quitButton.setAlignmentX(.6f);
-
-        var buttonPanel = new JPanel();
-
-        buttonPanel.add(shuffleButton);
-        buttonPanel.add(resetButton);
-        buttonPanel.add(quitButton);
-        buttonPanel.setSize(1280, 100);
-        buttonPanel.setAlignmentY(1f);
-
-        this.add(buttonPanel);
+        setupCardPanel();
+        setupButtonPanel();
 
         this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         establishListeners();
         this.revalidate();
+    }
+
+    private void setupCardPanel() {
+        var cardPanel = new JPanel();
+        cardPanel.setLayout(cardLayout);
+        cardPanel.setSize(getWidth(), 420);
+
+        for (int suitCount = 0; suitCount < CardDeck.SUIT_COUNT; suitCount++) {
+            for (int cardCount = 0; cardCount < CardDeck.CARD_SUIT_COUNT; cardCount++) {
+                cards[suitCount][cardCount] = new JLabel();
+                var cardField = cards[suitCount][cardCount];
+                cardField.setSize(getWidth() / CardDeck.CARD_SUIT_COUNT, getHeight() / CardDeck.SUIT_COUNT);
+
+                var currentCard = deck.getCardList().get(CardDeck.CARD_SUIT_COUNT * suitCount + cardCount);
+                cardField.setIcon(currentCard.getCardImage());
+
+                cardPanel.add(cardField, suitCount, cardCount);
+            }
+        }
+        this.add(cardPanel);
+    }
+
+    private void setupButtonPanel() {
+        var buttonPanel = new JPanel();
+        buttonPanel.setLayout(buttonLayout);
+
+        buttonPanel.add(shuffleButton);
+        buttonPanel.add(resetButton);
+        buttonPanel.add(quitButton);
+        buttonPanel.setSize(getWidth(), 100);
+
+        this.add(buttonPanel);
     }
 
     /**
@@ -81,12 +83,26 @@ class ApplicationContext extends JFrame implements ActionListener {
         shuffleButton.addActionListener(e -> {
             deck.shuffleDeck();
             deck.printDeck();
+            reloadCards();
         });
         resetButton.addActionListener(e -> {
             deck.reset();
             deck.printDeck();
+            reloadCards();
         });
         quitButton.addActionListener(e -> System.exit(0));
+    }
+
+    private void reloadCards() {
+        for (int suitCount = 0; suitCount < CardDeck.SUIT_COUNT; suitCount++) {
+            for (int cardCount = 0; cardCount < CardDeck.CARD_SUIT_COUNT; cardCount++) {
+                var cardField = cards[suitCount][cardCount];
+                cardField.setSize(getWidth() / CardDeck.CARD_SUIT_COUNT, getHeight() / CardDeck.SUIT_COUNT);
+
+                var currentCard = deck.getCardList().get(CardDeck.CARD_SUIT_COUNT * suitCount + cardCount);
+                cardField.setIcon(currentCard.getCardImage());
+            }
+        }
     }
 
     /**

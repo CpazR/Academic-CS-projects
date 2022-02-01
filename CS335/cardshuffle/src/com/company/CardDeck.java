@@ -5,16 +5,20 @@ import java.util.Collections;
 import java.util.List;
 
 public class CardDeck {
-    private final Card[][] sortedCards = new Card[3][12];
+    public static final int SUIT_COUNT = 4;
+    public static final int CARD_SUIT_COUNT = 13;
+
+
+    private final Card[][] unShuffledCard = new Card[SUIT_COUNT][CARD_SUIT_COUNT];
 
     private final List<Card> cardList = new ArrayList<>();
 
     CardDeck() {
-        for (int suitCount = 0; suitCount < 3; suitCount++) {
-            for (int cardCount = 0; cardCount < 12; cardCount++) {
-                sortedCards[suitCount][cardCount] = new Card(Card.Suit.values()[suitCount], cardCount + 1);
+        for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
+            for (int cardCount = 0; cardCount < CARD_SUIT_COUNT; cardCount++) {
+                unShuffledCard[suitCount][cardCount] = new Card(Card.Suit.values()[suitCount], Card.Value.valueOf(cardCount + 1));
             }
-            cardList.addAll(List.of(sortedCards[suitCount]));
+            cardList.addAll(List.of(unShuffledCard[suitCount]));
         }
     }
 
@@ -24,12 +28,13 @@ public class CardDeck {
 
     public void shuffleDeck() {
         Collections.shuffle(cardList);
+        System.out.println("Shuffled!");
     }
 
     public void reset() {
         cardList.clear();
         for (int suitCount = 0; suitCount < 3; suitCount++) {
-            cardList.addAll(List.of(sortedCards[suitCount]));
+            cardList.addAll(List.of(unShuffledCard[suitCount]));
         }
     }
 
