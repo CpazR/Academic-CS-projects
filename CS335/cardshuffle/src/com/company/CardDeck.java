@@ -9,16 +9,16 @@ public class CardDeck {
     public static final int CARD_SUIT_COUNT = 13;
 
 
-    private final Card[][] unShuffledCard = new Card[SUIT_COUNT][CARD_SUIT_COUNT];
+    private final Card[][] unshuffledCard = new Card[SUIT_COUNT][CARD_SUIT_COUNT];
 
     private final List<Card> cardList = new ArrayList<>();
 
-    CardDeck() {
+    CardDeck() throws Exception {
         for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
             for (int cardCount = 0; cardCount < CARD_SUIT_COUNT; cardCount++) {
-                unShuffledCard[suitCount][cardCount] = new Card(Card.Suit.values()[suitCount], Card.Value.valueOf(cardCount + 1));
+                unshuffledCard[suitCount][cardCount] = new Card(Card.Suit.values()[suitCount], Card.Value.valueOf(cardCount + 1));
             }
-            cardList.addAll(List.of(unShuffledCard[suitCount]));
+            cardList.addAll(List.of(unshuffledCard[suitCount]));
         }
     }
 
@@ -26,18 +26,29 @@ public class CardDeck {
         return cardList;
     }
 
+    /**
+     * Shuffle the card list using collections
+     */
     public void shuffleDeck() {
         Collections.shuffle(cardList);
         System.out.println("Shuffled!");
     }
 
+    /**
+     * Reset card list to original unshuffled order
+     */
     public void reset() {
+        // Empty card list
         cardList.clear();
-        for (int suitCount = 0; suitCount < 3; suitCount++) {
-            cardList.addAll(List.of(unShuffledCard[suitCount]));
+        // Reinsert all cards from unshuffled array one suit at a time
+        for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
+            cardList.addAll(List.of(unshuffledCard[suitCount]));
         }
     }
 
+    /**
+     * Debug method to help visualize the card list
+     */
     public void printDeck() {
         cardList.forEach(System.out::println);
         System.out.println("--------------------");

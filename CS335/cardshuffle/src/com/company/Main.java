@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         var deck = new CardDeck();
         new ApplicationContext(deck);
     }
@@ -16,9 +16,10 @@ public class Main {
 class ApplicationContext extends JFrame implements ActionListener {
 
     private final GridLayout cardLayout = new GridLayout(CardDeck.SUIT_COUNT, CardDeck.CARD_SUIT_COUNT);
+    private final JPanel cardPanel = new JPanel();
     private final JLabel[][] cards = new JLabel[CardDeck.SUIT_COUNT][CardDeck.CARD_SUIT_COUNT];
 
-    private final FlowLayout buttonLayout = new FlowLayout();
+    private final JPanel buttonPanel = new JPanel();
     private final JButton shuffleButton = new JButton("Shuffle");
     private final JButton resetButton = new JButton("Reset");
     private final JButton quitButton = new JButton("Quit");
@@ -26,16 +27,15 @@ class ApplicationContext extends JFrame implements ActionListener {
     private final CardDeck deck;
 
     ApplicationContext(CardDeck deck) {
+        super("Card Shuffling!!!");
+        this.setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        this.setSize(1080, 480);
+        this.setVisible(true);
         this.deck = deck;
         windowSetup();
     }
 
     private void windowSetup() {
-        this.setTitle("Card Shuffling");
-        this.setLayout(null);
-        this.setSize(1080, 600);
-        this.setVisible(true);
-
         setupCardPanel();
         setupButtonPanel();
 
@@ -45,35 +45,31 @@ class ApplicationContext extends JFrame implements ActionListener {
     }
 
     private void setupCardPanel() {
-        var cardPanel = new JPanel();
         cardPanel.setLayout(cardLayout);
         cardPanel.setSize(getWidth(), 420);
 
+        // Initialize card labels
         for (int suitCount = 0; suitCount < CardDeck.SUIT_COUNT; suitCount++) {
             for (int cardCount = 0; cardCount < CardDeck.CARD_SUIT_COUNT; cardCount++) {
                 cards[suitCount][cardCount] = new JLabel();
                 var cardField = cards[suitCount][cardCount];
                 cardField.setSize(getWidth() / CardDeck.CARD_SUIT_COUNT, getHeight() / CardDeck.SUIT_COUNT);
-
-                var currentCard = deck.getCardList().get(CardDeck.CARD_SUIT_COUNT * suitCount + cardCount);
-                cardField.setIcon(currentCard.getCardImage());
-
-                cardPanel.add(cardField, suitCount, cardCount);
+                cardPanel.add(cardField);
             }
         }
-        this.add(cardPanel);
+        // "Reload" to get images based on `cardList` data
+        reloadCards();
+        this.add(cardPanel, BorderLayout.NORTH);
     }
 
     private void setupButtonPanel() {
-        var buttonPanel = new JPanel();
-        buttonPanel.setLayout(buttonLayout);
+        buttonPanel.setSize(250, 50);
 
         buttonPanel.add(shuffleButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(quitButton);
-        buttonPanel.setSize(getWidth(), 100);
 
-        this.add(buttonPanel);
+        this.add(buttonPanel, BorderLayout.SOUTH);
     }
 
     /**
@@ -97,8 +93,6 @@ class ApplicationContext extends JFrame implements ActionListener {
         for (int suitCount = 0; suitCount < CardDeck.SUIT_COUNT; suitCount++) {
             for (int cardCount = 0; cardCount < CardDeck.CARD_SUIT_COUNT; cardCount++) {
                 var cardField = cards[suitCount][cardCount];
-                cardField.setSize(getWidth() / CardDeck.CARD_SUIT_COUNT, getHeight() / CardDeck.SUIT_COUNT);
-
                 var currentCard = deck.getCardList().get(CardDeck.CARD_SUIT_COUNT * suitCount + cardCount);
                 cardField.setIcon(currentCard.getCardImage());
             }
@@ -117,13 +111,6 @@ class ApplicationContext extends JFrame implements ActionListener {
         double calculatedPercentageHeight = (double) percentageHeight / 100;
         component.setAlignmentX(Double.valueOf(getWidth() * calculatedPercentageWidth - (component.getWidth() * calculatedPercentageWidth)).floatValue() / 100);
         component.setAlignmentY(Double.valueOf(getHeight() * calculatedPercentageHeight - (component.getHeight() * calculatedPercentageHeight)).floatValue() / 100);
-    }
-
-    private void setComponentPercentagePositionRelative(JComponent component, JPanel relativePanel, int percentageWidth, int percentageHeight) {
-        var calculatedPercentageWidth = percentageWidth / 100;
-        var calculatedPercentageHeight = percentageHeight / 100;
-        component.setAlignmentX(Double.valueOf(relativePanel.getWidth() * calculatedPercentageWidth - (component.getWidth() * calculatedPercentageWidth)).floatValue() / 100);
-        component.setAlignmentY(Double.valueOf(relativePanel.getHeight() * calculatedPercentageHeight - (component.getHeight() * calculatedPercentageHeight)).floatValue() / 100);
     }
 
     @Override
