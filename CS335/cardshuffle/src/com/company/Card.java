@@ -5,10 +5,10 @@ import javax.swing.*;
 public class Card {
 
     enum Suit {
-        HEARTS(0, "hearts", "red"),
-        DIAMONDS(1, "diamonds", "red"),
-        CLUBS(2, "clubs", "black"),
-        SPADES(3, "spades", "black");
+        SPADES(0, "spades", "black"),
+        HEARTS(1, "hearts", "red"),
+        DIAMONDS(2, "diamonds", "red"),
+        CLUBS(3, "clubs", "black");
 
         private final String name;
 
@@ -43,7 +43,13 @@ public class Card {
             name = valueName;
         }
 
-        static Value valueOf(int index) {
+        /**
+         * Get enum from an index from 1 - 13
+         */
+        static Value valueOf(int index) throws Exception {
+            if (index < 1 || index > 13) {
+                throw new Exception("Card number is supposed to be between 1 and 13 but was: " + index);
+            }
             return values()[index - 1];
         }
 
