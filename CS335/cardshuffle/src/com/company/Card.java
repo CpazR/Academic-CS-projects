@@ -74,7 +74,7 @@ public class Card {
     Card(Suit suit, Value number) {
         this.suit = suit;
         this.value = number;
-        this.cardImage = new ImageIcon(".\\assets\\" + this.value + "_of_" + this.suit + "_icon.png");
+        this.cardImage = new ImageIcon("./assets/" + this.value + "_of_" + this.suit + "_icon.png");
     }
 
     public Icon getCardImage() {
