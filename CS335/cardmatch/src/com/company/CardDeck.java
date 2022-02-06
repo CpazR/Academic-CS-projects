@@ -12,6 +12,7 @@ public class CardDeck {
     private final Card[][] unshuffledCard = new Card[SUIT_COUNT][CARD_SUIT_COUNT];
 
     private final List<Card> cardList = new ArrayList<>();
+    private final List<Card> matchedCardBucket = new ArrayList<>();
 
     CardDeck() throws Exception {
         for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
@@ -24,6 +25,10 @@ public class CardDeck {
 
     public List<Card> getCardList() {
         return cardList;
+    }
+
+    public Card getCard(int suitIndex, int cardIndex) {
+        return cardList.get(CardDeck.CARD_SUIT_COUNT * suitIndex + cardIndex);
     }
 
     /**
@@ -40,6 +45,7 @@ public class CardDeck {
     public void reset() {
         // Empty card list
         cardList.clear();
+        matchedCardBucket.clear();
         // Reinsert all cards from unshuffled array one suit at a time
         for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
             cardList.addAll(List.of(unshuffledCard[suitCount]));

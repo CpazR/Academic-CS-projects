@@ -37,10 +37,12 @@ public class Card {
         QUEEN(12, "queen"),
         KING(13, "king");
 
+        private int valueIndex;
         private final String name;
 
         Value(int valueIndex, String valueName) {
-            name = valueName;
+            this.valueIndex = valueIndex;
+            this.name = valueName;
         }
 
         /**
@@ -51,6 +53,10 @@ public class Card {
                 throw new Exception("Card number is supposed to be between 1 and 13 but was: " + index);
             }
             return values()[index - 1];
+        }
+
+        public int getNumericalValue() {
+            return valueIndex;
         }
 
         @Override
@@ -69,19 +75,39 @@ public class Card {
      */
     private final Value value;
     private final Suit suit;
-    private final Icon cardImage;
+    private final Icon actualCardImage;
+    private Icon visibleCardImage;
 
     private final Icon notFlippedImage = new ImageIcon("./assets/red_joker_icon.png");
     private boolean flippedOver = false;
 
+    public void flipCard() {
+        this.flippedOver = true;
+        visibleCardImage = actualCardImage;
+    }
+
+    public boolean isFlipped() {
+        return flippedOver;
+    }
+
+    public void resetCard() {
+        this.flippedOver = false;
+        visibleCardImage = notFlippedImage;
+    }
+
     Card(Suit suit, Value number) {
         this.suit = suit;
         this.value = number;
-        this.cardImage = new ImageIcon("./assets/" + this.value + "_of_" + this.suit + "_icon.png");
+        this.actualCardImage = new ImageIcon("./assets/" + this.value + "_of_" + this.suit + "_icon.png");
+        this.visibleCardImage = notFlippedImage;
     }
 
-    public Icon getCardImage() {
-        return cardImage;
+    public Icon getVisibleCardImage() {
+        return visibleCardImage;
+    }
+
+    public int getValue() {
+        return value.getNumericalValue();
     }
 
     @Override
