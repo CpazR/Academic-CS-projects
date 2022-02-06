@@ -50,6 +50,7 @@ public class CardDeck {
         for (int suitCount = 0; suitCount < SUIT_COUNT; suitCount++) {
             cardList.addAll(List.of(unshuffledCard[suitCount]));
         }
+        cardList.forEach(Card::resetCard);
     }
 
     /**

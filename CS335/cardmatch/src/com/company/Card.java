@@ -78,7 +78,7 @@ public class Card {
     private final Icon actualCardImage;
     private Icon visibleCardImage;
 
-    private final Icon notFlippedImage = new ImageIcon("./assets/red_joker_icon.png");
+    private final Icon notFlippedImage = new ImageIcon("./assets/back_icon.png");
     private boolean flippedOver = false;
 
     public void flipCard() {

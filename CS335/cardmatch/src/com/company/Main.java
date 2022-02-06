@@ -116,7 +116,6 @@ class ApplicationContext extends JFrame implements ActionListener {
     private void matchAttempt(int suitIndex, int cardIndex) {
         var card = deck.getCard(suitIndex, cardIndex);
         if (!card.isFlipped() && matchedCards.size() < 2) {
-            var didMatch = false;
             card.flipCard();
             matchedCards.add(card);
             System.out.println(matchedCards);
@@ -125,6 +124,9 @@ class ApplicationContext extends JFrame implements ActionListener {
                 if (matchedCards.get(0).getValue() == matchedCards.get(1).getValue()) {
                     matchesMadeCount++;
                     matchedCards.clear();
+                    if (matchesMadeCount == CardDeck.SUIT_COUNT * CardDeck.CARD_SUIT_COUNT / 2) {
+                        newGame();
+                    }
                 } else {
                     this.matchResetTimer = new Timer(3000, e -> {
                         this.resetMatch();
@@ -148,7 +150,6 @@ class ApplicationContext extends JFrame implements ActionListener {
         deck.reset();
         deck.shuffleDeck();
         deck.printDeck();
-
         matchesMadeCount = 0;
         guessesMadeCount = 0;
         matchedCards.clear();
