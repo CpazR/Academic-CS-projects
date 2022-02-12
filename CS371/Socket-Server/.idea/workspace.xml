@@ -2,17 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/description.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/project-template.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Socket-/Socket-.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Socket-Server.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/description.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/project-template.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/primitiesTest.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../primitiesTest/src/com/company/ApplicationContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../CS335/cardmatch/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/cardmatch/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../CS335/cardmatch/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/cardmatch/src/com/company/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Socket-/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Socket-/src/com/company/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/company/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
