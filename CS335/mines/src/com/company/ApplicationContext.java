@@ -1,6 +1,7 @@
 package com.company;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class ApplicationContext extends JFrame {
 
@@ -34,7 +35,7 @@ public class ApplicationContext extends JFrame {
 
         menuBarSetup();
         gamePanelSetup(context);
-//        mainWindowSetup();
+        mainWindowSetup();
 
         setSize(400, 350);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -50,10 +51,11 @@ public class ApplicationContext extends JFrame {
     }
 
     private void gamePanelSetup(GameContext context) {
+        gamePanel.setLayout(new GridLayout(context.getWidth(), context.getHeight()));
         gameButtons = new JButton[context.getWidth()][context.getHeight()];
         for (int i = 0; i < context.getWidth(); i++) {
             for (int j = 0; j < context.getHeight(); j++) {
-                gameButtons[i][j] = new MineButton();
+                gameButtons[i][j] = new MineButton(i, j, false);
                 gamePanel.add(gameButtons[i][j]);
             }
         }

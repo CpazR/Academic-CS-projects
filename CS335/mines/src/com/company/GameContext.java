@@ -16,4 +16,8 @@ public class GameContext {
     public int getHeight() {
         return height;
     }
+
+    public void plantBombs() {
+
+    }
 }
