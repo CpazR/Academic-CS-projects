@@ -5,17 +5,23 @@ import javax.swing.*;
 public class MineButton extends JButton {
     private MineButtonState buttonState;
 
-    private Icon currentIcon = unexposedIcon;
-    private static final Icon unexposedIcon = new ImageIcon("./assets/unexposed_icon.png");
-    private static final Icon unexposedFlaggedIcon = new ImageIcon("./assets/unexposed_flagged_icon.png");
-    private static final Icon blankIcon = new ImageIcon("./assets/blank_icon.png");
-    private static final Icon numberedIcon = new ImageIcon("./assets/numbered_icon.png");
-    private static final Icon bombIcon = new ImageIcon("./assets/bomb_icon.png");
+//    private Icon currentIcon = unexposedIcon;
+//    private static final Icon unexposedIcon = new ImageIcon("./assets/unexposed_icon.png");
+//    private static final Icon unexposedFlaggedIcon = new ImageIcon("./assets/unexposed_flagged_icon.png");
+//    private static final Icon blankIcon = new ImageIcon("./assets/blank_icon.png");
+//    private static final Icon numberedIcon = new ImageIcon("./assets/numbered_icon.png");
+//    private static final Icon bombIcon = new ImageIcon("./assets/bomb_icon.png");
+
+    private final String unexposedText = " ";
+    private final String unexposedFlaggedText = "!";
+    private final String blankText = "_";
+    private final String bombText = "*";
+    private String currentText = unexposedText;
 
     private final int columnPosition;
     private final int rowPosition;
 
-    private final boolean isBomb;
+    private boolean isBomb;
     private int adjacentBombCount;
 
     public MineButton(int columnPosition, int rowPosition, boolean isBomb) {
@@ -23,12 +29,13 @@ public class MineButton extends JButton {
         this.rowPosition = rowPosition;
         this.isBomb = isBomb;
         this.buttonState = MineButtonState.HIDDEN;
+        setText(currentText);
     }
 
     /**
-     * If a bomb, effectively end the game. Otherwise, expose adjacent empty spaces via an algorithm
+     * If a bomb, effectively end the game. Otherwise, simply change to image
      */
-    private void expose() {
+    public MineButtonState expose() {
         if (!isBomb) {
             buttonState = (adjacentBombCount == 0) ? MineButtonState.EXPOSED_BLANK : MineButtonState.EXPOSED_NUMBER;
         } else {
@@ -36,20 +43,51 @@ public class MineButton extends JButton {
         }
 
         updateImage();
+        return buttonState;
+    }
+
+    public MineButtonState getButtonState() {
+        return buttonState;
+    }
+
+    public boolean isBomb() {
+        return isBomb;
+    }
+
+    public void setBomb() {
+        isBomb = true;
+    }
+
+    public int getColumnPosition() {
+        return columnPosition;
+    }
+
+    public int getRowPosition() {
+        return rowPosition;
+    }
+
+    public int getAdjacentBombCount() {
+        return adjacentBombCount;
     }
 
     private void updateImage() {
         switch (buttonState) {
             case EXPOSED_BLANK:
-                currentIcon = blankIcon;
+                currentText = blankText;
                 break;
             case EXPOSED_NUMBER:
-                currentIcon = numberedIcon;
+                currentText = String.valueOf(adjacentBombCount);
                 break;
             case EXPOSED_BOMB:
-                currentIcon = bombIcon;
+                currentText = bombText;
                 break;
         }
-        setIcon(currentIcon);
+//        setIcon(currentIcon);
+        setText(currentText);
+    }
+
+    @Override
+    public String toString() {
+        return "GameButton: [" + rowPosition + ", " + columnPosition + "], is a bomb: " + isBomb;
     }
 }

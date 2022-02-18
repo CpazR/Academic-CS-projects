@@ -16,7 +16,6 @@ public class ApplicationContext extends JFrame {
     private final JPanel mainPanel = new JPanel();
 
     private final JPanel gamePanel = new JPanel();
-    private JButton[][] gameButtons;
 
     private final JPanel scorePanel = new JPanel();
     private final JMenuBar mainMenuBar = new JMenuBar();
@@ -37,6 +36,8 @@ public class ApplicationContext extends JFrame {
         gamePanelSetup(context);
         mainWindowSetup();
 
+        establishListeners();
+
         setSize(400, 350);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setVisible(true);
@@ -52,10 +53,9 @@ public class ApplicationContext extends JFrame {
 
     private void gamePanelSetup(GameContext context) {
         gamePanel.setLayout(new GridLayout(context.getWidth(), context.getHeight()));
-        gameButtons = new JButton[context.getWidth()][context.getHeight()];
+        var gameButtons = context.getGameButtons();
         for (int i = 0; i < context.getWidth(); i++) {
             for (int j = 0; j < context.getHeight(); j++) {
-                gameButtons[i][j] = new MineButton(i, j, false);
                 gamePanel.add(gameButtons[i][j]);
             }
         }
@@ -65,6 +65,23 @@ public class ApplicationContext extends JFrame {
         mainPanel.add(scorePanel);
         mainPanel.add(gamePanel);
         add(mainPanel);
+    }
+
+    private void establishListeners() {
+        var gameButtons = context.getGameButtons();
+        for (int i = 0; i < context.getWidth(); i++) {
+            for (int j = 0; j < context.getHeight(); j++) {
+                var button = gameButtons[i][j];
+                var finalI = i;
+                var finalJ = j;
+                button.addActionListener(e -> {
+                    context.exposeButton(finalI, finalJ);
+                    context.addMove();
+
+                    System.out.println(button);
+                });
+            }
+        }
     }
 
 }
