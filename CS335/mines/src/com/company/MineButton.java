@@ -24,9 +24,9 @@ public class MineButton extends JButton {
     private boolean isBomb;
     private int adjacentBombCount;
 
-    public MineButton(int columnPosition, int rowPosition, boolean isBomb) {
-        this.columnPosition = columnPosition;
+    public MineButton(int rowPosition, int columnPosition, boolean isBomb) {
         this.rowPosition = rowPosition;
+        this.columnPosition = columnPosition;
         this.isBomb = isBomb;
         this.buttonState = MineButtonState.HIDDEN;
         setText(currentText);
@@ -35,14 +35,15 @@ public class MineButton extends JButton {
     /**
      * If a bomb, effectively end the game. Otherwise, simply change to image
      */
-    public MineButtonState expose() {
+    public MineButtonState expose(int adjacentBombCount) {
         if (!isBomb) {
             buttonState = (adjacentBombCount == 0) ? MineButtonState.EXPOSED_BLANK : MineButtonState.EXPOSED_NUMBER;
         } else {
             buttonState = MineButtonState.EXPOSED_BOMB;
         }
+        this.adjacentBombCount = adjacentBombCount;
 
-        updateImage();
+        updateText();
         return buttonState;
     }
 
@@ -50,7 +51,7 @@ public class MineButton extends JButton {
         return buttonState;
     }
 
-    public boolean isBomb() {
+    public boolean areBomb() {
         return isBomb;
     }
 
@@ -70,19 +71,16 @@ public class MineButton extends JButton {
         return adjacentBombCount;
     }
 
-    private void updateImage() {
+    public void setAdjacentBombCount(int newBombCount) {
+        this.adjacentBombCount = newBombCount;
+    }
+
+    private void updateText() {
         switch (buttonState) {
-            case EXPOSED_BLANK:
-                currentText = blankText;
-                break;
-            case EXPOSED_NUMBER:
-                currentText = String.valueOf(adjacentBombCount);
-                break;
-            case EXPOSED_BOMB:
-                currentText = bombText;
-                break;
+            case EXPOSED_BLANK -> currentText = blankText;
+            case EXPOSED_NUMBER -> currentText = String.valueOf(adjacentBombCount);
+            case EXPOSED_BOMB -> currentText = bombText;
         }
-//        setIcon(currentIcon);
         setText(currentText);
     }
 
