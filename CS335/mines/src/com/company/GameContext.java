@@ -34,7 +34,8 @@ public class GameContext {
         var mainButton = gameButtons[rowPos][colPos];
 
         // Expose first button, and depending on state, update game state
-        var mainButtonState = mainButton.expose(countAdjacentBombs(rowPos, colPos));
+        mainButton.setAdjacentBombCount(countAdjacentBombs(rowPos, colPos));
+        var mainButtonState = mainButton.expose();
         switch (mainButtonState) {
             case EXPOSED_BLANK:
                 // Run algorithm to show adjacent blank buttons
@@ -46,6 +47,9 @@ public class GameContext {
         }
     }
 
+    /**
+     * Iterate over adjacent buttons and their adjacent buttons until buttons with adjacent bombs have been found
+     */
     private void exposeAdjacentBlanks(int rowPos, int colPos) {
         // Iterate starting from rowPos - 1, colPos - 1 and add blank buttons to stack
         var mineButtonStack = new LinkedList<MineButton>();
@@ -56,7 +60,7 @@ public class GameContext {
             var adjacentBombs = countAdjacentBombs(currentButton.getRowPosition(), currentButton.getColumnPosition());
 
             currentButton.setAdjacentBombCount(adjacentBombs);
-            currentButton.expose(countAdjacentBombs(rowPos, colPos));
+            currentButton.expose();
 
             // Only search and add adjacent
             if (currentButton.getAdjacentBombCount() == 0) {
@@ -69,12 +73,12 @@ public class GameContext {
         // Bound initial scan row and column
         var startScanRow = Math.max(startRowPos - 1, 0);
         var startScanCol = Math.max(startColPos - 1, 0);
-        var endScanRow = Math.min(startScanRow + 3, width);
-        var endScanCol = Math.min(startScanCol + 3, height);
+        var endScanRow = Math.min(startRowPos + 1, width);
+        var endScanCol = Math.min(startColPos + 1, height);
 
         // Iterate over 3 x 3 grid around button
-        for (int scanRow = startScanRow; scanRow < endScanRow; scanRow++) {
-            for (int scanCol = startScanCol; scanCol < endScanCol; scanCol++) {
+        for (int scanRow = startScanRow; scanRow <= endScanRow; scanRow++) {
+            for (int scanCol = startScanCol; scanCol <= endScanCol; scanCol++) {
                 var currentButton = gameButtons[scanRow][scanCol];
                 if (!mineButtonStackReference.contains(currentButton) && currentButton.getButtonState().equals(MineButtonState.HIDDEN) && !currentButton.areBomb()) {
                     mineButtonStackReference.add(currentButton);
@@ -87,8 +91,8 @@ public class GameContext {
         // Bound initial scan row and column
         var startScanRow = Math.max(startRowPos - 1, 0);
         var startScanCol = Math.max(startColPos - 1, 0);
-        var endScanRow = Math.min(startScanRow + 3, width);
-        var endScanCol = Math.min(startScanCol + 3, height);
+        var endScanRow = Math.min(startRowPos + 1, width);
+        var endScanCol = Math.min(startColPos + 1, height);
 
         int adjacentBombCount = 0;
 
