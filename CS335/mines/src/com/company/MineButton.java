@@ -36,13 +36,15 @@ public class MineButton extends JButton {
      * If a bomb, effectively end the game. Otherwise, simply change to image
      */
     public MineButtonState expose() {
-        if (!isBomb) {
-            buttonState = (adjacentBombCount == 0) ? MineButtonState.EXPOSED_BLANK : MineButtonState.EXPOSED_NUMBER;
-        } else {
-            buttonState = MineButtonState.EXPOSED_BOMB;
+        if (!buttonState.equals(MineButtonState.FLAGGED)) {
+            if (!isBomb) {
+                buttonState = (adjacentBombCount == 0) ? MineButtonState.EXPOSED_BLANK : MineButtonState.EXPOSED_NUMBER;
+            } else {
+                buttonState = MineButtonState.EXPOSED_BOMB;
+            }
+            updateIcon();
         }
 
-        updateIcon();
         return buttonState;
     }
 

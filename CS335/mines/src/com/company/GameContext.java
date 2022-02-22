@@ -183,17 +183,18 @@ public class GameContext {
     }
 
     private void gameEnd(boolean didWin) {
-        if (!didWin) {
-            // Immediately show all spaces
-            for (int currRow = 0; currRow < getHeight(); currRow++) {
-                for (int currCol = 0; currCol < getWidth(); currCol++) {
-                    var currentButton = gameButtons[currRow][currCol];
-                    var adjacentBombs = countAdjacentBombs(currentButton.getRowPosition(), currentButton.getColumnPosition());
+        // Immediately show all spaces
+        for (int currRow = 0; currRow < getHeight(); currRow++) {
+            for (int currCol = 0; currCol < getWidth(); currCol++) {
+                var currentButton = gameButtons[currRow][currCol];
+                var adjacentBombs = countAdjacentBombs(currentButton.getRowPosition(), currentButton.getColumnPosition());
 
-                    currentButton.setAdjacentBombCount(adjacentBombs);
-                    currentButton.expose();
-                }
+                currentButton.setFlagged(false);
+                currentButton.setAdjacentBombCount(adjacentBombs);
+                currentButton.expose();
             }
+        }
+        if (!didWin) {
             contextState = GameContextState.LOST;
             System.out.println("Game Lost!");
         } else {
