@@ -14,7 +14,6 @@ public class GameContext {
 
     private GameContextState contextState;
 
-    private int secondCount;
 
     GameContext(int gridWidth, int gridHeight, int bombCount) {
         this.width = gridWidth;
@@ -58,7 +57,7 @@ public class GameContext {
     }
 
     private void checkGameState(MineButtonState lastExposedButtonState) {
-        if (spacesRemaining == 0) {
+        if (spacesRemaining == totalBombs) {
             gameEnd(true);
         }
 
@@ -141,6 +140,18 @@ public class GameContext {
 
     public void addMove() {
         moveCount++;
+    }
+
+    public int getMoveCount() {
+        return moveCount;
+    }
+
+    public int getSpacesRemaining() {
+        return spacesRemaining;
+    }
+
+    public GameContextState getContextState() {
+        return contextState;
     }
 
     public void plantBombs(int firstMoveX, int firstMoveY) {
