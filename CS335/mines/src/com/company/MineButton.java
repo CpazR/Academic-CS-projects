@@ -1,6 +1,7 @@
 package com.company;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class MineButton extends JButton {
     private MineButtonState buttonState;
@@ -11,25 +12,26 @@ public class MineButton extends JButton {
     private static final Icon blankIcon = new ImageIcon("./assets/0.png");
     private static final Icon bombIcon = new ImageIcon("./assets/bomb.png");
 
-//    private final String unexposedText = " ";
-//    private final String unexposedFlaggedText = "!";
-//    private final String blankText = "_";
-//    private final String bombText = "*";
-//    private String currentText = unexposedText;
-
-    private final int columnPosition;
-    private final int rowPosition;
+    private final int xPosition;
+    private final int yPosition;
 
     private boolean isBomb;
     private int adjacentBombCount;
 
-    public MineButton(int rowPosition, int columnPosition, boolean isBomb) {
-        this.rowPosition = rowPosition;
-        this.columnPosition = columnPosition;
+    public MineButton(int xPosition, int yPosition, boolean isBomb) {
+        this.xPosition = xPosition;
+        this.yPosition = yPosition;
         this.isBomb = isBomb;
         this.buttonState = MineButtonState.HIDDEN;
-        setSize(unexposedIcon.getIconWidth(), unexposedIcon.getIconHeight());
-        setIcon(unexposedIcon);
+        setIcon(currentIcon);
+    }
+
+    /**
+     * Force size of button to uniform icon size
+     */
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(currentIcon.getIconWidth(), currentIcon.getIconHeight());
     }
 
     /**
@@ -60,12 +62,12 @@ public class MineButton extends JButton {
         isBomb = true;
     }
 
-    public int getColumnPosition() {
-        return columnPosition;
+    public int getXPosition() {
+        return xPosition;
     }
 
-    public int getRowPosition() {
-        return rowPosition;
+    public int getYPosition() {
+        return yPosition;
     }
 
     public int getAdjacentBombCount() {
@@ -77,7 +79,7 @@ public class MineButton extends JButton {
     }
 
     private void updateIcon() {
-        var currentIcon = blankIcon;
+        currentIcon = blankIcon;
         switch (buttonState) {
             case EXPOSED_NUMBER:
                 currentIcon = new ImageIcon("./assets/" + adjacentBombCount + ".png");
@@ -91,7 +93,7 @@ public class MineButton extends JButton {
 
     @Override
     public String toString() {
-        return "GameButton: [" + rowPosition + ", " + columnPosition + "], is a bomb: " + isBomb;
+        return "GameButton: [" + xPosition + ", " + yPosition + "], is a bomb: " + isBomb;
     }
 
     public void setFlagged(boolean isFlagged) {

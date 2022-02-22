@@ -67,26 +67,30 @@ public class ApplicationContext extends JFrame {
     }
 
     private void gamePanelSetup(GameContext context) {
-        gamePanel.setLayout(new GridLayout(context.getWidth(), context.getHeight()));
+        // The grid layout is rows first and this is dumb. That is all.
+        gamePanel.setLayout(new GridLayout(context.getHeight(), context.getWidth()));
         var gameButtons = context.getGameButtons();
-        for (int i = 0; i < context.getWidth(); i++) {
-            for (int j = 0; j < context.getHeight(); j++) {
-                var button = gameButtons[i][j];
+        for (int currY = 0; currY < context.getHeight(); currY++) {
+            // Since components are added row first, iterate in a less efficient manner.
+            for (int currX = 0; currX < context.getWidth(); currX++) {
+                var button = gameButtons[currX][currY];
                 System.out.println(button);
                 gamePanel.add(button);
 
-                var finalI = i;
-                var finalJ = j;
+                var finalX = currX;
+                var finalY = currY;
                 button.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (SwingUtilities.isLeftMouseButton(e)) {
-                            context.exposeClickedButton(finalI, finalJ);
+                            context.exposeClickedButton(finalX, finalY);
                             context.addMove();
+                            System.out.println("Exposed: " + context.getGameButtons()[finalX][finalY]);
                         }
 
                         if (SwingUtilities.isRightMouseButton(e)) {
-                            context.flagButton(finalI, finalJ);
+                            context.flagButton(finalX, finalY);
+                            System.out.println("Flagged: " + context.getGameButtons()[finalX][finalY]);
                         }
                     }
                 });
