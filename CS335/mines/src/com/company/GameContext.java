@@ -11,9 +11,9 @@ public class GameContext {
     private int moveCount;
     private int spacesRemaining;
     private final int totalBombs;
+    private int bombsLeft;
 
     private GameContextState contextState;
-
 
     GameContext(int gridWidth, int gridHeight, int bombCount) {
         this.width = gridWidth;
@@ -21,6 +21,7 @@ public class GameContext {
 
         gameButtons = new MineButton[gridWidth][gridHeight];
         totalBombs = bombCount;
+        bombsLeft = totalBombs;
         spacesRemaining = gridWidth * gridHeight;
 
         contextState = GameContextState.PLAYING;
@@ -39,20 +40,24 @@ public class GameContext {
         var mainButton = gameButtons[xPos][yPos];
 
         // Expose first button, and depending on state, update game state
-        mainButton.setAdjacentBombCount(countAdjacentBombs(xPos, yPos));
-        var mainButtonState = mainButton.expose();
+        if (mainButton.getButtonState().equals(MineButtonState.HIDDEN)) {
+            System.out.println("Exposed: " + mainButton);
 
-        // First move? Plant bombs around first picked spot
-        if (spacesRemaining == getWidth() * getHeight()) {
-            plantBombs(xPos, yPos);
-        }
-        spacesRemaining--;
+            mainButton.setAdjacentBombCount(countAdjacentBombs(xPos, yPos));
+            var mainButtonState = mainButton.expose();
 
-        checkGameState(mainButtonState);
+            // First move? Plant bombs around first picked spot
+            if (spacesRemaining == getWidth() * getHeight()) {
+                plantBombs(xPos, yPos);
+            }
+            spacesRemaining--;
 
-        if (mainButtonState.equals(MineButtonState.EXPOSED_BLANK)) {
-            // Run algorithm to show adjacent blank buttons
-            exposeAdjacentBlanks(xPos, yPos);
+            checkGameState(mainButtonState);
+
+            if (mainButtonState.equals(MineButtonState.EXPOSED_BLANK)) {
+                // Run algorithm to show adjacent blank buttons
+                exposeAdjacentBlanks(xPos, yPos);
+            }
         }
     }
 
@@ -142,12 +147,8 @@ public class GameContext {
         moveCount++;
     }
 
-    public int getMoveCount() {
-        return moveCount;
-    }
-
-    public int getSpacesRemaining() {
-        return spacesRemaining;
+    public int getBombsLeft() {
+        return bombsLeft;
     }
 
     public GameContextState getContextState() {
@@ -185,10 +186,16 @@ public class GameContext {
 
         switch (button.getButtonState()) {
             case HIDDEN:
-                button.setFlagged(true);
+                if (bombsLeft > 0) {
+                    button.setFlagged(true);
+                    System.out.println("Flagged: " + button);
+                    bombsLeft--;
+                }
                 break;
             case FLAGGED:
                 button.setFlagged(false);
+                System.out.println("Un-flagged: " + button);
+                bombsLeft++;
                 break;
         }
     }
