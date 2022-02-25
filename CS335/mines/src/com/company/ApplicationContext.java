@@ -103,9 +103,7 @@ public class ApplicationContext extends JFrame {
         helpItem.setMinimumSize(buttonDimension);
         helpItem.setPreferredSize(buttonDimension);
         helpItem.setMaximumSize(buttonDimension);
-        System.out.println(helpItem.getSize());
         mainMenuBar.add(helpItem);
-
         setJMenuBar(mainMenuBar);
     }
 
