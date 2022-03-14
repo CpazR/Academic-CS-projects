@@ -1,4 +1,7 @@
+package Entities;
+
 import java.awt.*;
+import java.util.List;
 
 public class Bspline {
 
@@ -35,6 +38,33 @@ public class Bspline {
                 yp[count] = ypoints[i];
             }
             paintCurveSegment(g, c, xp, yp);
+        }
+    }
+
+    /**
+     * Same as above paintCurve, but can draw segments with different colors
+     * @param g
+     * @param c
+     */
+    public void paintCurve(Graphics g, List<Color> c) {
+
+        int xp[];
+        int yp[];
+
+        xp = new int[limit];
+        yp = new int[limit];
+
+        // must have at least 4 points
+        if (count < limit)
+            return;
+
+
+        for (int segment = 0; segment < limit; segment++) {
+            for (int count = 0, i = segment; count < limit; count++, i = (i + 1) % limit) {
+                xp[count] = xpoints[i];
+                yp[count] = ypoints[i];
+            }
+            paintCurveSegment(g, c.get(segment), xp, yp);
         }
     }
 
@@ -78,7 +108,7 @@ public class Bspline {
         if (count < limit)
             return;
 
-        //  This is forward differencing code to draw fast Bspline
+        //  This is forward differencing code to draw fast Entities.Bspline
         t1 = 1.0 / intervals;
         t2 = t1 * t1;
         t3 = t2 * t1;

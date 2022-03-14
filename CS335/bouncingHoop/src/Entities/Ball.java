@@ -1,14 +1,15 @@
+package Entities;
 
 import java.awt.*;
 
 public class Ball {
     // Box height and width
-    private int width;
-    private int height;
+    private final int width;
+    private final int height;
 
-    // Ball Size
-    private float radius = 10;
-    private float diameter = radius * 2;
+    // Entities.Ball Size
+    private final float radius = 10;
+    private final float diameter = radius * 2;
 
     // Center of ball
     private float X = radius + 20;
@@ -50,9 +51,9 @@ public class Ball {
         if ((X - radius) < 0) {
             dx = -dx;
             X = radius;
-        } else if ((X + diameter) > width) {
+        } else if ((X + radius) > width) {
             dx = -dx;
-            X = width - diameter;
+            X = width - radius;
         }
 
         // Check boundaries and if necessary update the
@@ -60,9 +61,9 @@ public class Ball {
         if ((Y - radius) < 0) {
             dy = -dy;
             Y = radius;
-        } else if ((Y + diameter) > height) {
+        } else if ((Y + radius) > height) {
             dy = -dy;
-            Y = height - diameter;
+            Y = height - radius;
         }
     }
 
