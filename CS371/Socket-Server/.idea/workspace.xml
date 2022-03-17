@@ -2,25 +2,29 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/description.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/project-template.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/primitiesTest.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../primitiesTest/src/com/company/ApplicationContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/cardmatch/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/cardmatch/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/cardmatch/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/cardmatch/src/com/company/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Socket-/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Socket-/src/com/company/Main.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/company/Server.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/company/ServerOperations.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/Client.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/ClientRunner.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/ServerOperations.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/company/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/company/ServerRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/Main.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="Enum" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
@@ -92,9 +96,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
   <component name="RunManager">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true">
-      <option name="MAIN_CLASS_NAME" value="com.company.Main" />
+      <option name="MAIN_CLASS_NAME" value="com.company.ServerRunner" />
       <module name="Socket-Server" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <RunnerSettings RunnerId="Run" />
@@ -117,7 +127,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1644423185779</updated>
+      <workItem from="1647450513227" duration="2574000" />
+      <workItem from="1647454186752" duration="592000" />
+      <workItem from="1647479134344" duration="3429000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
