@@ -1,7 +1,5 @@
 package com.company.ApplicationGUI;
 
-import com.company.ApplicationGUI.ApplicationContext;
-
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -28,6 +26,7 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
     @Override
     public void stateChanged(ChangeEvent e) {
         var slider = (JSlider) e.getSource();
+        parentFrame.applyRotation(slider.getValue());
 
         revalidate();
     }

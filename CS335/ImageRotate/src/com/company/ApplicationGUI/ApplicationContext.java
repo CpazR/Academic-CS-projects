@@ -1,6 +1,7 @@
 package com.company.ApplicationGUI;
 
 import com.company.Entities.BaseDrawnEntity;
+import com.company.RotatableImage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -52,6 +53,10 @@ public class ApplicationContext extends JFrame {
             // TODO: check if entities require any initialization
         }
 
+        public BaseDrawnEntity getEntity(int index) {
+            return drawableEntities.get(index);
+        }
+
         public void addEntities(List<BaseDrawnEntity> entity) {
             drawableEntities.addAll(entity);
         }
@@ -74,5 +79,11 @@ public class ApplicationContext extends JFrame {
     }
 
     /// APPLICATION SPECIFIC FUNCTIONALITY
+
+    public void applyRotation(int value) {
+        var image = (RotatableImage) contentPanel.getEntity(0);
+
+        image.setAngle(value);
+    }
 }
 

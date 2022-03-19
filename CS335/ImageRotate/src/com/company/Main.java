@@ -7,6 +7,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        new ApplicationContext("Rotating Image",List.of());
+        var image = new RotatableImage("./test_assets/strawberry.jpg");
+        new ApplicationContext("Rotating Image",List.of(image));
     }
 }
