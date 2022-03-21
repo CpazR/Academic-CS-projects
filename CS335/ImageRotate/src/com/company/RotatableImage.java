@@ -16,7 +16,7 @@ public class RotatableImage implements BaseDrawnEntity {
 
     private double angle;
 
-    RotatableImage(String imageLocation) {
+    public RotatableImage(String imageLocation) {
         try {
             image = ImageIO.read(new File(imageLocation));
         } catch (Exception e) {

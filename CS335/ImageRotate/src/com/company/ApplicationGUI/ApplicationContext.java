@@ -16,6 +16,7 @@ public class ApplicationContext extends JFrame {
     private final JPanel applicationPanel = new JPanel();
     private final ControlBarPanel controlPanel = new ControlBarPanel(this);
     private final PrimitivePanel contentPanel = new PrimitivePanel(panelWidth, panelHeight);
+    private final JFileChooser fileSelector = new JFileChooser("./");
 
     public ApplicationContext(String applicationName, List<BaseDrawnEntity> entityList) {
         super(applicationName);
@@ -65,6 +66,10 @@ public class ApplicationContext extends JFrame {
             drawableEntities.add(entity);
         }
 
+        public void removeEntity(Object entity) {
+            drawableEntities.remove(entity);
+        }
+
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
             drawableEntities.forEach(baseDrawnEntity -> baseDrawnEntity.paintEntity(g));
@@ -81,10 +86,26 @@ public class ApplicationContext extends JFrame {
 
     /// APPLICATION SPECIFIC FUNCTIONALITY
 
-    public void applyRotation(int value) {
-        var image = (RotatableImage) contentPanel.getEntity(0);
+    private RotatableImage getImage() {
+        return (RotatableImage) contentPanel.getEntity(0);
+    }
 
-        image.setAngle(value);
+    public void findImage() {
+        if (fileSelector.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            if (fileSelector.getSelectedFile().exists()) {
+                contentPanel.removeEntity(getImage());
+                contentPanel.addEntity(new RotatableImage(fileSelector.getSelectedFile().getPath()));
+            }
+        }
+
+    }
+
+    public void resetImage() {
+        getImage().setAngle(0);
+    }
+
+    public void applyRotation(int value) {
+        getImage().setAngle(value);
     }
 }
 
