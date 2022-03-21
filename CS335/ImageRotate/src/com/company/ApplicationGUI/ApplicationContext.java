@@ -68,6 +68,7 @@ public class ApplicationContext extends JFrame {
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
             drawableEntities.forEach(baseDrawnEntity -> baseDrawnEntity.paintEntity(g));
+            repaint();
         }
     }
 

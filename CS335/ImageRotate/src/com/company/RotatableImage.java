@@ -1,5 +1,6 @@
 package com.company;
 
+import com.company.ApplicationGUI.ApplicationContext;
 import com.company.Entities.BaseDrawnEntity;
 
 import javax.imageio.ImageIO;
@@ -29,15 +30,29 @@ public class RotatableImage implements BaseDrawnEntity {
 
     @Override
     public void paintEntity(Graphics g) {
-        var affineTransform = new AffineTransform();
+        var rotationalAffineTransform = new AffineTransform();
 
-        affineTransform.translate(image.getWidth() / 2, image.getHeight() / 2);
-        affineTransform.rotate(Math.toRadians(angle));
-        affineTransform.scale(0.5, 0.5);
-        affineTransform.translate(-image.getWidth() / 2, -image.getHeight() / 2);
+        var xCenter = ApplicationContext.panelWidth / 2;
+        var yCenter = ApplicationContext.panelHeight / 2;
 
-        var graphics2d = (Graphics2D) g;
-        graphics2d.drawImage(image, affineTransform, null);
+        var imageHorCenter = image.getWidth() / 2;
+        var imageVerCenter = image.getHeight() / 2;
+
+        // Center transformation at center of screen
+        rotationalAffineTransform.translate(xCenter - imageVerCenter, yCenter - imageVerCenter);
+
+        // Apply transformations to rotate around center of image
+        rotationalAffineTransform.translate(imageHorCenter, imageVerCenter);
+        // Apply rotation
+        rotationalAffineTransform.rotate(Math.toRadians(angle));
+        // Scale down image if too large (apply while image is centered to keep things aligned)
+        if (image.getWidth() > ApplicationContext.panelWidth && image.getHeight() > ApplicationContext.panelHeight) {
+            rotationalAffineTransform.scale(0.3, 0.3);
+        }
+        rotationalAffineTransform.translate(-imageHorCenter, -imageVerCenter);
+
+        // Draw image with transformation
+        ((Graphics2D) g).drawImage(image, rotationalAffineTransform, null);
     }
 
     @Override
