@@ -9,8 +9,8 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
 
     private final ApplicationContext parentFrame;
 
-    private final JButton imageButton = new JButton("Image");
-    private final JButton resetButton = new JButton("Reset");
+    private final JButton imageButton = new JButton("New Rotatable Image");
+    private final JButton resetButton = new JButton("Reset Rotation");
 
     private final JSlider speedSlider = new JSlider(-360, 360, 0);
 

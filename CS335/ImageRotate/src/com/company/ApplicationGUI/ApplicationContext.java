@@ -1,10 +1,12 @@
 package com.company.ApplicationGUI;
 
 import com.company.Entities.BaseDrawnEntity;
-import com.company.RotatableImage;
+import com.company.Entities.RotatableImage;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,6 +28,27 @@ public class ApplicationContext extends JFrame {
         setVisible(true);
         contentPanel.initializeEntities();
         centerWindow();
+        setResizable(false);
+
+        // Initialize default file selector
+        fileSelector.setFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                var isValid = false;
+
+                if (f.isDirectory()) {
+                    isValid = true;
+                } else {
+                    isValid = f.getName().toLowerCase().endsWith(".png") || f.getName().toLowerCase().endsWith(".jpg");
+                }
+                return isValid;
+            }
+
+            @Override
+            public String getDescription() {
+                return null;
+            }
+        });
     }
 
     private void mainPanelSetup() {
@@ -55,7 +78,13 @@ public class ApplicationContext extends JFrame {
         }
 
         public BaseDrawnEntity getEntity(int index) {
-            return drawableEntities.get(index);
+            BaseDrawnEntity entity = null;
+            if (drawableEntities.size() > 0) {
+                entity = drawableEntities.get(index);
+            } else {
+                System.err.println("ERROR: No entities exist.");
+            }
+            return entity;
         }
 
         public void addEntities(List<BaseDrawnEntity> entity) {
@@ -67,7 +96,12 @@ public class ApplicationContext extends JFrame {
         }
 
         public void removeEntity(Object entity) {
-            drawableEntities.remove(entity);
+            if (drawableEntities.contains(entity)) {
+                drawableEntities.remove(entity);
+                System.out.println("INFO: Successfully removed entity.");
+            } else {
+                System.out.println("INFO: Attempted to remove an entity that does not exist.");
+            }
         }
 
         public void paintComponent(Graphics g) {
@@ -92,9 +126,11 @@ public class ApplicationContext extends JFrame {
 
     public void findImage() {
         if (fileSelector.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            if (fileSelector.getSelectedFile().exists()) {
+            if (fileSelector.getSelectedFile().getName().toLowerCase().endsWith(".png") || fileSelector.getSelectedFile().getName().toLowerCase().endsWith(".jpg")) {
                 contentPanel.removeEntity(getImage());
                 contentPanel.addEntity(new RotatableImage(fileSelector.getSelectedFile().getPath()));
+            } else {
+                System.err.println("ERROR: File must be an PNG or JPG");
             }
         }
 
