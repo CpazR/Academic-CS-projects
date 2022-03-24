@@ -2,16 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/company/Server.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/com/company/ServerOperations.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SocketClient/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/Client.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/ClientRunner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../SocketClient/src/com/company/ServerOperations.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/sharedFiles/testFile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/company/ServerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/company/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/company/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/company/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ClientRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerOperations.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +36,9 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="24sdMwtJ4XNlqtW0TbaRejZh8VX" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
       <flattenPackages />
@@ -97,14 +99,21 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../SocketClient" />
   </component>
-  <component name="RunManager">
+  <component name="RecentsManager">
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="" />
+      <recent name="com" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.ServerRunner">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true">
-      <option name="MAIN_CLASS_NAME" value="com.company.ServerRunner" />
+      <option name="MAIN_CLASS_NAME" value="company.ServerRunner" />
       <module name="Socket-Server" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <RunnerSettings RunnerId="Run" />
@@ -113,8 +122,16 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ServerRunner" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="ServerRunner" />
+      <module name="Socket-Server" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.ServerRunner" />
         <item itemvalue="Application.Main" />
       </list>
     </recent_temporary>
@@ -146,5 +163,8 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
 </project>
