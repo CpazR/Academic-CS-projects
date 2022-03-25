@@ -6,16 +6,23 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class Server {
-    private final int serverPort = 4444;
+    private static final int SOCKET_TIMEOUT = 1000;
+    public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
+    private final static int SERVER_PORT = 4444;
+
+    // Socket to manage client connection
     private Socket socket = null;
+    // Socket to manage server state
     private ServerSocket serverSocket = null;
+    // Receive data from client
     private DataInputStream inputStream = null;
+    // Send data to client
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
 
-    public final static int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
 
     private final File directory = new File("./sharedFiles/");
 
@@ -26,12 +33,13 @@ public class Server {
     private void initializeServer() {
         try {
             // Establish server on port {#serverPort}
-            serverSocket = new ServerSocket(serverPort);
+            serverSocket = new ServerSocket(SERVER_PORT);
             System.out.println("Server started");
 
             // Wait for client to connect
             System.out.println("Waiting for client...");
             socket = serverSocket.accept();
+            socket.setSoTimeout(SOCKET_TIMEOUT);
 
             // Client connected, establish data input/output
             System.out.println("Client accepted");
@@ -78,7 +86,8 @@ public class Server {
 
         // TODO: track statistics
         try {
-            Files.copy(inputStream, fileToUpload.toPath());
+            // Copy byte data to destination, replacing or creating file if needed
+            Files.copy(inputStream, fileToUpload.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.println("INFO: File received from client");
         } catch (Exception e) {
             e.printStackTrace();

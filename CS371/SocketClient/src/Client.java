@@ -2,17 +2,25 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Files;
 
 public class Client {
 
+    /**
+     * Socket operations have a timeout of 10 seconds
+     */
+    private static final int SOCKET_TIMEOUT = 1000;
+    public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
+
     private Socket mainSocket = null;
+
+    // Receive acknowledgements from server
     private DataInputStream inputStream = null;
+    // Send data to server
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
-
-    public final static int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
 
     private final File directory = new File("./sharedFiles/");
 
@@ -37,13 +45,20 @@ public class Client {
 
             if (operation.equals(ServerOperations.UPLOAD)) {
                 // Check if file exists
-                var fileToUpload = new File(directory.getAbsolutePath() +"\\"+ arguments[0]);
+                var fileToUpload = new File(directory.getAbsolutePath() + "\\" + arguments[0]);
                 if (fileToUpload.exists()) {
                     var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
 
                     outputStream.write(fileBuffer);
                     outputStream.flush();
                     System.out.println("INFO: Sent file to server");
+
+                    var response = waitForResponse();
+                    if (response.equals(ServerResponseCode.ERROR)) {
+                        System.out.println("INFO: File uploaded successfully");
+                    } else {
+                        System.err.println("ERROR: Failure when uploading file - " + response);
+                    }
                 } else {
                     System.err.println("ERROR: Specified file does not exist");
                 }
@@ -53,6 +68,22 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private ServerResponseCode waitForResponse() {
+        int responseCode = 0;
+        try {
+            responseCode = inputStream.readInt();
+            if (responseCode > ServerResponseCode.values().length - 1) {
+                var errorMessage = "Unknown response code received: " + responseCode;
+                // Reset error code to be an error
+                responseCode = 0;
+                throw new IOException(errorMessage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ServerResponseCode.values()[responseCode];
     }
 
     private String buildCommandRequest(String operationName, String[] arguments) {
@@ -69,7 +100,9 @@ public class Client {
 
     public void initializeClient(String address, int port) {
         try {
-            mainSocket = new Socket(address, port);
+            mainSocket = new Socket();
+            mainSocket.connect(new InetSocketAddress(address, port), SOCKET_TIMEOUT);
+            mainSocket.setSoTimeout(SOCKET_TIMEOUT);
             System.out.println("Client connected");
 
             inputStream = new DataInputStream(mainSocket.getInputStream());

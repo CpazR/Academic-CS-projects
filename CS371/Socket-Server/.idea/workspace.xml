@@ -2,16 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../SocketClient/sharedFiles/testFile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/ServerResponseCode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/company/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/company/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/com/company/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ClientRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/com/company/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/sharedFiles/testFile" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/sharedFiles/testFile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/Client.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
