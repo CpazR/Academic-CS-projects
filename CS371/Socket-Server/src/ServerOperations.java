@@ -7,7 +7,9 @@ public enum ServerOperations {
     DOWNLOAD("DOWNLOAD"),
     DELETE("DELETE"),
     DIR("DIR"),
-    CLOSE("CLOSE");
+    CLOSE("CLOSE"),
+    HEARTBEAT("HB"), // short message to satisfy timeout
+    ACKNOWLEDGE("ACK");
 
     private final String inputValue;
 

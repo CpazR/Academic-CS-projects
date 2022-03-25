@@ -32,6 +32,9 @@ public class ServerRunner {
                         case CLOSE:
                             server.closeServer();
                             break;
+                        case HEARTBEAT:
+                            // Do not perform any operations, wait for valid input
+                            break;
                         default:
                             System.err.println("INVALID OPERATION: " + userOperation);
                             break;

@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Objects;
 
 public class Client {
 
     /**
      * Socket operations have a timeout of 10 seconds
      */
-    private static final int SOCKET_TIMEOUT = 1000;
+    private static final int SOCKET_TIMEOUT = 10000;
     public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
 
     private Socket mainSocket = null;
@@ -54,7 +55,7 @@ public class Client {
                     System.out.println("INFO: Sent file to server");
 
                     var response = waitForResponse();
-                    if (response.equals(ServerResponseCode.ERROR)) {
+                    if (!response.equals(ServerOperations.ACKNOWLEDGE)) {
                         System.out.println("INFO: File uploaded successfully");
                     } else {
                         System.err.println("ERROR: Failure when uploading file - " + response);
@@ -66,24 +67,24 @@ public class Client {
             }
 
         } catch (IOException e) {
+            System.err.println("ERROR: Failure when uploading file.");
             e.printStackTrace();
         }
     }
 
-    private ServerResponseCode waitForResponse() {
-        int responseCode = 0;
+    private ServerOperations waitForResponse() {
+        ServerOperations responseOperation = null;
         try {
-            responseCode = inputStream.readInt();
-            if (responseCode > ServerResponseCode.values().length - 1) {
-                var errorMessage = "Unknown response code received: " + responseCode;
-                // Reset error code to be an error
-                responseCode = 0;
+            var responseCode = inputStream.readUTF();
+            if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT)) {
+                var errorMessage = "Unknown response operation received: " + responseCode;
                 throw new IOException(errorMessage);
             }
+            responseOperation = ServerOperations.ACKNOWLEDGE;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ServerResponseCode.values()[responseCode];
+        return responseOperation;
     }
 
     private String buildCommandRequest(String operationName, String[] arguments) {

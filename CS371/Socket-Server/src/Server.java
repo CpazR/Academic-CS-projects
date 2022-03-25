@@ -9,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public class Server {
-    private static final int SOCKET_TIMEOUT = 1000;
+    /**
+     * Socket operations have a timeout of 10 seconds
+     */
+    private static final int SOCKET_TIMEOUT = 10000;
     public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
     private final static int SERVER_PORT = 4444;
 
@@ -59,7 +62,12 @@ public class Server {
     public String waitForInput() {
         var clientInput = "";
         try {
-            clientInput = inputStream.readUTF();
+            // Only check for input if there is data in input stream
+            if (inputStream.available() > 0) {
+                clientInput = inputStream.readUTF();
+            } else {
+                clientInput = "HB";
+            }
         } catch (IOException e) {
             System.err.println("ERROR WHILE RECEIVING INPUT: ");
             e.printStackTrace();
@@ -89,6 +97,8 @@ public class Server {
             // Copy byte data to destination, replacing or creating file if needed
             Files.copy(inputStream, fileToUpload.toPath(), StandardCopyOption.REPLACE_EXISTING);
             System.out.println("INFO: File received from client");
+
+            outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
         } catch (Exception e) {
             e.printStackTrace();
         }
