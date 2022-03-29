@@ -6,7 +6,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Server {
     /**
@@ -15,6 +17,7 @@ public class Server {
     private static final int SOCKET_TIMEOUT = 10000;
     public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
     private final static int SERVER_PORT = 4444;
+    private static final boolean TIMEOUT_ENABLED = false;
 
     // Socket to manage client connection
     private Socket socket = null;
@@ -42,10 +45,11 @@ public class Server {
             // Wait for client to connect
             System.out.println("Waiting for client...");
             socket = serverSocket.accept();
-            socket.setSoTimeout(SOCKET_TIMEOUT);
-
+            if (TIMEOUT_ENABLED) {
+                socket.setSoTimeout(SOCKET_TIMEOUT);
+            }
             // Client connected, establish data input/output
-            System.out.println("Client accepted");
+            System.out.println("Client accepted: " + socket.getInetAddress());
             inputStream = new DataInputStream(socket.getInputStream());
             outputStream = new DataOutputStream(socket.getOutputStream());
             isConnected = true;
@@ -62,8 +66,14 @@ public class Server {
     public String waitForInput() {
         var clientInput = "";
         try {
+            // TODO: Edge case where server instance is in limbo when client errors out
+            if (!isConnected()) {
+                throw new SocketException("ERROR: Connection closed");
+            }
+
             // Only check for input if there is data in input stream
-            if (inputStream.available() > 0) {
+            var bytesAvailable = inputStream.available();
+            if (bytesAvailable > 0) {
                 clientInput = inputStream.readUTF();
             } else {
                 clientInput = "HB";
@@ -88,35 +98,66 @@ public class Server {
     /**
      * CLIENT is uploading a file
      */
-    public void uploadFile(String fileName) {
-        System.out.println("INFO: Attempting to receive file from client - " + fileName);
-        var fileToUpload = new File(directory.getAbsolutePath() + "\\" + fileName);
+    public void uploadFile(String fileName, int fileByteSize) throws IOException {
+        System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
+        var uploadedFile = new File(directory.getAbsolutePath() + "\\" + fileName);
 
         // TODO: track statistics
-        try {
-            // Copy byte data to destination, replacing or creating file if needed
-            Files.copy(inputStream, fileToUpload.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("INFO: File received from client");
-
-            outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (uploadedFile.createNewFile()) {
+            System.out.println("INFO: File created");
         }
+        // Wait for file stream
+        // TODO: need to do chunked downloads for large files
+        var uploadedFileByteData = inputStream.readNBytes(fileByteSize);
+        Files.write(uploadedFile.toPath(), uploadedFileByteData);
+        System.out.println("INFO: File received from client");
 
+        // Send ACK back to client
+        outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
     }
 
     /**
      * CLIENT is requesting to download a file
      */
-    public void downloadFile(String fileName) {
-        System.out.println("INFO: Attempting to receive file from client - " + fileName);
+    public void downloadFile(String fileName) throws IOException {
+
+        // Check if file exists
+        var fileToUpload = new File(directory.getAbsolutePath() + "\\" + fileName);
+        if (fileToUpload.exists()) {
+            // Send signal back to client with size of requested file.
+            outputStream.writeLong(Files.size(fileToUpload.toPath()));
+            System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
+            var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
+
+            outputStream.write(fileBuffer);
+            outputStream.flush();
+            System.out.println("INFO: Sent file to client");
+        } else {
+            System.err.println("ERROR: Specified file does not exist");
+        }
     }
 
-    public void showFolderContents() {
+    public void showFolderContents() throws IOException {
+        System.out.println("INFO: Sending file list to client");
+        // Build directory content message
+        var directoryListString = "Files in shared directory:\n-------\n" +
+                Arrays.stream(Objects.requireNonNull(directory.listFiles()))
+                        .map(File::getName).collect(Collectors.joining("\n")) +
+                "\n-------\n";
+
+
+        outputStream.writeUTF(directoryListString);
 
     }
 
-    public void deleteFile(String fileName) {
+    public void deleteFile(String fileName) throws IOException {
+
+        var fileToDelete = new File(directory.getAbsolutePath() + "\\" + fileName);
+        Files.deleteIfExists(fileToDelete.toPath());
+
+        // Send ack back to client
+        outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+
     }
 
     public void closeServer() {
@@ -125,9 +166,10 @@ public class Server {
 
             socket.close();
             inputStream.close();
+            serverSocket.close();
             isConnected = false;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
         }
     }
 }

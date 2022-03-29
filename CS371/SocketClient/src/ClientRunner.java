@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.net.SocketException;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -17,37 +19,48 @@ public class ClientRunner {
         while (clientRunning) {
 
             var localUserInput = getLocalInput();
-            var userOperation = ServerOperations.getOperation(localUserInput[0]);
+            var userOperation = ServerOperations.getOperation(localUserInput[0].toUpperCase());
             if (Objects.nonNull(userOperation)) {
-                switch (userOperation) {
-                    case CONNECT:
-                        if (localUserInput.length == 3) {
-                            var address = localUserInput[1];
-                            var port = Integer.parseInt(localUserInput[2]);
+                try {
+                    switch (userOperation) {
+                        case CONNECT:
+                            if (localUserInput.length == 3) {
+                                var address = localUserInput[1];
+                                var port = Integer.parseInt(localUserInput[2]);
 
-                            client.initializeClient(address, port);
-                        } else {
-                            System.err.println("ERROR: CONNECT protocol requires two arguments, {\"address\", \"port\"}");
-                        }
-                        break;
-                    case UPLOAD:
-                        client.uploadFile(localUserInput[1]);
-                        break;
-                    case DOWNLOAD:
-                        client.downloadFile(localUserInput[1]);
-                        break;
-                    case DIR:
-                        client.showFolderContents();
-                        break;
-                    case DELETE:
-                        client.deleteFile(localUserInput[1]);
-                        break;
-                    case CLOSE:
+                                client.initializeClient(address, port);
+                            } else {
+                                throw new IOException("ERROR: CONNECT protocol requires two arguments, {\"address\", \"port\"}");
+                            }
+                            break;
+                        case UPLOAD:
+
+                                client.uploadFile(localUserInput[1]);
+                            break;
+                        case DOWNLOAD:
+                            client.downloadFile(localUserInput[1]);
+                            break;
+                        case DIR:
+                            client.showFolderContents();
+                            break;
+                        case DELETE:
+                            client.deleteFile(localUserInput[1]);
+                            break;
+                        case CLOSE:
+                            client.closeClient();
+                            break;
+                        default:
+                            System.err.println("INVALID OPERATION: " + userOperation);
+                            break;
+                    }
+                } catch (IOException e) {
+                    System.err.println("ERROR: Failed to execute operation " + userOperation);
+                    e.printStackTrace();
+
+                    if (e instanceof SocketException) {
+                        System.err.println("ERROR: Connection reset, closing connection");
                         client.closeClient();
-                        break;
-                    default:
-                        System.err.println("INVALID OPERATION: " + userOperation);
-                        break;
+                    }
                 }
             } else {
                 System.err.println("ERROR: Input is null.");
