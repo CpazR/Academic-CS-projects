@@ -2,14 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/JFilePanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sharedFiles/testFile" beforeDir="false" afterPath="$PROJECT_DIR$/sharedFiles/testFile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerOperations.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ServerResponseCode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,5 +162,26 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$USER_HOME$/.jdks/openjdk-15.0.2/lib/src.zip!/java.base/java/io/InputStream.java</url>
+          <line>775</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$USER_HOME$/.jdks/openjdk-15.0.2/lib/src.zip!/java.base/java/io/InputStream.java</url>
+          <line>776</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="Server" memberName="directory" />
+      </pinned-members>
+    </pin-to-top-manager>
   </component>
 </project>

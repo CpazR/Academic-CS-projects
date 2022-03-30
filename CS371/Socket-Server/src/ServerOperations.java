@@ -9,7 +9,8 @@ public enum ServerOperations {
     DIR("DIR"),
     CLOSE("CLOSE"),
     HEARTBEAT("HB"), // short message to satisfy timeout
-    ACKNOWLEDGE("ACK");
+    ACKNOWLEDGE("ACK"),
+    RETRY("RETRY");
 
     private final String inputValue;
 

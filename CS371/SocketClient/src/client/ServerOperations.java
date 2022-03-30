@@ -1,3 +1,5 @@
+package client;
+
 /**
  * Shared enum to keep server operations in line
  */
@@ -9,7 +11,8 @@ public enum ServerOperations {
     DIR("DIR"),
     CLOSE("CLOSE"),
     HEARTBEAT("HB"), // short message to satisfy timeout
-    ACKNOWLEDGE("ACK");
+    ACKNOWLEDGE("ACK"),
+    RETRY("RETRY");
 
 
     private final String inputValue;
