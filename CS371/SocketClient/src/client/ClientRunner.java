@@ -54,7 +54,7 @@ public class ClientRunner {
                             client.downloadFile(localUserInput[1]);
                             break;
                         case DIR:
-                            client.showFolderContents();
+                            client.showRemoteFolderContents();
                             break;
                         case DELETE:
                             client.deleteFile(localUserInput[1]);

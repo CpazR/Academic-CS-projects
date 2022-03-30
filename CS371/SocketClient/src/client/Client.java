@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class Client {
@@ -180,10 +181,24 @@ public class Client {
         // NOTE: Ack isn't required here. If error occurs, client will automatically trigger a re-request
     }
 
-    public void showFolderContents() throws IOException {
+    public String[] showRemoteFolderContents() throws IOException {
         performInitialRequest(ServerOperations.DIR);
         var directoryListString = inputStream.readUTF();
+        System.out.println("Remote files:\n------------");
         System.out.println(directoryListString);
+        System.out.println("------------");
+        return directoryListString.split("\n");
+    }
+
+    public String[] showLocalFolderContents() throws IOException {
+        var fileNames = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(File::getName).toArray();
+        var convertedFileNames = Arrays.copyOf(fileNames, fileNames.length, String[].class);
+        System.out.println("Local files:\n------------");
+        for (String convertedFileName : convertedFileNames) {
+            System.out.println(convertedFileName);
+        }
+        System.out.println("------------");
+        return convertedFileNames;
     }
 
     public void deleteFile(String fileName) throws IOException {

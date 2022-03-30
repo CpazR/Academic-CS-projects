@@ -3,11 +3,9 @@ package GUI.ApplicationGUI;
 import client.Client;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
 
 public class ApplicationContext extends JFrame {
@@ -19,7 +17,8 @@ public class ApplicationContext extends JFrame {
     private final JPanel applicationPanel = new JPanel();
     private final ControlBarPanel controlPanel = new ControlBarPanel(this);
     private final JTerminal terminalPanel = new JTerminal(new Dimension(panelWidth - 50, panelHeight - 100));
-    private final JFileChooser fileSelector = new JFileChooser("./");
+
+    private final JFilePanel fileManagerPanel = new JFilePanel(this);
 
     private final Client clientConnection;
 
@@ -34,26 +33,6 @@ public class ApplicationContext extends JFrame {
         setResizable(false);
 
         clientConnection = client;
-
-        // Initialize default file selector
-        fileSelector.setFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                var isValid = false;
-
-                if (f.isDirectory()) {
-                    isValid = true;
-                } else {
-                    isValid = f.getName().toLowerCase().endsWith(".png") || f.getName().toLowerCase().endsWith(".jpg");
-                }
-                return isValid;
-            }
-
-            @Override
-            public String getDescription() {
-                return null;
-            }
-        });
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -96,7 +75,11 @@ public class ApplicationContext extends JFrame {
 
     public void requestFileUpload() {
         try {
-            clientConnection.uploadFile("");
+            fileManagerPanel.updateFileList(clientConnection.showLocalFolderContents());
+            var result = JOptionPane.showConfirmDialog(this, fileManagerPanel, "Upload File Request", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                clientConnection.uploadFile(fileManagerPanel.getSelectedFileName());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,7 +87,11 @@ public class ApplicationContext extends JFrame {
 
     public void requestFileDownload() {
         try {
-            clientConnection.downloadFile("");
+            fileManagerPanel.updateFileList(clientConnection.showRemoteFolderContents());
+            var result = JOptionPane.showConfirmDialog(this, fileManagerPanel, "Download File Request", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                clientConnection.downloadFile(fileManagerPanel.getSelectedFileName());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

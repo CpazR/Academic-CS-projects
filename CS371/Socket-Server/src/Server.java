@@ -140,14 +140,10 @@ public class Server {
     public void showFolderContents() throws IOException {
         System.out.println("INFO: Sending file list to client");
         // Build directory content message
-        var directoryListString = "Files in shared directory:\n-------\n" +
-                Arrays.stream(Objects.requireNonNull(directory.listFiles()))
-                        .map(File::getName).collect(Collectors.joining("\n")) +
-                "\n-------\n";
-
+        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles()))
+                .map(File::getName).collect(Collectors.joining("\n"));
 
         outputStream.writeUTF(directoryListString);
-
     }
 
     public void deleteFile(String fileName) throws IOException {
