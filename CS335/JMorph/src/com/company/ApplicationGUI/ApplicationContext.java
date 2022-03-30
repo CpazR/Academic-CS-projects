@@ -1,12 +1,10 @@
 package com.company.ApplicationGUI;
 
 import com.company.Entities.BaseDrawnEntity;
-import com.company.Entities.RotatableImage;
+import com.company.Entities.ControlImage;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import java.awt.*;
-import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,10 +13,11 @@ public class ApplicationContext extends JFrame {
     public static final int panelWidth = 800;
     public static final int panelHeight = 600;
 
+    private ControlImage controlImage;
+
     private final JPanel applicationPanel = new JPanel();
     private final ControlBarPanel controlPanel = new ControlBarPanel(this);
     private final PrimitivePanel contentPanel = new PrimitivePanel(panelWidth, panelHeight);
-    private final JFileChooser fileSelector = new JFileChooser("./");
 
     public ApplicationContext(String applicationName, List<BaseDrawnEntity> entityList) {
         super(applicationName);
@@ -30,29 +29,11 @@ public class ApplicationContext extends JFrame {
         centerWindow();
         setResizable(false);
 
-        // Initialize default file selector
-        fileSelector.setFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                var isValid = false;
 
-                if (f.isDirectory()) {
-                    isValid = true;
-                } else {
-                    isValid = f.getName().toLowerCase().endsWith(".png") || f.getName().toLowerCase().endsWith(".jpg");
-                }
-                return isValid;
-            }
-
-            @Override
-            public String getDescription() {
-                return null;
-            }
-        });
     }
 
     public ApplicationContext(String applicationName) {
-        this(applicationName,List.of());
+        this(applicationName, List.of());
     }
 
     private void mainPanelSetup() {
@@ -124,28 +105,8 @@ public class ApplicationContext extends JFrame {
 
     /// APPLICATION SPECIFIC FUNCTIONALITY
 
-    private RotatableImage getImage() {
-        return (RotatableImage) contentPanel.getEntity(0);
-    }
+    public void setMorphState(int newMorphState) {
 
-    public void findImage() {
-        if (fileSelector.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            if (fileSelector.getSelectedFile().getName().toLowerCase().endsWith(".png") || fileSelector.getSelectedFile().getName().toLowerCase().endsWith(".jpg")) {
-                contentPanel.removeEntity(getImage());
-                contentPanel.addEntity(new RotatableImage(fileSelector.getSelectedFile().getPath()));
-            } else {
-                System.err.println("ERROR: File must be an PNG or JPG");
-            }
-        }
-
-    }
-
-    public void resetImage() {
-        getImage().setAngle(0);
-    }
-
-    public void applyRotation(int value) {
-        getImage().setAngle(value);
     }
 }
 

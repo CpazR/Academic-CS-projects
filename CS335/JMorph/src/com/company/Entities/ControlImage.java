@@ -1,22 +1,20 @@
 package com.company.Entities;
 
 import com.company.ApplicationGUI.ApplicationContext;
-import com.company.Entities.BaseDrawnEntity;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-public class RotatableImage implements BaseDrawnEntity {
+public class ControlImage implements BaseDrawnEntity {
 
     private BufferedImage image;
 
     private double angle;
 
-    public RotatableImage(String imageLocation) {
+    public ControlImage(String imageLocation) {
         try {
             image = ImageIO.read(new File(imageLocation));
         } catch (Exception e) {

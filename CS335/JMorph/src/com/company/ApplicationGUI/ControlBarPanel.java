@@ -9,35 +9,28 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
 
     private final ApplicationContext parentFrame;
 
-    private final JButton imageButton = new JButton("New Rotatable Image");
-    private final JButton resetButton = new JButton("Reset Rotation");
-
-    private final JSlider speedSlider = new JSlider(-360, 360, 0);
+    private final JButton startNewMorphButton = new JButton("Start New Morph");
+    private final JButton previewMorphButton = new JButton("Preview Morph");
+    private final JSlider speedSlider = new JSlider(0, 10, 0);
 
     ControlBarPanel(ApplicationContext frame) {
         parentFrame = frame;
         setLayout(new GridLayout(1, 0));
-        add(imageButton);
+        add(startNewMorphButton);
         add(speedSlider);
-        add(resetButton);
 
         establishListeners();
     }
 
     private void establishListeners() {
-        imageButton.addActionListener(e -> parentFrame.findImage());
-        resetButton.addActionListener(e -> {
-            parentFrame.resetImage();
-            speedSlider.setValue(0);
-        });
-
+        startNewMorphButton.addActionListener(e -> System.out.println("TODO: Open window for starting new morph"));
         speedSlider.addChangeListener(this);
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
         var slider = (JSlider) e.getSource();
-        parentFrame.applyRotation(slider.getValue());
+        parentFrame.setMorphState(slider.getValue());
 
         revalidate();
     }
