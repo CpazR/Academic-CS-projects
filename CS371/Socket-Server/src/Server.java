@@ -157,7 +157,6 @@ public class Server {
 
         // Send ack back to client
         outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
-
     }
 
     public void closeServer() {

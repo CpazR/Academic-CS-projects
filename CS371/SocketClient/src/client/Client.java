@@ -1,3 +1,5 @@
+package client;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -111,6 +113,7 @@ public class Client {
             inputStream.close();
             outputStream.close();
             isConnected = false;
+            System.out.println("Client disconnected successfully.");
         } catch (Exception e) {
             e.printStackTrace();
         }

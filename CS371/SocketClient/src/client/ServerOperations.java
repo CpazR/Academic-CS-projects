@@ -1,3 +1,5 @@
+package client;
+
 /**
  * Shared enum to keep server operations in line
  */

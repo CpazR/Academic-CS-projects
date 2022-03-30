@@ -2,26 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/project-template.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/project-template.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/JMorph.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/JMorph.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/ApplicationGUI/ApplicationContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/ApplicationGUI/ControlBarPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Entities/BaseDrawnEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Entities/BaseDrawnEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Entities/RotatableImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Entities/RotatableImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/com/company/Main.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sharedFiles/largeFile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sharedFiles/mediumFile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sharedFiles/smallFile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/sharedFiles/music.mp3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/JTerminal.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/Entities/BaseDrawnEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../CS335/ImageRotate/src/com/company/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/ImageRotate/src/com/company/ApplicationGUI/ApplicationContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../CS335/ImageRotate/src/com/company/ApplicationGUI/ControlBarPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/ImageRotate/src/com/company/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sharedFiles/testFile" beforeDir="false" afterPath="$PROJECT_DIR$/sharedFiles/testFile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerOperations.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ClientRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ServerOperations.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

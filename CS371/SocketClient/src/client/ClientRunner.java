@@ -1,3 +1,7 @@
+package client;
+
+import GUI.ApplicationGUI.ApplicationContext;
+
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.Objects;
@@ -16,7 +20,16 @@ public class ClientRunner {
         boolean clientConnecting = false;
         var client = new Client();
 
-        while (clientRunning) {
+        new ApplicationContext("Shared Folder Client", client);
+    }
+
+    private static String[] getLocalInput() {
+        inputScanner.useDelimiter("\\n");
+        return inputScanner.nextLine().split(" ");
+    }
+
+    public static void mainLoop(Client client) {
+        while (true) {
 
             var localUserInput = getLocalInput();
             var userOperation = ServerOperations.getOperation(localUserInput[0].toUpperCase());
@@ -35,7 +48,7 @@ public class ClientRunner {
                             break;
                         case UPLOAD:
 
-                                client.uploadFile(localUserInput[1]);
+                            client.uploadFile(localUserInput[1]);
                             break;
                         case DOWNLOAD:
                             client.downloadFile(localUserInput[1]);
@@ -66,10 +79,5 @@ public class ClientRunner {
                 System.err.println("ERROR: Input is null.");
             }
         }
-    }
-
-    private static String[] getLocalInput() {
-        inputScanner.useDelimiter("\\n");
-        return inputScanner.nextLine().split(" ");
     }
 }
