@@ -69,6 +69,10 @@ public class ControlGrid implements BaseDrawnEntity {
         }
     }
 
+    public ControlPoint[][] getGridOfPoints() {
+        return pointGrid;
+    }
+
     @Override
     public void paintEntity(Graphics g) {
         for (ControlPoint[] controlPoints : pointGrid) {

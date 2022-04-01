@@ -1,5 +1,6 @@
 package com.company.ApplicationGUI;
 
+import com.company.Entities.AnimatedGrid;
 import com.company.Entities.BaseDrawnEntity;
 import com.company.Entities.ControlGrid;
 import com.company.Entities.ControlImage;
@@ -26,7 +27,7 @@ public class ApplicationContext extends JFrame {
 
     private final JPanel previewPanel = new JPanel();
     private final ControlBarPanel previewControlPanel = new ControlBarPanel(this);
-    private final PrimitivePanel previewAnimatedPanel = new PrimitivePanel(panelWidth, panelHeight);
+    private final PrimitivePanel previewAnimatedPanel = new PrimitivePanel(panelWidth / 2, panelHeight);
 
 
     public ApplicationContext(String applicationName, List<BaseDrawnEntity> entityList) {
@@ -35,6 +36,8 @@ public class ApplicationContext extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainPanelSetup();
         setVisible(true);
+
+        establishListeners();
 
         primitivePanelA.addEntities(List.of(new ControlGrid(5, 5, primitivePanelA.getWidth(), primitivePanelA.getHeight())));
         primitivePanelB.addEntities(List.of(new ControlGrid(5, 5, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
@@ -61,6 +64,10 @@ public class ApplicationContext extends JFrame {
     }
 
     private void establishListeners() {
+        previewMorphButton.addActionListener(e -> {
+            var animatedGrid = new AnimatedGrid(List.of(primitivePanelA.getGrid(), primitivePanelB.getGrid()), 60);
+            new PreviewWindow(animatedGrid);
+        });
         resetMorphButton.addActionListener(e -> {
             primitivePanelA.resetEntities();
             primitivePanelB.resetEntities();

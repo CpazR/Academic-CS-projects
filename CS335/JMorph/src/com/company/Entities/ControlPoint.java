@@ -77,6 +77,10 @@ public class ControlPoint implements BaseDrawnEntity {
         return position;
     }
 
+    public void updatePosition(Point newPosition) {
+        updatedPosition(newPosition.getX(), newPosition.getY());
+    }
+
     @Override
     public void paintEntity(Graphics g) {
         g.setColor(ballColor);

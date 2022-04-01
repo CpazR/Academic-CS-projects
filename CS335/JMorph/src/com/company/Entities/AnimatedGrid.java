@@ -11,7 +11,7 @@ public class AnimatedGrid implements BaseDrawnEntity {
     private int currentFrame;
     private final int totalFrames;
 
-    AnimatedGrid(List<ControlGrid> keyframes, int totalFrames) {
+    public AnimatedGrid(List<ControlGrid> keyframes, int totalFrames) {
         activeFrame = new ControlGrid(keyframes.get(0));
 
         gridKeyframes.addAll(keyframes);
@@ -40,6 +40,25 @@ public class AnimatedGrid implements BaseDrawnEntity {
      */
     public Point subtract(Point p1, Point p2) {
         return new Point((int) (p1.getX() - p2.getX()), (int) (p1.getY() - p2.getY()));
+    }
+
+    /**
+     * Animate grid one point at a time
+     */
+    public void animate() {
+        currentFrame++;
+
+        System.out.println("Animating frame: " + currentFrame);
+        var pointGrid = activeFrame.getGridOfPoints();
+
+        for (int i = 0; i < pointGrid.length; i++) {
+            for (int j = 0; j < pointGrid[i].length; j++) {
+                var currentPoint = pointGrid[i][j];
+                currentPoint.updatePosition(getMorphInterpolation(i, j, currentFrame));
+            }
+        }
+
+
     }
 
     @Override
