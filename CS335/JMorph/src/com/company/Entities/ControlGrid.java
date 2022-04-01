@@ -1,23 +1,94 @@
 package com.company.Entities;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
 
-public class ControlGrid {
-    private ControlPoint[][] pointGridA;
-    private ControlPoint[][] pointGridB;
+public class ControlGrid implements BaseDrawnEntity {
+    private ControlPoint[][] pointGrid;
+    private ControlPoint draggedPoint;
 
-    ControlGrid(int gridWidth, int gridHeight) {
-        pointGridA = new ControlPoint[gridWidth][gridHeight];
-        pointGridB = new ControlPoint[gridWidth][gridHeight];
+    private int panelWidth;
+    private int panelHeight;
+
+    /**
+     * Normal constructor
+     */
+    public ControlGrid(int gridWidth, int gridHeight, int panelWidth, int panelHeight) {
+        pointGrid = new ControlPoint[gridWidth][gridHeight];
+
+        this.panelWidth = panelWidth;
+        this.panelHeight = panelHeight;
+
+        var widthInterval = panelWidth / gridWidth;
+        var heightInterval = panelHeight / gridHeight;
+
+        for (int i = 0; i < pointGrid.length; i++) {
+            for (int j = 0; j < pointGrid[i].length; j++) {
+                pointGrid[i][j] = new ControlPoint(widthInterval / 2 + widthInterval * i, heightInterval / 2 + heightInterval * j);
+            }
+        }
     }
 
-    public Point getMorphInterpolation(int pointX, int pointY, int frameNumber) {
-        var direction = subtract(pointGridA[pointX][pointY].getPosition(), pointGridB[pointX][pointY].getPosition());
-
-        return new Point();
+    /**
+     * Copy constructor
+     */
+    public ControlGrid(ControlGrid controlGrid) {
+        pointGrid = controlGrid.pointGrid.clone();
+        draggedPoint = null;
     }
 
-    public static Point subtract(Point p1, Point p2) {
-        return new Point((int) (p1.getX() - p2.getX()), (int) (p1.getY() - p2.getY()));
+    public ControlPoint getPoint(int pointX, int pointY) {
+        return pointGrid[pointX][pointY];
+    }
+
+    public void beginDragging(MouseEvent e) {
+        System.out.println("Clicked at: " + e.getPoint());
+        for (ControlPoint[] controlPoints : pointGrid) {
+            for (ControlPoint controlPoint : controlPoints) {
+                var inBoundingBox = controlPoint.getBoundingBox().contains(e.getX(), e.getY());
+                if (inBoundingBox) {
+                    draggedPoint = controlPoint;
+                    draggedPoint.beginDragging(e);
+                    System.out.println("Dragging point: " + draggedPoint);
+                }
+            }
+        }
+    }
+
+    public void doDragging(MouseEvent e, int width, int height) {
+        if (draggedPoint != null) {
+            draggedPoint.doDragging(e, width, height);
+        }
+    }
+
+    public void endDragging(MouseEvent e) {
+        if (draggedPoint != null) {
+            System.out.println("Stopped dragging: " + draggedPoint);
+            draggedPoint.endDragging();
+            draggedPoint = null;
+        }
+    }
+
+    @Override
+    public void paintEntity(Graphics g) {
+        for (ControlPoint[] controlPoints : pointGrid) {
+            for (ControlPoint controlPoint : controlPoints) {
+                controlPoint.paintEntity(g);
+            }
+        }
+    }
+
+    @Override
+    public void reset() {
+        var gridWidth = pointGrid.length;
+        var gridHeight = pointGrid[0].length;
+        var widthInterval = panelWidth / gridWidth;
+        var heightInterval = panelHeight / gridHeight;
+
+        for (int i = 0; i < pointGrid.length; i++) {
+            for (int j = 0; j < pointGrid[i].length; j++) {
+                pointGrid[i][j] = new ControlPoint(widthInterval / 2 + widthInterval * i, heightInterval / 2 + heightInterval * j);
+            }
+        }
     }
 }

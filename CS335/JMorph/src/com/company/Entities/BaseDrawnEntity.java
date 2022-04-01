@@ -11,8 +11,5 @@ public interface BaseDrawnEntity {
      */
     void paintEntity(Graphics g);
 
-    /**
-     * Require a move method to be defined to each entity
-     */
-    void move();
+    void reset();
 }

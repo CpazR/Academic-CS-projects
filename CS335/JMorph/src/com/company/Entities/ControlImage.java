@@ -54,7 +54,7 @@ public class ControlImage implements BaseDrawnEntity {
     }
 
     @Override
-    public void move() {
+    public void reset() {
 
     }
 }
