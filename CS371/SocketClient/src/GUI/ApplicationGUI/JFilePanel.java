@@ -19,9 +19,11 @@ public class JFilePanel extends JPanel {
     }
 
     public void updateFileList(String[] filesNames) {
+        fileSelectorDropdown.removeAllItems();
         files.clear();
         files.addAll(Set.of(filesNames));
         files.forEach(fileSelectorDropdown::addItem);
+        SwingUtilities.updateComponentTreeUI(fileSelectorDropdown);
     }
 
     public String getSelectedFileName() {

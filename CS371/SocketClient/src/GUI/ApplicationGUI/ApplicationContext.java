@@ -4,6 +4,8 @@ import client.Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -20,6 +22,16 @@ public class ApplicationContext extends JFrame {
 
     private final JFilePanel fileManagerPanel = new JFilePanel(this);
 
+    private final JPanel connectionSetupPanel = new JPanel();
+    private final JLabel addressLabel = new JLabel("Server IP:");
+    private final JLabel portLabel = new JLabel("Server Port:");
+
+    private final JTextField addressField = new JTextField("localhost", 12);
+    private final JTextField portField = new JTextField("4444", 4);
+
+    private String address = "localhost";
+    private int port = 4444;
+
     private final Client clientConnection;
 
     public ApplicationContext(String applicationName, Client client) {
@@ -33,6 +45,27 @@ public class ApplicationContext extends JFrame {
         setResizable(false);
 
         clientConnection = client;
+
+        addressField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                address = addressField.getText();
+            }
+        });
+        portField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                port = Integer.parseInt(portField.getText());
+            }
+        });
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -62,15 +95,25 @@ public class ApplicationContext extends JFrame {
 
     /// APPLICATION SPECIFIC FUNCTIONALITY
     public void connect() {
-        // TODO: Add parameter window
-        terminalPanel.emptyTerminal();
-        clientConnection.initializeClient("localhost", 4444);
-        revalidate();
+        connectionSetupPanel.setLayout(new BoxLayout(connectionSetupPanel, BoxLayout.Y_AXIS));
+        connectionSetupPanel.add(addressLabel);
+        connectionSetupPanel.add(addressField);
+        connectionSetupPanel.add(portLabel);
+        connectionSetupPanel.add(portField);
+
+        var result = JOptionPane.showConfirmDialog(this, connectionSetupPanel, "Setup connection", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            terminalPanel.emptyTerminal();
+            clientConnection.initializeClient(address, port);
+            revalidate();
+            SwingUtilities.updateComponentTreeUI(this);
+        }
     }
 
     public void disconnect() {
         clientConnection.closeClient();
         revalidate();
+        SwingUtilities.updateComponentTreeUI(this);
     }
 
     public void requestFileUpload() {
@@ -91,6 +134,18 @@ public class ApplicationContext extends JFrame {
             var result = JOptionPane.showConfirmDialog(this, fileManagerPanel, "Download File Request", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 clientConnection.downloadFile(fileManagerPanel.getSelectedFileName());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void requestDeleteFile() {
+        try {
+            fileManagerPanel.updateFileList(clientConnection.showLocalFolderContents());
+            var result = JOptionPane.showConfirmDialog(this, fileManagerPanel, "Delete File", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result == JOptionPane.OK_OPTION) {
+                clientConnection.deleteFile(fileManagerPanel.getSelectedFileName());
             }
         } catch (IOException e) {
             e.printStackTrace();

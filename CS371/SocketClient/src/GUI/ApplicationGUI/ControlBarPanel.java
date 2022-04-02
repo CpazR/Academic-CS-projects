@@ -11,6 +11,7 @@ public class ControlBarPanel extends JPanel {
 
     private final JButton uploadButton = new JButton("Upload File");
     private final JButton downloadButton = new JButton("Download File");
+    private final JButton deleteButton = new JButton("Delete File");
     private final JButton disconnectButton = new JButton("Disconnect from server");
 
     ControlBarPanel(ApplicationContext frame) {
@@ -27,6 +28,7 @@ public class ControlBarPanel extends JPanel {
 
         add(uploadButton);
         add(downloadButton);
+        add(deleteButton);
         add(disconnectButton);
         revalidate();
     }
@@ -35,6 +37,7 @@ public class ControlBarPanel extends JPanel {
         parentFrame.disconnect();
         remove(uploadButton);
         remove(downloadButton);
+        remove(deleteButton);
         remove(disconnectButton);
 
         add(connectButton);
@@ -45,6 +48,7 @@ public class ControlBarPanel extends JPanel {
         connectButton.addActionListener(e -> connect());
         uploadButton.addActionListener(e -> parentFrame.requestFileUpload());
         downloadButton.addActionListener(e -> parentFrame.requestFileDownload());
+        deleteButton.addActionListener(e -> parentFrame.requestDeleteFile());
         disconnectButton.addActionListener(e -> disconnect());
     }
 }
