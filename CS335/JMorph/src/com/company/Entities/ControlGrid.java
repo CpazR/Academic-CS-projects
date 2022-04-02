@@ -33,7 +33,14 @@ public class ControlGrid implements BaseDrawnEntity {
      * Copy constructor
      */
     public ControlGrid(ControlGrid controlGrid) {
-        pointGrid = controlGrid.pointGrid.clone();
+        pointGrid = new ControlPoint[controlGrid.getGridOfPoints().length][controlGrid.getGridOfPoints()[0].length];
+        for (int i = 0; i < pointGrid.length; i++) {
+            for (int j = 0; j < pointGrid[i].length; j++) {
+                pointGrid[i][j] = new ControlPoint(controlGrid.getGridOfPoints()[i][j]);
+
+            }
+        }
+
         draggedPoint = null;
     }
 

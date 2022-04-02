@@ -19,25 +19,27 @@ public class PrimitivePanel extends JPanel {
     // Primary list of entities to be drawn. Maintains order through a linked list.
     private final LinkedList<BaseDrawnEntity> drawableEntities = new LinkedList<>();
 
-    public PrimitivePanel(int width, int height) {
+    public PrimitivePanel(int width, int height, boolean useMouse) {
         setPreferredSize(new Dimension(width, height));
         setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 
-        addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                getGrid().beginDragging(e);
-            }
+        if (useMouse) {
+            addMouseListener(new MouseAdapter() {
+                public void mousePressed(MouseEvent e) {
+                    getGrid().beginDragging(e);
+                }
 
-            public void mouseReleased(MouseEvent e) {
-                getGrid().endDragging(e);
-            }
-        });
+                public void mouseReleased(MouseEvent e) {
+                    getGrid().endDragging(e);
+                }
+            });
 
-        addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                getGrid().doDragging(e, getWidth(), getHeight());
-            }
-        });
+            addMouseMotionListener(new MouseMotionAdapter() {
+                public void mouseDragged(MouseEvent e) {
+                    getGrid().doDragging(e, getWidth(), getHeight());
+                }
+            });
+        }
     }
 
     /**
@@ -71,6 +73,15 @@ public class PrimitivePanel extends JPanel {
             System.out.println("INFO: Successfully removed entity.");
         } else {
             System.out.println("INFO: Attempted to remove an entity that does not exist.");
+        }
+    }
+
+    public void removeAllEntities() {
+        if (!drawableEntities.isEmpty()) {
+            drawableEntities.clear();
+            System.out.println("INFO: Successfully removed entities.");
+        } else {
+            System.out.println("INFO: No drawable entities to remove.");
         }
     }
 

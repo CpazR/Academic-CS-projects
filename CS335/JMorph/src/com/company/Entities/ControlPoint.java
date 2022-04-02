@@ -25,6 +25,12 @@ public class ControlPoint implements BaseDrawnEntity {
         boundingBox = new Rectangle((int) (position.getX() - radius), (int) (position.getY() - radius), (int) diameter, (int) diameter);
     }
 
+    public ControlPoint(ControlPoint controlPoint) {
+        position = new Point(controlPoint.position);
+        ballColor = Color.BLUE;
+        boundingBox = new Rectangle(controlPoint.getBoundingBox());
+    }
+
     public void beginDragging(MouseEvent e) {
         lastKnownMouseX = e.getXOnScreen();
         lastKnownMouseY = e.getYOnScreen();

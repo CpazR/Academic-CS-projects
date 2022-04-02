@@ -18,6 +18,10 @@ public class AnimatedGrid implements BaseDrawnEntity {
         this.totalFrames = totalFrames;
     }
 
+    public int getTotalFrames() {
+        return totalFrames;
+    }
+
     /**
      * Interpolate between the two grid keyframe. Return approximate interpolation at keyframe.
      */
@@ -25,9 +29,9 @@ public class AnimatedGrid implements BaseDrawnEntity {
         var pointA = gridKeyframes.get(0).getPoint(pointX, pointY).getPosition();
         var pointB = gridKeyframes.get(1).getPoint(pointX, pointY).getPosition();
 
-        var direction = subtract(pointA, pointB);
+        var direction = subtract(pointB, pointA);
         // Scale current frame to be between 0 and 1.
-        var frameIteration = totalFrames / frameNumber;
+        double frameIteration = (double) frameNumber / totalFrames;
 
         var interpolatedX = pointA.getX() + direction.getX() * frameIteration;
         var interpolatedY = pointA.getY() + direction.getY() * frameIteration;
@@ -44,21 +48,29 @@ public class AnimatedGrid implements BaseDrawnEntity {
 
     /**
      * Animate grid one point at a time
+     *
+     * @param currentFrame
      */
-    public void animate() {
-        currentFrame++;
+    public boolean animate(int currentFrame) {
+        this.currentFrame = currentFrame;
+        var continues = true;
+        if (this.currentFrame < totalFrames) {
 
-        System.out.println("Animating frame: " + currentFrame);
-        var pointGrid = activeFrame.getGridOfPoints();
+            System.out.println("Animating frame: " + this.currentFrame);
+            var pointGrid = activeFrame.getGridOfPoints();
 
-        for (int i = 0; i < pointGrid.length; i++) {
-            for (int j = 0; j < pointGrid[i].length; j++) {
-                var currentPoint = pointGrid[i][j];
-                currentPoint.updatePosition(getMorphInterpolation(i, j, currentFrame));
+            for (int i = 0; i < pointGrid.length; i++) {
+                for (int j = 0; j < pointGrid[i].length; j++) {
+                    var currentPoint = pointGrid[i][j];
+                    var newPosition = getMorphInterpolation(i, j, this.currentFrame);
+                    currentPoint.updatePosition(newPosition);
+                }
             }
+        } else {
+            continues = false;
         }
 
-
+        return continues;
     }
 
     @Override
@@ -70,4 +82,5 @@ public class AnimatedGrid implements BaseDrawnEntity {
     public void reset() {
 
     }
+
 }
