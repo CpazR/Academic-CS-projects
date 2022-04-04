@@ -3,27 +3,42 @@ package com.company.ApplicationGUI;
 import com.company.Entities.AnimatedGrid;
 import com.company.Entities.BaseDrawnEntity;
 import com.company.Entities.ControlGrid;
+import com.company.Entities.ControlPoint;
+import netscape.javascript.JSObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ApplicationContext extends JFrame {
 
     public static final int panelWidth = 1600;
     public static final int panelHeight = 600;
 
-    private int gridWidth;
-    private int gridHeight;
-    private int totalFrames;
+    private int gridWidth = 5;
+    private int gridHeight = 5;
+    private int totalFrames = 60;
 
     private final JPanel applicationPanel = new JPanel();
     private final JPanel controlPanel = new JPanel();
     private final JButton startNewMorphButton = new JButton("Start New Morph");
     private final JButton resetMorphButton = new JButton("Reset Morph");
     private final JButton previewMorphButton = new JButton("Preview Morph");
+    private final JButton saveMorphButton = new JButton("Save Morph");
+    private final JButton loadMorphButton = new JButton("Load Morph");
     private final JPanel primitivePanelGroup = new JPanel();
     private final PrimitivePanel primitivePanelA = new PrimitivePanel(panelWidth / 2, panelHeight, true);
     private final PrimitivePanel primitivePanelB = new PrimitivePanel(panelWidth / 2, panelHeight, true);
@@ -144,6 +159,52 @@ public class ApplicationContext extends JFrame {
         primitivePanelB.removeAllEntities();
         primitivePanelB.addEntities(List.of(new ControlGrid(gridWidth, gridHeight, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
         revalidate();
+    }
+
+    public void saveMorph() {
+        // Save morph as JSON
+        // Save grid width and height
+        // Save grids array of coordinates
+        // Save total number of frames for morph
+        var pointMapA = new JSONArray();
+        var pointMapB = new JSONArray();
+
+        var gridA = primitivePanelA.getGrid();
+
+        for (int i = 0; i < gridA.getGridOfPoints().length; i++) {
+            pointMapA.addAll(i, Arrays.stream(gridA.getGridOfPoints()[i]).collect(Collectors.toSet()));
+        }
+
+        var gridB = primitivePanelB.getGrid();
+
+        for (int i = 0; i < gridB.getGridOfPoints().length; i++) {
+            pointMapB.addAll(i, Arrays.stream(gridB.getGridOfPoints()[i]).collect(Collectors.toSet()));
+        }
+
+        var jsonObject = new JSONObject();
+
+        jsonObject.put(gridWidth, "Morph grid width");
+        jsonObject.put(gridHeight, "Morph grid height");
+        jsonObject.put(totalFrames, "Morph frames");
+        jsonObject.put(pointMapA, "Grid A points");
+        jsonObject.put(pointMapB, "Grid B points");
+
+        try {
+            var jsonFile = new FileWriter("./morphSave.json");
+            jsonFile.write(jsonObject.toJSONString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadMorph() {
+        var jsonObject = new JSONObject();
+        try {
+            var jsonFile = new FileReader("./morphSave.json");
+            jsonObject = (JSONObject) new JSONParser().parse(jsonFile);
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
     }
 }
 

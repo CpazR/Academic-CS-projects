@@ -14,19 +14,14 @@ public class ControlGrid implements BaseDrawnEntity {
      * Normal constructor
      */
     public ControlGrid(int gridWidth, int gridHeight, int panelWidth, int panelHeight) {
-        pointGrid = new ControlPoint[gridWidth][gridHeight];
 
+        pointGrid = new ControlPoint[gridWidth + 2][gridHeight + 2];
+
+        // Add two for hidden border points
         this.panelWidth = panelWidth;
         this.panelHeight = panelHeight;
 
-        var widthInterval = panelWidth / gridWidth;
-        var heightInterval = panelHeight / gridHeight;
-
-        for (int i = 0; i < pointGrid.length; i++) {
-            for (int j = 0; j < pointGrid[i].length; j++) {
-                pointGrid[i][j] = new ControlPoint(widthInterval / 2 + widthInterval * i, heightInterval / 2 + heightInterval * j);
-            }
-        }
+        reset();
     }
 
     /**
@@ -84,21 +79,24 @@ public class ControlGrid implements BaseDrawnEntity {
     public void paintEntity(Graphics g) {
         for (ControlPoint[] controlPoints : pointGrid) {
             for (ControlPoint controlPoint : controlPoints) {
-                controlPoint.paintEntity(g);
+                if (controlPoint.canDraw())
+                    controlPoint.paintEntity(g);
             }
         }
     }
 
     @Override
     public void reset() {
-        var gridWidth = pointGrid.length;
-        var gridHeight = pointGrid[0].length;
-        var widthInterval = panelWidth / gridWidth;
-        var heightInterval = panelHeight / gridHeight;
+        var gridWidth = pointGrid.length - 2;
+        var gridHeight = pointGrid[0].length - 2;
+        var widthInterval = panelWidth / (gridWidth + 1);
+        var heightInterval = panelHeight / (gridHeight + 1);
 
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
-                pointGrid[i][j] = new ControlPoint(widthInterval / 2 + widthInterval * i, heightInterval / 2 + heightInterval * j);
+                var xPos = widthInterval * i;
+                var yPos = heightInterval * j;
+                pointGrid[i][j] = new ControlPoint(xPos, yPos, !(i == 0 || j == 0 || i == pointGrid.length - 1 || j == pointGrid[0].length - 1));
             }
         }
     }
