@@ -26,7 +26,7 @@ public class PrimitivePanel extends JPanel {
         if (useMouse) {
             addMouseListener(new MouseAdapter() {
                 public void mousePressed(MouseEvent e) {
-                    getGrid().beginDragging(e);
+                    getGrid().beginDragging(e, getWidth(), getHeight());
                 }
 
                 public void mouseReleased(MouseEvent e) {

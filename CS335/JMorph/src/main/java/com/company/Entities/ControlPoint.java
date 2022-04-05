@@ -34,12 +34,14 @@ public class ControlPoint implements BaseDrawnEntity {
         isDraggable = controlPoint.isDraggable;
     }
 
-    public void beginDragging(MouseEvent e) {
+    public void beginDragging(MouseEvent e, int width, int height) {
         if (isDraggable) {
             lastKnownMouseX = e.getXOnScreen();
             lastKnownMouseY = e.getYOnScreen();
 
-            position.setLocation(e.getX(), e.getY());
+            updatedPosition(e.getX(), e.getY());
+            applyPositionBoundary(width, height);
+
             ballColor = Color.RED;
         }
     }
@@ -59,7 +61,7 @@ public class ControlPoint implements BaseDrawnEntity {
 
     private void updatedPosition(double xNew, double yNew) {
         position.setLocation(xNew, yNew);
-        boundingBox.setLocation((int) xNew, (int) yNew);
+        boundingBox.setLocation((int) (xNew - radius), (int) (yNew - radius));
     }
 
     private void applyPositionBoundary(int width, int height) {

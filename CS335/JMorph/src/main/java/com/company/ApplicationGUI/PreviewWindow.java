@@ -45,6 +45,7 @@ public class PreviewWindow extends JFrame {
         animatorThread = Executors.newSingleThreadScheduledExecutor();
         animatorThread.scheduleAtFixedRate(() -> {
             currentFrame++;
+            previewControlPanel.updateControlBar();
             if (currentFrame <= totalFrames) {
                 if (!animatedGrid.animate(currentFrame) || !this.isVisible()) {
                     System.out.println("Animation stopped, shutting down thread.");
@@ -61,7 +62,7 @@ public class PreviewWindow extends JFrame {
             animatorThread.shutdown();
         } else {
             // Restart animation if finished
-            currentFrame = currentFrame == totalFrames ? 0 : currentFrame;
+            currentFrame = currentFrame >= totalFrames ? 0 : currentFrame;
             scheduleAnimationThread();
         }
     }
@@ -74,6 +75,14 @@ public class PreviewWindow extends JFrame {
     public void setFrame(int newFrame) {
         animatedGrid.animate(newFrame);
         currentFrame = newFrame;
+    }
+
+    public int getTotalFrames() {
+        return totalFrames;
+    }
+
+    public int getCurrentFrame() {
+        return currentFrame;
     }
 
     /**

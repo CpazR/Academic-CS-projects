@@ -2,10 +2,13 @@ package com.company.Entities;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ControlGrid implements BaseDrawnEntity {
-    private ControlPoint[][] pointGrid;
+    private final ControlPoint[][] pointGrid;
     private ControlPoint draggedPoint;
+    private final List<Polygon> pointTriangles = new ArrayList<>();
 
     private int panelWidth;
     private int panelHeight;
@@ -32,9 +35,9 @@ public class ControlGrid implements BaseDrawnEntity {
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 pointGrid[i][j] = new ControlPoint(controlGrid.getGridOfPoints()[i][j]);
-
             }
         }
+        updateTriangles();
 
         draggedPoint = null;
     }
@@ -43,14 +46,15 @@ public class ControlGrid implements BaseDrawnEntity {
         return pointGrid[pointX][pointY];
     }
 
-    public void beginDragging(MouseEvent e) {
+    public void beginDragging(MouseEvent e, int width, int height) {
         System.out.println("Clicked at: " + e.getPoint());
         for (ControlPoint[] controlPoints : pointGrid) {
             for (ControlPoint controlPoint : controlPoints) {
                 var inBoundingBox = controlPoint.getBoundingBox().contains(e.getX(), e.getY());
                 if (inBoundingBox) {
                     draggedPoint = controlPoint;
-                    draggedPoint.beginDragging(e);
+                    draggedPoint.beginDragging(e, width, height);
+                    updateTriangles();
                     System.out.println("Dragging point: " + draggedPoint);
                 }
             }
@@ -60,6 +64,7 @@ public class ControlGrid implements BaseDrawnEntity {
     public void doDragging(MouseEvent e, int width, int height) {
         if (draggedPoint != null) {
             draggedPoint.doDragging(e, width, height);
+            updateTriangles();
         }
     }
 
@@ -77,12 +82,21 @@ public class ControlGrid implements BaseDrawnEntity {
 
     @Override
     public void paintEntity(Graphics g) {
+        // As original list of triangles is updated concurrently, create a copy of list to prevent problems
+        List<Polygon> copyOfTriangles = new ArrayList<>(pointTriangles);
+        copyOfTriangles.forEach(triangle -> {
+            var prevColor = g.getColor();
+            g.setColor(Color.BLUE);
+            g.drawPolygon(triangle);
+            g.setColor(prevColor);
+        });
         for (ControlPoint[] controlPoints : pointGrid) {
             for (ControlPoint controlPoint : controlPoints) {
                 if (controlPoint.canDraw())
                     controlPoint.paintEntity(g);
             }
         }
+        g.dispose();
     }
 
     @Override
@@ -97,6 +111,22 @@ public class ControlGrid implements BaseDrawnEntity {
                 var xPos = widthInterval * i;
                 var yPos = heightInterval * j;
                 pointGrid[i][j] = new ControlPoint(xPos, yPos, !(i == 0 || j == 0 || i == pointGrid.length - 1 || j == pointGrid[0].length - 1));
+            }
+        }
+        updateTriangles();
+    }
+
+    public void updateTriangles() {
+        pointTriangles.clear();
+        for (int i = 0; i < pointGrid.length; i++) {
+            for (int j = 0; j < pointGrid[i].length; j++) {
+                if (i > 0 && j > 0) {
+                    var triangle = new Polygon();
+                    triangle.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
+                    triangle.addPoint(pointGrid[i - 1][j].getPosition().x, pointGrid[i - 1][j].getPosition().y);
+                    triangle.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
+                    pointTriangles.add(triangle);
+                }
             }
         }
     }
