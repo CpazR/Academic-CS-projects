@@ -96,7 +96,6 @@ public class ControlGrid implements BaseDrawnEntity {
                     controlPoint.paintEntity(g);
             }
         }
-        g.dispose();
     }
 
     @Override

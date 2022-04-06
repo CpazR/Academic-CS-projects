@@ -13,7 +13,7 @@ import static com.company.ApplicationGUI.ApplicationContext.panelWidth;
 public class PreviewWindow extends JFrame {
 
     private final JPanel previewPanel = new JPanel();
-    private final ControlBarPanel previewControlPanel = new ControlBarPanel(this);
+    private final ControlBarPanel previewControlPanel;
     private final PrimitivePanel previewAnimatedPanel = new PrimitivePanel(panelWidth / 2, panelHeight, false);
     private final AnimatedGrid animatedGrid;
 
@@ -26,8 +26,10 @@ public class PreviewWindow extends JFrame {
 
     PreviewWindow(AnimatedGrid animatedGrid) {
         this.animatedGrid = animatedGrid;
+        totalFrames = animatedGrid.getTotalFrames();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         previewPanel.setLayout(new BoxLayout(previewPanel, BoxLayout.Y_AXIS));
+        previewControlPanel = new ControlBarPanel(this);
         previewPanel.add(previewControlPanel);
         previewPanel.add(previewAnimatedPanel);
         previewAnimatedPanel.addEntity(animatedGrid);
@@ -36,7 +38,6 @@ public class PreviewWindow extends JFrame {
         setResizable(false);
         pack();
 
-        totalFrames = animatedGrid.getTotalFrames();
         // Start/pause thread with button press
         scheduleAnimationThread();
     }
@@ -44,9 +45,9 @@ public class PreviewWindow extends JFrame {
     private void scheduleAnimationThread() {
         animatorThread = Executors.newSingleThreadScheduledExecutor();
         animatorThread.scheduleAtFixedRate(() -> {
-            currentFrame++;
-            previewControlPanel.updateControlBar();
             if (currentFrame <= totalFrames) {
+                currentFrame++;
+                previewControlPanel.updateControlBar();
                 if (!animatedGrid.animate(currentFrame) || !this.isVisible()) {
                     System.out.println("Animation stopped, shutting down thread.");
                 }

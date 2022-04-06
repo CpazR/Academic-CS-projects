@@ -11,11 +11,13 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
 
     private final JButton playPauseButton = new JButton("Play/Pause");
     private final JSlider keyFrameSlider;
+    private boolean animating;
+
 
     ControlBarPanel(PreviewWindow frame) {
         parentFrame = frame;
         setLayout(new GridLayout(1, 0));
-        keyFrameSlider= new JSlider(0, parentFrame.getTotalFrames(), 0);
+        keyFrameSlider = new JSlider(0, parentFrame.getTotalFrames(), 0);
         add(playPauseButton);
         add(keyFrameSlider);
 
@@ -28,7 +30,9 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
     }
 
     public void updateControlBar() {
+        animating = true;
         keyFrameSlider.setValue(parentFrame.getCurrentFrame());
+        animating = false;
         revalidate();
     }
 
@@ -36,7 +40,9 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
     public void stateChanged(ChangeEvent e) {
         var slider = (JSlider) e.getSource();
 
-        parentFrame.pause();
+        if (!animating) {
+            parentFrame.pause();
+        }
         parentFrame.setFrame(slider.getValue());
 
         revalidate();
