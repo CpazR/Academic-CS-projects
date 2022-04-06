@@ -120,11 +120,16 @@ public class ControlGrid implements BaseDrawnEntity {
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 if (i > 0 && j > 0) {
-                    var triangle = new Polygon();
-                    triangle.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
-                    triangle.addPoint(pointGrid[i - 1][j].getPosition().x, pointGrid[i - 1][j].getPosition().y);
-                    triangle.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
-                    pointTriangles.add(triangle);
+                    var triangleLowerRegion = new Polygon();
+                    triangleLowerRegion.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
+                    triangleLowerRegion.addPoint(pointGrid[i - 1][j].getPosition().x, pointGrid[i - 1][j].getPosition().y);
+                    triangleLowerRegion.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
+                    pointTriangles.add(triangleLowerRegion);
+                    var triangleUpperRegion = new Polygon();
+                    triangleUpperRegion.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
+                    triangleUpperRegion.addPoint(pointGrid[i][j - 1].getPosition().x, pointGrid[i][j - 1].getPosition().y);
+                    triangleUpperRegion.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
+                    pointTriangles.add(triangleUpperRegion);
                 }
             }
         }
