@@ -34,6 +34,7 @@ public class Server {
 
     Server() {
         initializeServer();
+        listener();
     }
 
     private void initializeServer() {
@@ -60,6 +61,59 @@ public class Server {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void listener() {
+        while (!socket.isClosed()) {
+
+            if (isConnected()) {
+                var inputFromClient = waitForInput().split(" ");
+                var userOperation = ServerOperations.getOperation(inputFromClient[0]);
+
+                if (Objects.nonNull(userOperation)) {
+                    try {
+                        switch (userOperation) {
+                            case UPLOAD:
+                                if (inputFromClient.length == 3) {
+                                    var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
+                                    uploadFile(inputFromClient[1], (int) fileSizeInBytes);
+                                } else {
+                                    throw new IOException("ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
+                                }
+                                break;
+                            case DOWNLOAD:
+                                downloadFile(inputFromClient[1]);
+                                break;
+                            case DIR:
+                                showFolderContents();
+                                break;
+                            case DELETE:
+                                deleteFile(inputFromClient[1]);
+                                break;
+                            case CLOSE:
+                                closeServer();
+                                break;
+                            case HEARTBEAT:
+                                // Do not perform any operations, try next iteration for valid input
+                                break;
+                            default:
+                                System.err.println("INVALID OPERATION: " + userOperation);
+                                break;
+                        }
+                    } catch (IOException e) {
+                        System.err.println("ERROR: Failed to execute operation " + userOperation);
+                        e.printStackTrace();
+
+                        if (e instanceof SocketException) {
+                            System.err.println("ERROR: Connection reset, closing socket");
+                            closeServer();
+                        }
+                    }
+                } else {
+                    System.err.println("ERROR: Failed to receive operation from client.");
+                }
+            }
         }
     }
 
@@ -140,8 +194,7 @@ public class Server {
     public void showFolderContents() throws IOException {
         System.out.println("INFO: Sending file list to client");
         // Build directory content message
-        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles()))
-                .map(File::getName).collect(Collectors.joining("\n"));
+        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(File::getName).collect(Collectors.joining("\n"));
 
         outputStream.writeUTF(directoryListString);
     }
