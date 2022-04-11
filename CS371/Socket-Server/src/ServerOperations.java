@@ -10,6 +10,7 @@ public enum ServerOperations {
     CLOSE("CLOSE"),
     HEARTBEAT("HB"), // short message to satisfy timeout
     ACKNOWLEDGE("ACK"),
+    NEG_ACKNOWLEDGE("NACK"),
     RETRY("RETRY");
 
     private final String inputValue;

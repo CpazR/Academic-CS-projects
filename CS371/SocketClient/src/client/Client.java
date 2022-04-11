@@ -11,12 +11,15 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
 
     /* Socket operations have a timeout of 10 seconds */
     private static final int SOCKET_TIMEOUT = 10000;
-    public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
+    // Byte buffer size for chunks in one KB
+    public static final int MAX_BUFFER_SIZE = 10000;
     private static final boolean TIMEOUT_ENABLED = false;
     /* Total number of times an operation can be attempted before decided a failure */
     private static final int OPERATION_RETRY_COUNT = 3;
@@ -52,6 +55,8 @@ public class Client {
         if (operation.equals(ServerOperations.UPLOAD) || operation.equals(ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
             if (arguments.length == 0) {
                 throw new IOException("No file name given for operation that requires a file name.");
+            } else {
+                arguments[0] = "\"" + arguments[0] + "\"";
             }
         }
 
@@ -61,8 +66,7 @@ public class Client {
     private ServerOperations waitForResponse() throws IOException {
         ServerOperations responseOperation;
         var responseCode = inputStream.readUTF();
-        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT)
-                && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE)) {
+        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE)) {
             var errorMessage = "Unknown response operation received: " + responseCode;
             throw new IOException(errorMessage);
         }
@@ -83,7 +87,8 @@ public class Client {
         return completeRequest.toString();
     }
 
-    public void initializeClient(String address, int port) {
+    public boolean initializeClient(String address, int port) {
+        var successfulConnect = false;
         try {
             mainSocket = new Socket();
             mainSocket.connect(new InetSocketAddress(address, port), SOCKET_TIMEOUT);
@@ -100,9 +105,11 @@ public class Client {
                 directory.mkdir();
                 System.out.println("Initialized shared directory.");
             }
+            successfulConnect = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return successfulConnect;
     }
 
     public void closeClient() {
@@ -131,17 +138,43 @@ public class Client {
             // Send initial upload request with file size in bytes to server. Signals it to wait for file.
             performInitialRequest(ServerOperations.UPLOAD, fileName, String.valueOf(Files.size(fileToUpload.toPath())));
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
+            AtomicInteger chunkCount = new AtomicInteger();
+            AtomicInteger chunkedByteCount = new AtomicInteger();
 
             ServerOperations response = null;
             var retryCount = 0;
             while (retryCount < OPERATION_RETRY_COUNT) {
                 try {
-                    outputStream.write(fileBuffer);
-                    outputStream.flush();
+                    var uploadThread = new Thread(() -> {
+                        try {
+                            for (byte b : fileBuffer) {
+                                outputStream.write(b);
+
+                                if (chunkedByteCount.incrementAndGet() == MAX_BUFFER_SIZE) {
+                                    chunkCount.incrementAndGet();
+                                    chunkedByteCount.set(0);
+                                }
+                            }
+                            outputStream.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    uploadThread.start();
+
+                    var startTime = System.currentTimeMillis();
+                    while (uploadThread.isAlive()) {
+                        if (System.currentTimeMillis() - startTime >= 1000) {
+                            System.out.println("Uploaded " + chunkedByteCount.get() + " bytes");
+                            startTime = System.currentTimeMillis();
+                        }
+                    }
+                    System.out.println("Uploaded " + chunkedByteCount.get() * chunkCount.get() + " kb/S");
                     System.out.println("INFO: Sent file to server");
 
                     response = waitForResponse();
                     retryCount = OPERATION_RETRY_COUNT;
+
                 } catch (SocketTimeoutException e) {
                     retryCount++;
                     if (retryCount < OPERATION_RETRY_COUNT) {
@@ -174,7 +207,6 @@ public class Client {
         }
         var fileByteSize = inputStream.readLong();
 
-        // TODO: need to do chunked downloads for large files
         var uploadedFileByteData = inputStream.readNBytes((int) fileByteSize);
         Files.write(uploadedFile.toPath(), uploadedFileByteData);
         System.out.println("INFO: File downloaded from client");

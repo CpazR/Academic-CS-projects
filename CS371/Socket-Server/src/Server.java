@@ -6,8 +6,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Server {
@@ -28,7 +30,6 @@ public class Server {
     // Send data to client
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
-
 
     private final File directory = new File("./sharedFiles/");
 
@@ -68,7 +69,11 @@ public class Server {
         while (!socket.isClosed()) {
 
             if (isConnected()) {
-                var inputFromClient = waitForInput().split(" ");
+                var unParameterizedInput = waitForInput();
+                var inputTokenList = new ArrayList<String>();
+                var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
+                while (matcher.find()) inputTokenList.add(matcher.group(1));
+                var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(), String[].class);
                 var userOperation = ServerOperations.getOperation(inputFromClient[0]);
 
                 if (Objects.nonNull(userOperation)) {
@@ -77,7 +82,7 @@ public class Server {
                             case UPLOAD:
                                 if (inputFromClient.length == 3) {
                                     var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
-                                    uploadFile(inputFromClient[1], (int) fileSizeInBytes);
+                                    uploadFile(inputFromClient[1].replaceAll("\"", ""), (int) fileSizeInBytes);
                                 } else {
                                     throw new IOException("ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
                                 }

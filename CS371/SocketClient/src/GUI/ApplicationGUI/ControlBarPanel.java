@@ -23,14 +23,15 @@ public class ControlBarPanel extends JPanel {
     }
 
     private void connect() {
-        parentFrame.connect();
-        remove(connectButton);
+        if (parentFrame.connect()) {
+            remove(connectButton);
 
-        add(uploadButton);
-        add(downloadButton);
-        add(deleteButton);
-        add(disconnectButton);
-        revalidate();
+            add(uploadButton);
+            add(downloadButton);
+            add(deleteButton);
+            add(disconnectButton);
+            revalidate();
+        }
     }
 
     private void disconnect() {

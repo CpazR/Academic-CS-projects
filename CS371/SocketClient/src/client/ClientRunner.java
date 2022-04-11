@@ -47,7 +47,6 @@ public class ClientRunner {
                             }
                             break;
                         case UPLOAD:
-
                             client.uploadFile(localUserInput[1]);
                             break;
                         case DOWNLOAD:

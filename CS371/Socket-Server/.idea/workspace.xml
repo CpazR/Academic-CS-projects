@@ -2,27 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/jarRepositories.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__com_googlecode_json_simple_json_simple_1_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__com_googlecode_json_simple_json_simple_1_1_1.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__junit_junit_4_10.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__junit_junit_4_10.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__org_hamcrest_hamcrest_core_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/libraries/Maven__org_hamcrest_hamcrest_core_1_1.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/JMorph.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/JMorph.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/ApplicationContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/ControlBarPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/PreviewWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/PreviewWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/PrimitivePanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/ApplicationGUI/PrimitivePanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/AnimatedGrid.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/AnimatedGrid.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/BaseDrawnEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/BaseDrawnEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlGrid.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlGrid.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlImage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlPoint.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Entities/ControlPoint.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../CS335/JMorph/src/main/java/com/company/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerOperations.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ControlBarPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/Entities/BaseDrawnEntity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,6 +148,7 @@
       <workItem from="1647450513227" duration="2574000" />
       <workItem from="1647454186752" duration="592000" />
       <workItem from="1647479134344" duration="3429000" />
+      <workItem from="1649685456238" duration="7740000" />
     </task>
     <servers />
   </component>
@@ -191,11 +181,6 @@
           <url>jar://$USER_HOME$/.jdks/openjdk-15.0.2/lib/src.zip!/java.base/java/io/InputStream.java</url>
           <line>776</line>
           <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Server.java</url>
-          <line>186</line>
-          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -94,7 +94,8 @@ public class ApplicationContext extends JFrame {
     }
 
     /// APPLICATION SPECIFIC FUNCTIONALITY
-    public void connect() {
+    public boolean connect() {
+        var connectedSuccessfully = false;
         connectionSetupPanel.setLayout(new BoxLayout(connectionSetupPanel, BoxLayout.Y_AXIS));
         connectionSetupPanel.add(addressLabel);
         connectionSetupPanel.add(addressField);
@@ -104,10 +105,11 @@ public class ApplicationContext extends JFrame {
         var result = JOptionPane.showConfirmDialog(this, connectionSetupPanel, "Setup connection", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             terminalPanel.emptyTerminal();
-            clientConnection.initializeClient(address, port);
+            connectedSuccessfully = clientConnection.initializeClient(address, port);
             revalidate();
             SwingUtilities.updateComponentTreeUI(this);
         }
+        return connectedSuccessfully;
     }
 
     public void disconnect() {
