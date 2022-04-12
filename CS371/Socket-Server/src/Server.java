@@ -32,7 +32,7 @@ public class Server {
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
 
-    private final File directory = new File("./sharedFiles/");
+    private final File directory = new File("sharedFiles/");
 
     Server() {
         initializeServer();
@@ -90,13 +90,13 @@ public class Server {
                                 }
                                 break;
                             case DOWNLOAD:
-                                downloadFile(inputFromClient[1]);
+                                downloadFile(inputFromClient[1].replaceAll("\"", ""));
                                 break;
                             case DIR:
                                 showFolderContents();
                                 break;
                             case DELETE:
-                                deleteFile(inputFromClient[1]);
+                                deleteFile(inputFromClient[1].replaceAll("\"", ""));
                                 break;
                             case CLOSE:
                                 closeServer();
@@ -232,15 +232,9 @@ public class Server {
                 bytesPerSecond++;
                 totalByteCount++;
 
-                if (System.currentTimeMillis() - startTime >= 1000) {
-                    System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
-                    startTime = System.currentTimeMillis();
-                    bytesPerSecond = 0;
-                }
             }
             outputStream.flush();
             System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
-            outputStream.flush();
             System.out.println("INFO: Sent file to client");
         } else {
             System.err.println("ERROR: Specified file does not exist");

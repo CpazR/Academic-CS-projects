@@ -219,23 +219,33 @@ public class Client {
         // Wait for file stream
         var downloadThread = new Thread(() -> {
             isBusy = true;
-            var receivedBytes = 0;
+            var bytesPerSecond = 0;
+            var totalByteCount = 0;
             var uploadedFileByteData = new byte[(int) fileByteSize];
-            while (receivedBytes < fileByteSize && receivedBytes != -1) {
+            var startTime = System.currentTimeMillis();
+            while (totalByteCount < fileByteSize && totalByteCount != -1) {
                 try {
                     // So long as bytes are available in stream, collect data until all bytes in file are collected
                     if (inputStream.available() > 0) {
-                        uploadedFileByteData[receivedBytes] = inputStream.readByte();
-                        receivedBytes++;
+                        uploadedFileByteData[totalByteCount] = inputStream.readByte();
+                        totalByteCount++;
+                    }
+
+                    bytesPerSecond++;
+                    if (System.currentTimeMillis() - startTime >= 1000) {
+                        System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+                        startTime = System.currentTimeMillis();
+                        bytesPerSecond = 0;
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
                     // Set received bytes to -1, indicating an error
-                    receivedBytes = -1;
+                    totalByteCount = -1;
                 }
             }
-            if (receivedBytes != -1) {
+            System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+            if (totalByteCount != -1) {
                 try {
                     Files.write(uploadedFile.toPath(), uploadedFileByteData);
                 } catch (IOException e) {
