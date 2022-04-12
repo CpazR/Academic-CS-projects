@@ -1,9 +1,6 @@
 package client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -11,8 +8,6 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
 
@@ -31,6 +26,7 @@ public class Client {
     // Send data to server
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
+    private boolean isBusy = false;
 
     private final File directory = new File("./sharedFiles/");
 
@@ -91,14 +87,15 @@ public class Client {
         var successfulConnect = false;
         try {
             mainSocket = new Socket();
+            mainSocket.setTcpNoDelay(true);
             mainSocket.connect(new InetSocketAddress(address, port), SOCKET_TIMEOUT);
             if (TIMEOUT_ENABLED) {
                 mainSocket.setSoTimeout(SOCKET_TIMEOUT);
             }
             System.out.println("Client connected");
 
-            inputStream = new DataInputStream(mainSocket.getInputStream());
-            outputStream = new DataOutputStream(mainSocket.getOutputStream());
+            inputStream = new DataInputStream(new BufferedInputStream(mainSocket.getInputStream()));
+            outputStream = new DataOutputStream(new BufferedOutputStream(mainSocket.getOutputStream()));
             isConnected = true;
 
             if (!directory.exists()) {
@@ -131,6 +128,10 @@ public class Client {
         return isConnected;
     }
 
+    public boolean isBusy() {
+        return isBusy;
+    }
+
     public void uploadFile(String fileName) throws IOException {
         // Check if file exists
         var fileToUpload = new File(directory.getAbsolutePath() + "\\" + fileName);
@@ -138,59 +139,46 @@ public class Client {
             // Send initial upload request with file size in bytes to server. Signals it to wait for file.
             performInitialRequest(ServerOperations.UPLOAD, fileName, String.valueOf(Files.size(fileToUpload.toPath())));
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
-            AtomicInteger chunkCount = new AtomicInteger();
-            AtomicInteger chunkedByteCount = new AtomicInteger();
 
-            ServerOperations response = null;
-            var retryCount = 0;
-            while (retryCount < OPERATION_RETRY_COUNT) {
+            var uploadThread = new Thread(() -> {
+                isBusy = true;
+                ServerOperations response = null;
+                var bytesPerSecond = 0;
+                var totalByteCount = 0;
                 try {
-                    var uploadThread = new Thread(() -> {
-                        try {
-                            for (byte b : fileBuffer) {
-                                outputStream.write(b);
-
-                                if (chunkedByteCount.incrementAndGet() == MAX_BUFFER_SIZE) {
-                                    chunkCount.incrementAndGet();
-                                    chunkedByteCount.set(0);
-                                }
-                            }
-                            outputStream.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    uploadThread.start();
-
                     var startTime = System.currentTimeMillis();
-                    while (uploadThread.isAlive()) {
+                    for (byte b : fileBuffer) {
+                        outputStream.write(b);
+                        bytesPerSecond++;
+                        totalByteCount++;
+
                         if (System.currentTimeMillis() - startTime >= 1000) {
-                            System.out.println("Uploaded " + chunkedByteCount.get() + " bytes");
+                            System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
                             startTime = System.currentTimeMillis();
+                            bytesPerSecond = 0;
                         }
                     }
-                    System.out.println("Uploaded " + chunkedByteCount.get() * chunkCount.get() + " kb/S");
-                    System.out.println("INFO: Sent file to server");
+                    outputStream.flush();
+                    System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
 
+                    System.out.println("INFO: Waiting for server ACK");
                     response = waitForResponse();
-                    retryCount = OPERATION_RETRY_COUNT;
-
                 } catch (SocketTimeoutException e) {
-                    retryCount++;
-                    if (retryCount < OPERATION_RETRY_COUNT) {
-                        System.err.println("ERROR: Request timed out, retrying");
-                    } else {
-                        System.err.println("ERROR: Too many attempts, request failed");
-                    }
-                }
-            }
+                    System.err.println("ERROR: Request timed out");
+                } catch (IOException e) {
+                    e.printStackTrace();
 
-            Objects.requireNonNull(response);
-            if (response.equals(ServerOperations.ACKNOWLEDGE)) {
-                System.out.println("INFO: File uploaded successfully");
-            } else {
-                System.err.println("ERROR: Failure when uploading file - " + response);
-            }
+                }
+
+                Objects.requireNonNull(response);
+                if (response.equals(ServerOperations.ACKNOWLEDGE)) {
+                    System.out.println("INFO: File uploaded successfully");
+                } else {
+                    System.err.println("ERROR: Failure when uploading file - " + response);
+                }
+                isBusy = false;
+            });
+            uploadThread.start();
         } else {
             System.err.println("ERROR: Specified file does not exist");
         }
@@ -201,16 +189,43 @@ public class Client {
         performInitialRequest(ServerOperations.DOWNLOAD, fileName);
 
         var uploadedFile = new File(directory.getAbsolutePath() + "\\" + fileName);
-        // TODO: track statistics
         if (uploadedFile.createNewFile()) {
             System.out.println("INFO: File created");
         }
         var fileByteSize = inputStream.readLong();
 
-        var uploadedFileByteData = inputStream.readNBytes((int) fileByteSize);
-        Files.write(uploadedFile.toPath(), uploadedFileByteData);
-        System.out.println("INFO: File downloaded from client");
-        // NOTE: Ack isn't required here. If error occurs, client will automatically trigger a re-request
+        // Wait for file stream
+        var downloadThread = new Thread(() -> {
+            var receivedBytes = 0;
+            var uploadedFileByteData = new byte[(int) fileByteSize];
+            while (receivedBytes < fileByteSize && receivedBytes != -1) {
+                try {
+                    // So long as bytes are available in stream, collect data until all bytes in file are collected
+                    if (inputStream.available() > 0) {
+                        uploadedFileByteData[receivedBytes] = inputStream.readByte();
+                        receivedBytes++;
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Set received bytes to -1, indicating an error
+                    receivedBytes = -1;
+                }
+            }
+            if (receivedBytes != -1) {
+                try {
+                    Files.write(uploadedFile.toPath(), uploadedFileByteData);
+                } catch (IOException e) {
+                    System.err.println("ERROR: An error occurred when writing downloaded file");
+                    e.printStackTrace();
+                }
+                System.out.println("INFO: File downloaded from server");
+            } else {
+                System.err.println("ERROR: An error occurred when downloading file");
+            }
+        });
+        downloadThread.start();
+        // NOTE: Ack isn't required here. If error occurs, client will safely alert user of failure
     }
 
     public String[] showRemoteFolderContents() throws IOException {

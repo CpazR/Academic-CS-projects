@@ -33,6 +33,7 @@ public class ApplicationContext extends JFrame {
     private int port = 4444;
 
     private final Client clientConnection;
+    private boolean isBusy;
 
     public ApplicationContext(String applicationName, Client client) {
         super(applicationName);
@@ -144,7 +145,7 @@ public class ApplicationContext extends JFrame {
 
     public void requestDeleteFile() {
         try {
-            fileManagerPanel.updateFileList(clientConnection.showLocalFolderContents());
+            fileManagerPanel.updateFileList(clientConnection.showRemoteFolderContents());
             var result = JOptionPane.showConfirmDialog(this, fileManagerPanel, "Delete File", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
                 clientConnection.deleteFile(fileManagerPanel.getSelectedFileName());
@@ -153,5 +154,11 @@ public class ApplicationContext extends JFrame {
             e.printStackTrace();
         }
     }
+
+    public void setBusy(boolean toggle) {
+        isBusy = toggle;
+        controlPanel.setBusy(!toggle);
+    }
+
 }
 

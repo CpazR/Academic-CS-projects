@@ -52,4 +52,12 @@ public class ControlBarPanel extends JPanel {
         deleteButton.addActionListener(e -> parentFrame.requestDeleteFile());
         disconnectButton.addActionListener(e -> disconnect());
     }
+
+    public void setBusy(boolean b) {
+        connectButton.setEnabled(b);
+        uploadButton.setEnabled(b);
+        downloadButton.setEnabled(b);
+        deleteButton.setEnabled(b);
+        disconnectButton.setEnabled(b);
+    }
 }

@@ -13,6 +13,7 @@ import java.util.Scanner;
 public class ClientRunner {
 
     static Scanner inputScanner = new Scanner(System.in);
+    static ApplicationContext context;
 
     public static void main(String[] args) {
 
@@ -20,7 +21,7 @@ public class ClientRunner {
         boolean clientConnecting = false;
         var client = new Client();
 
-        new ApplicationContext("Shared Folder Client", client);
+        context = new ApplicationContext("Shared Folder Client", client);
     }
 
     private static String[] getLocalInput() {
@@ -30,10 +31,10 @@ public class ClientRunner {
 
     public static void mainLoop(Client client) {
         while (true) {
-
             var localUserInput = getLocalInput();
             var userOperation = ServerOperations.getOperation(localUserInput[0].toUpperCase());
-            if (Objects.nonNull(userOperation)) {
+            if (!client.isBusy() && Objects.nonNull(userOperation)) {
+                context.setBusy(false);
                 try {
                     switch (userOperation) {
                         case CONNECT:
@@ -75,7 +76,11 @@ public class ClientRunner {
                     }
                 }
             } else {
-                System.err.println("ERROR: Input is null.");
+                if (client.isBusy()) {
+                    context.setBusy(true);
+                } else {
+                    System.err.println("ERROR: Input is null.");
+                }
             }
         }
     }

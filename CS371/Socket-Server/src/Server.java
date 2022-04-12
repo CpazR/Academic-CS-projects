@@ -31,7 +31,7 @@ public class Server {
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
 
-    private final File directory = new File("./sharedFiles/");
+    private final File directory = new File(".\\sharedFiles\\");
 
     Server() {
         initializeServer();
@@ -72,7 +72,8 @@ public class Server {
                 var unParameterizedInput = waitForInput();
                 var inputTokenList = new ArrayList<String>();
                 var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
-                while (matcher.find()) inputTokenList.add(matcher.group(1));
+                while (matcher.find())
+                    inputTokenList.add(matcher.group(1));
                 var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(), String[].class);
                 var userOperation = ServerOperations.getOperation(inputFromClient[0]);
 
@@ -107,6 +108,7 @@ public class Server {
                                 break;
                         }
                     } catch (IOException e) {
+                        sendNack();
                         System.err.println("ERROR: Failed to execute operation " + userOperation);
                         e.printStackTrace();
 
@@ -119,6 +121,14 @@ public class Server {
                     System.err.println("ERROR: Failed to receive operation from client.");
                 }
             }
+        }
+    }
+
+    private void sendNack() {
+        try {
+            outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -161,18 +171,37 @@ public class Server {
         System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
         var uploadedFile = new File(directory.getAbsolutePath() + "\\" + fileName);
 
-        // TODO: track statistics
         if (uploadedFile.createNewFile()) {
             System.out.println("INFO: File created");
         }
         // Wait for file stream
-        // TODO: need to do chunked downloads for large files
-        var uploadedFileByteData = inputStream.readNBytes(fileByteSize);
-        Files.write(uploadedFile.toPath(), uploadedFileByteData);
-        System.out.println("INFO: File received from client");
+        var receivedBytes = 0;
+        var uploadedFileByteData = new byte[fileByteSize];
+        // So long as bytes are available in stream, collect data until all bytes in file are collected
+        while (receivedBytes < fileByteSize && receivedBytes != -1) {
+            try {
+                if (inputStream.available() > 0) {
+                    uploadedFileByteData[receivedBytes] = inputStream.readByte();
+                    receivedBytes++;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Set received bytes to -1, indicating an error
+                receivedBytes = -1;
+            }
+        }
 
-        // Send ACK back to client
-        outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+        if (receivedBytes != -1) {
+            Files.write(uploadedFile.toPath(), uploadedFileByteData);
+            System.out.println("INFO: File received from client");
+
+            // Send ACK back to client
+            outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+            System.out.println("INFO: ACK send. Waiting for new command.");
+        } else {
+            System.err.println("ERROR: An error occurred when receiving uploaded file");
+            sendNack();
+        }
     }
 
     /**
@@ -188,7 +217,22 @@ public class Server {
             System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
 
-            outputStream.write(fileBuffer);
+            var bytesPerSecond = 0;
+            var totalByteCount = 0;
+            var startTime = System.currentTimeMillis();
+            for (byte b : fileBuffer) {
+                outputStream.write(b);
+                bytesPerSecond++;
+                totalByteCount++;
+
+                if (System.currentTimeMillis() - startTime >= 1000) {
+                    System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
+                    startTime = System.currentTimeMillis();
+                    bytesPerSecond = 0;
+                }
+            }
+            outputStream.flush();
+            System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
             outputStream.flush();
             System.out.println("INFO: Sent file to client");
         } else {
