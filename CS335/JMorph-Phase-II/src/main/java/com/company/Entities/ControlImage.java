@@ -3,58 +3,71 @@ package com.company.Entities;
 import com.company.ApplicationGUI.ApplicationContext;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
-public class ControlImage implements BaseDrawnEntity {
+public class ControlImage implements BaseDrawnEntity, Cloneable {
 
-    private BufferedImage image;
+    private final JFrame context;
+    private final BufferedImage imageBuffer;
+    private final Image image;
+    private final int panelWidth = ApplicationContext.panelWidth / 2;
+    private final int panelHeight = ApplicationContext.panelHeight;
+    private boolean imageLoaded = false;
+    private float alpha = 1f;
 
-    private double angle;
+    public ControlImage(JFrame context, String imageURL) {
+        Image imageTemp;
+        this.context = context;
+        // The ImageObserver implementation to observe loading of the image
 
-    public ControlImage(String imageLocation) {
         try {
-            image = ImageIO.read(new File(imageLocation));
-        } catch (Exception e) {
+            var imageFile = new File(imageURL);
+            if (imageFile.exists()) {
+                imageTemp = ImageIO.read(imageFile).getScaledInstance(panelWidth, panelHeight, Image.SCALE_DEFAULT);
+            } else {
+                throw new IOException("Cannot find file at " + imageURL);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
+            imageTemp = null;
         }
+
+        image = imageTemp;
+
+        imageBuffer = new BufferedImage(panelWidth, panelHeight, BufferedImage.TYPE_INT_ARGB);
+        assert image != null;
+        imageBuffer.getGraphics().drawImage(image, 0, 0, panelWidth, panelHeight, 0, 0, image.getWidth(null), image.getHeight(null), null);
     }
 
-    public void setAngle(double angle) {
-        this.angle = angle;
+    public void setAlpha(float newAlpha) {
+        alpha = newAlpha;
     }
 
     @Override
     public void paintEntity(Graphics g) {
-        var rotationalAffineTransform = new AffineTransform();
-
-        var xCenter = ApplicationContext.panelWidth / 2;
-        var yCenter = ApplicationContext.panelHeight / 2;
-
-        var imageHorCenter = image.getWidth() / 2;
-        var imageVerCenter = image.getHeight() / 2;
-
-        // Center transformation at center of screen
-        rotationalAffineTransform.translate(xCenter - imageHorCenter, yCenter - imageVerCenter);
-
-        // Apply transformations to rotate around center of image
-        rotationalAffineTransform.translate(imageHorCenter, imageVerCenter);
-        // Apply rotation
-        rotationalAffineTransform.rotate(Math.toRadians(angle));
-        // Scale down image if too large (apply while image is centered to keep things aligned)
-        if (image.getWidth() > ApplicationContext.panelWidth && image.getHeight() > ApplicationContext.panelHeight) {
-            rotationalAffineTransform.scale(0.3, 0.3);
-        }
-        rotationalAffineTransform.translate(-imageHorCenter, -imageVerCenter);
-
-        // Draw image with transformation
-        ((Graphics2D) g).drawImage(image, rotationalAffineTransform, null);
+        var g2d = (Graphics2D) g;
+        var alphaComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
+        g2d.setComposite(alphaComposite);
+        g2d.drawImage(imageBuffer, 0, 0, context);
     }
 
     @Override
     public void reset() {
 
+    }
+
+    @Override
+    public ControlImage clone() {
+        try {
+            ControlImage clone = (ControlImage) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

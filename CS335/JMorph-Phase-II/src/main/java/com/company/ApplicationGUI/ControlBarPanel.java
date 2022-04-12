@@ -44,6 +44,7 @@ public class ControlBarPanel extends JPanel implements ChangeListener {
             parentFrame.pause();
         }
         parentFrame.setFrame(slider.getValue());
+        parentFrame.updateImage();
 
         revalidate();
     }

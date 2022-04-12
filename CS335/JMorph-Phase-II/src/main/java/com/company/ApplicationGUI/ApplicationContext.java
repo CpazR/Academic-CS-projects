@@ -3,6 +3,7 @@ package com.company.ApplicationGUI;
 import com.company.Entities.AnimatedGrid;
 import com.company.Entities.BaseDrawnEntity;
 import com.company.Entities.ControlGrid;
+import com.company.Entities.ControlImage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,6 +30,8 @@ public class ApplicationContext extends JFrame {
     private final PrimitivePanel primitivePanelB = new PrimitivePanel(panelWidth / 2, panelHeight, true);
 
     private final JPanel newMorphPanel = new JPanel();
+    private final JLabel pictureALabel = new JLabel("Picture A:");
+    private final JLabel pictureBLabel = new JLabel("Picture B:");
     private final JLabel gridWidthLabel = new JLabel("Width:");
     private final JLabel gridHeightLabel = new JLabel("Height:");
     private final JLabel morphFramesLabel = new JLabel("Frames for Morph:");
@@ -46,8 +49,9 @@ public class ApplicationContext extends JFrame {
 
         establishListeners();
 
-        primitivePanelA.addEntities(List.of(new ControlGrid(5, 5, primitivePanelA.getWidth(), primitivePanelA.getHeight())));
-        primitivePanelB.addEntities(List.of(new ControlGrid(5, 5, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
+        // TODO: Replace with original images and parameterize as part of new morph
+        primitivePanelA.addEntities(List.of(new ControlImage(this, "./assets/Bird1.jpg"), new ControlGrid(5, 5, primitivePanelA.getWidth(), primitivePanelA.getHeight())));
+        primitivePanelB.addEntities(List.of(new ControlImage(this, "./assets/Bird2.jpg"), new ControlGrid(5, 5, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
 
         centerWindow();
         setResizable(false);
@@ -106,6 +110,10 @@ public class ApplicationContext extends JFrame {
 
             newMorphPanel.removeAll();
             newMorphPanel.setLayout(new BoxLayout(newMorphPanel, BoxLayout.Y_AXIS));
+            newMorphPanel.add(pictureALabel);
+            // TODO: File select button
+            newMorphPanel.add(pictureBLabel);
+            // TODO: File select button
             newMorphPanel.add(gridWidthLabel);
             newMorphPanel.add(gridWidthField);
             newMorphPanel.add(gridHeightLabel);
@@ -121,7 +129,7 @@ public class ApplicationContext extends JFrame {
         });
         previewMorphButton.addActionListener(e -> {
             var animatedGrid = new AnimatedGrid(List.of(primitivePanelA.getGrid(), primitivePanelB.getGrid()), totalFrames);
-            new PreviewWindow(animatedGrid);
+            new PreviewWindow(animatedGrid, List.of(primitivePanelA.getBufferedImage().clone(), primitivePanelB.getBufferedImage().clone()));
         });
         resetMorphButton.addActionListener(e -> {
             primitivePanelA.resetEntities();

@@ -1,8 +1,10 @@
 package com.company.ApplicationGUI;
 
 import com.company.Entities.AnimatedGrid;
+import com.company.Entities.ControlImage;
 
 import javax.swing.*;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +18,8 @@ public class PreviewWindow extends JFrame {
     private final ControlBarPanel previewControlPanel;
     private final PrimitivePanel previewAnimatedPanel = new PrimitivePanel(panelWidth / 2, panelHeight, false);
     private final AnimatedGrid animatedGrid;
+    private final ControlImage imageBufferA;
+    private final ControlImage imageBufferB;
 
     private int currentFrame;
     private final int totalFrames;
@@ -24,15 +28,19 @@ public class PreviewWindow extends JFrame {
     // A thread that will run at roughly a fixed rate
     private ScheduledExecutorService animatorThread;
 
-    PreviewWindow(AnimatedGrid animatedGrid) {
+    PreviewWindow(AnimatedGrid animatedGrid, List<ControlImage> images) {
         this.animatedGrid = animatedGrid;
         totalFrames = animatedGrid.getTotalFrames();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         previewPanel.setLayout(new BoxLayout(previewPanel, BoxLayout.Y_AXIS));
         previewControlPanel = new ControlBarPanel(this);
+        imageBufferA = images.get(0);
+        imageBufferB = images.get(1);
         previewPanel.add(previewControlPanel);
         previewPanel.add(previewAnimatedPanel);
-        previewAnimatedPanel.addEntity(animatedGrid);
+        previewAnimatedPanel.addEntity(imageBufferA);
+        previewAnimatedPanel.addEntity(imageBufferB);
+        //        previewAnimatedPanel.addEntity(animatedGrid);
         add(previewPanel);
         setVisible(true);
         setResizable(false);
@@ -48,6 +56,7 @@ public class PreviewWindow extends JFrame {
             if (currentFrame <= totalFrames) {
                 currentFrame++;
                 previewControlPanel.updateControlBar();
+                updateImage();
                 if (!animatedGrid.animate(currentFrame) || !this.isVisible()) {
                     System.out.println("Animation stopped, shutting down thread.");
                 }
@@ -55,6 +64,12 @@ public class PreviewWindow extends JFrame {
                 pause();
             }
         }, 0L, 15, TimeUnit.MILLISECONDS);
+    }
+
+    public void updateImage() {
+        var alphaValue = Math.min(1f, Math.max(0f, (float) currentFrame / (float) totalFrames));
+        imageBufferA.setAlpha(alphaValue);
+        imageBufferB.setAlpha(1f - alphaValue);
     }
 
     public void togglePlay() {

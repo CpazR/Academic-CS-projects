@@ -2,6 +2,7 @@ package com.company.ApplicationGUI;
 
 import com.company.Entities.BaseDrawnEntity;
 import com.company.Entities.ControlGrid;
+import com.company.Entities.ControlImage;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -96,7 +97,10 @@ public class PrimitivePanel extends JPanel {
     }
 
     public ControlGrid getGrid() {
-        return (ControlGrid) drawableEntities.get(0);
+        return (ControlGrid) drawableEntities.get(1);
     }
 
+    public ControlImage getBufferedImage() {
+        return (ControlImage) drawableEntities.get(0);
+    }
 }
