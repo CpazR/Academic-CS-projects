@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -31,7 +32,7 @@ public class Server {
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
 
-    private final File directory = new File(".\\sharedFiles\\");
+    private final File directory = new File("./sharedFiles/");
 
     Server() {
         initializeServer();
@@ -102,6 +103,7 @@ public class Server {
                                 break;
                             case HEARTBEAT:
                                 // Do not perform any operations, try next iteration for valid input
+                                System.out.println("INFO: Heartbeat at " + LocalDateTime.now());
                                 break;
                             default:
                                 System.err.println("INVALID OPERATION: " + userOperation);
@@ -126,6 +128,14 @@ public class Server {
 
     private void sendNack() {
         try {
+            outputStream.writeUTF(ServerOperations.NEG_ACKNOWLEDGE.getInputValue());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendAck() {
+        try {
             outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
         } catch (IOException e) {
             e.printStackTrace();
@@ -140,13 +150,8 @@ public class Server {
                 throw new SocketException("ERROR: Connection closed");
             }
 
-            // Only check for input if there is data in input stream
-            var bytesAvailable = inputStream.available();
-            if (bytesAvailable > 0) {
-                clientInput = inputStream.readUTF();
-            } else {
-                clientInput = "HB";
-            }
+            // Wait for input from client. Can be a simple heartbeat to prevent server timeout
+            clientInput = inputStream.readUTF();
         } catch (IOException e) {
             System.err.println("ERROR WHILE RECEIVING INPUT: ");
             e.printStackTrace();
@@ -169,7 +174,7 @@ public class Server {
      */
     public void uploadFile(String fileName, int fileByteSize) throws IOException {
         System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
-        var uploadedFile = new File(directory.getAbsolutePath() + "\\" + fileName);
+        var uploadedFile = new File(directory.getAbsolutePath() + "/" + fileName);
 
         if (uploadedFile.createNewFile()) {
             System.out.println("INFO: File created");
@@ -196,7 +201,7 @@ public class Server {
             System.out.println("INFO: File received from client");
 
             // Send ACK back to client
-            outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+            sendAck();
             System.out.println("INFO: ACK send. Waiting for new command.");
         } else {
             System.err.println("ERROR: An error occurred when receiving uploaded file");
@@ -210,8 +215,10 @@ public class Server {
     public void downloadFile(String fileName) throws IOException {
 
         // Check if file exists
-        var fileToUpload = new File(directory.getAbsolutePath() + "\\" + fileName);
+        var fileToUpload = new File(directory.getAbsolutePath() + "/" + fileName);
         if (fileToUpload.exists()) {
+            // Use an ACK / NACK to indicate to client that file exists
+            sendAck();
             // Send signal back to client with size of requested file.
             outputStream.writeLong(Files.size(fileToUpload.toPath()));
             System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
@@ -237,6 +244,7 @@ public class Server {
             System.out.println("INFO: Sent file to client");
         } else {
             System.err.println("ERROR: Specified file does not exist");
+            sendNack();
         }
     }
 
@@ -250,11 +258,11 @@ public class Server {
 
     public void deleteFile(String fileName) throws IOException {
 
-        var fileToDelete = new File(directory.getAbsolutePath() + "\\" + fileName);
+        var fileToDelete = new File(directory.getAbsolutePath() + "/" + fileName);
         Files.deleteIfExists(fileToDelete.toPath());
 
         // Send ack back to client
-        outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+        sendAck();
     }
 
     public void closeServer() {

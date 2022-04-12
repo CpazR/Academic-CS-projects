@@ -8,6 +8,8 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
 
@@ -31,7 +33,20 @@ public class Client {
     private final File directory = new File("./sharedFiles/");
 
     Client() {
-
+        // Schedule heartbeat to prevent server timeout
+        var heartBeat = Executors.newSingleThreadScheduledExecutor();
+        heartBeat.scheduleAtFixedRate(() -> {
+            if (isConnected() && !isBusy()) {
+                try {
+                    performInitialRequest(ServerOperations.HEARTBEAT);
+                } catch (IOException e) {
+                    // Some error occurred on the server side if heartbeat failed to send. Disconnect
+                    System.err.println("ERROR: Failed to send server heartbeat");
+                    e.printStackTrace();
+                    closeClient();
+                }
+            }
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     Client(String address, int port) {
@@ -57,14 +72,20 @@ public class Client {
         }
 
         outputStream.writeUTF(buildCommandRequest(operation.getInputValue(), arguments));
+        outputStream.flush();
     }
 
     private ServerOperations waitForResponse() throws IOException {
         ServerOperations responseOperation;
         var responseCode = inputStream.readUTF();
-        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE)) {
+        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
             var errorMessage = "Unknown response operation received: " + responseCode;
             throw new IOException(errorMessage);
+        } else {
+            if (Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
+                var errorMessage = "A server side error has occurred: " + responseCode;
+                throw new IOException(errorMessage);
+            }
         }
         responseOperation = ServerOperations.getOperation(responseCode);
         Objects.requireNonNull(responseOperation);
@@ -188,6 +209,7 @@ public class Client {
         System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
         performInitialRequest(ServerOperations.DOWNLOAD, fileName);
 
+        waitForResponse();
         var uploadedFile = new File(directory.getAbsolutePath() + "\\" + fileName);
         if (uploadedFile.createNewFile()) {
             System.out.println("INFO: File created");
@@ -196,6 +218,7 @@ public class Client {
 
         // Wait for file stream
         var downloadThread = new Thread(() -> {
+            isBusy = true;
             var receivedBytes = 0;
             var uploadedFileByteData = new byte[(int) fileByteSize];
             while (receivedBytes < fileByteSize && receivedBytes != -1) {
@@ -223,17 +246,20 @@ public class Client {
             } else {
                 System.err.println("ERROR: An error occurred when downloading file");
             }
+            isBusy = false;
         });
         downloadThread.start();
         // NOTE: Ack isn't required here. If error occurs, client will safely alert user of failure
     }
 
     public String[] showRemoteFolderContents() throws IOException {
+        isBusy = true;
         performInitialRequest(ServerOperations.DIR);
         var directoryListString = inputStream.readUTF();
         System.out.println("Remote files:\n------------");
         System.out.println(directoryListString);
         System.out.println("------------");
+        isBusy = false;
         return directoryListString.split("\n");
     }
 
@@ -249,6 +275,7 @@ public class Client {
     }
 
     public void deleteFile(String fileName) throws IOException {
+        isBusy = true;
         performInitialRequest(ServerOperations.DELETE, fileName);
 
         var response = waitForResponse();
@@ -257,6 +284,6 @@ public class Client {
         } else {
             System.err.println("ERROR: Failure when requesting deletion of file - " + response);
         }
-
+        isBusy = true;
     }
 }

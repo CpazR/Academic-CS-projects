@@ -2,16 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ApplicationContext.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ControlBarPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/GUI/ApplicationGUI/ControlBarPanel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ClientRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/ServerOperations.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/ServerOperations.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,16 +174,6 @@
           <url>jar://$USER_HOME$/.jdks/openjdk-15.0.2/lib/src.zip!/java.base/java/io/InputStream.java</url>
           <line>776</line>
           <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Server.java</url>
-          <line>245</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/Server.java</url>
-          <line>94</line>
-          <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
