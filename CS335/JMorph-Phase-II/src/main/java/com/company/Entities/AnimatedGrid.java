@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnimatedGrid implements BaseDrawnEntity {
-    private List<ControlGrid> gridKeyframes = new ArrayList<>();
-    private ControlGrid activeFrame;
-    private List<Polygon> pointTriangles = new ArrayList<>();
+    private final List<ControlGrid> gridKeyframes = new ArrayList<>();
+    private final ControlGrid activeFrame;
 
     private int currentFrame;
     private final int totalFrames;
@@ -58,10 +57,10 @@ public class AnimatedGrid implements BaseDrawnEntity {
             System.out.println("Animating frame: " + this.currentFrame);
             var pointGrid = activeFrame.getGridOfPoints();
 
-            for (int i = 0; i < pointGrid.length; i++) {
-                for (int j = 0; j < pointGrid[i].length; j++) {
-                    var currentPoint = pointGrid[i][j];
-                    var newPosition = getMorphInterpolation(i, j, this.currentFrame);
+            for (int x = 0; x < pointGrid.length; x++) {
+                for (int y = 0; y < pointGrid[0].length; y++) {
+                    var currentPoint = pointGrid[x][y];
+                    var newPosition = getMorphInterpolation(x, y, this.currentFrame);
                     currentPoint.updatePosition(newPosition);
                 }
             }
@@ -82,5 +81,9 @@ public class AnimatedGrid implements BaseDrawnEntity {
     @Override
     public void reset() {
 
+    }
+
+    public ControlGrid getActiveFrame() {
+        return activeFrame;
     }
 }

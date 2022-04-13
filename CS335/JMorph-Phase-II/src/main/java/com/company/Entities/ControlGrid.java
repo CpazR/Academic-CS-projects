@@ -2,14 +2,15 @@ package com.company.Entities;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class ControlGrid implements BaseDrawnEntity {
     private final ControlPoint[][] pointGrid;
     private ControlPoint draggedPoint;
-    private final List<Polygon> pointTriangles = new ArrayList<>();
+    private Triangle[][] pointTriangles;
 
+    private int gridWidth;
+    private int gridHeight;
     private int panelWidth;
     private int panelHeight;
 
@@ -18,7 +19,10 @@ public class ControlGrid implements BaseDrawnEntity {
      */
     public ControlGrid(int gridWidth, int gridHeight, int panelWidth, int panelHeight) {
 
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
         pointGrid = new ControlPoint[gridWidth + 2][gridHeight + 2];
+        pointTriangles = new Triangle[(gridWidth + 1) * 2][(gridHeight + 1) * 2];
 
         // Add two for hidden border points
         this.panelWidth = panelWidth;
@@ -31,7 +35,8 @@ public class ControlGrid implements BaseDrawnEntity {
      * Copy constructor
      */
     public ControlGrid(ControlGrid controlGrid) {
-        pointGrid = new ControlPoint[controlGrid.getGridOfPoints().length][controlGrid.getGridOfPoints()[0].length];
+        pointGrid = new ControlPoint[gridWidth + 2][gridHeight + 2];
+        pointTriangles = new Triangle[(gridWidth + 1) * 2][(gridHeight + 1) * 2];
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 pointGrid[i][j] = new ControlPoint(controlGrid.getGridOfPoints()[i][j]);
@@ -80,16 +85,24 @@ public class ControlGrid implements BaseDrawnEntity {
         return pointGrid;
     }
 
+    public Triangle[][] getPointTriangles() {
+        return pointTriangles;
+    }
+
     @Override
     public void paintEntity(Graphics g) {
         // As original list of triangles is updated concurrently, create a copy of list to prevent problems
-        List<Polygon> copyOfTriangles = new ArrayList<>(pointTriangles);
-        copyOfTriangles.forEach(triangle -> {
-            var prevColor = g.getColor();
-            g.setColor(Color.BLUE);
-            g.drawPolygon(triangle);
-            g.setColor(prevColor);
-        });
+        var copyOfTriangles = pointTriangles.clone();
+        for (Triangle[] copyOfTriangle : copyOfTriangles) {
+            for (Triangle triangle : copyOfTriangle) {
+                if (!Objects.isNull(triangle)) {
+                    var prevColor = g.getColor();
+                    g.setColor(Color.BLUE);
+                    triangle.draw(g);
+                    g.setColor(prevColor);
+                }
+            }
+        }
         for (ControlPoint[] controlPoints : pointGrid) {
             for (ControlPoint controlPoint : controlPoints) {
                 if (controlPoint.canDraw())
@@ -109,27 +122,28 @@ public class ControlGrid implements BaseDrawnEntity {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 var xPos = widthInterval * i;
                 var yPos = heightInterval * j;
-                pointGrid[i][j] = new ControlPoint(xPos, yPos, !(i == 0 || j == 0 || i == pointGrid.length - 1 || j == pointGrid[0].length - 1));
+                pointGrid[i][j] = new ControlPoint(xPos, yPos,
+                        !(i == 0 || j == 0 || i == pointGrid.length - 1 || j == pointGrid[0].length - 1));
             }
         }
         updateTriangles();
     }
 
     public void updateTriangles() {
-        pointTriangles.clear();
+        pointTriangles = new Triangle[(gridWidth + 1) * 2][gridHeight + 1];
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 if (i > 0 && j > 0) {
-                    var triangleLowerRegion = new Polygon();
-                    triangleLowerRegion.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
-                    triangleLowerRegion.addPoint(pointGrid[i - 1][j].getPosition().x, pointGrid[i - 1][j].getPosition().y);
-                    triangleLowerRegion.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
-                    pointTriangles.add(triangleLowerRegion);
-                    var triangleUpperRegion = new Polygon();
-                    triangleUpperRegion.addPoint(pointGrid[i - 1][j - 1].getPosition().x, pointGrid[i - 1][j - 1].getPosition().y);
-                    triangleUpperRegion.addPoint(pointGrid[i][j - 1].getPosition().x, pointGrid[i][j - 1].getPosition().y);
-                    triangleUpperRegion.addPoint(pointGrid[i][j].getPosition().x, pointGrid[i][j].getPosition().y);
-                    pointTriangles.add(triangleUpperRegion);
+                    var triangleLowerRegion = new Triangle(pointGrid[i - 1][j - 1].getPosition().x,
+                            pointGrid[i - 1][j - 1].getPosition().y, pointGrid[i - 1][j].getPosition().x,
+                            pointGrid[i - 1][j].getPosition().y, pointGrid[i][j].getPosition().x,
+                            pointGrid[i][j].getPosition().y);
+                    pointTriangles[i - 1][j - 1] = triangleLowerRegion;
+                    var triangleUpperRegion = new Triangle(pointGrid[i - 1][j - 1].getPosition().x,
+                            pointGrid[i - 1][j - 1].getPosition().y, pointGrid[i][j - 1].getPosition().x,
+                            pointGrid[i][j - 1].getPosition().y, pointGrid[i][j].getPosition().x,
+                            pointGrid[i][j].getPosition().y);
+                    pointTriangles[i][j - 1] = triangleUpperRegion;
                 }
             }
         }
