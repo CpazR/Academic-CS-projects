@@ -40,6 +40,7 @@ public class PreviewWindow extends JFrame {
         previewPanel.add(previewAnimatedPanel);
         previewAnimatedPanel.addEntity(imageBufferA);
         previewAnimatedPanel.addEntity(imageBufferB);
+//        previewAnimatedPanel.addEntity(animatedGrid);
         add(previewPanel);
         setVisible(true);
         setResizable(false);

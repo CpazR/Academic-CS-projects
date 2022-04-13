@@ -148,9 +148,9 @@ public class ApplicationContext extends JFrame {
 
     public void newMorph(int gridWidth, int gridHeight, int totalFrames) {
         primitivePanelA.removeAllEntities();
-        primitivePanelA.addEntities(List.of(new ControlGrid(gridWidth, gridHeight, primitivePanelA.getWidth(), primitivePanelA.getHeight())));
+        primitivePanelA.addEntities(List.of(new ControlImage(this, "./assets/Bird1.jpg"), new ControlGrid(gridWidth, gridHeight, primitivePanelA.getWidth(), primitivePanelA.getHeight())));
         primitivePanelB.removeAllEntities();
-        primitivePanelB.addEntities(List.of(new ControlGrid(gridWidth, gridHeight, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
+        primitivePanelB.addEntities(List.of(new ControlImage(this, "./assets/Bird2.jpg"), new ControlGrid(gridWidth, gridHeight, primitivePanelB.getWidth(), primitivePanelB.getHeight())));
         revalidate();
     }
 }
