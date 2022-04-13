@@ -35,6 +35,10 @@ public class ControlGrid implements BaseDrawnEntity {
      * Copy constructor
      */
     public ControlGrid(ControlGrid controlGrid) {
+        gridWidth = controlGrid.gridWidth;
+        gridHeight = controlGrid.gridHeight;
+        panelWidth = controlGrid.panelWidth;
+        panelHeight = controlGrid.panelHeight;
         pointGrid = new ControlPoint[gridWidth + 2][gridHeight + 2];
         pointTriangles = new Triangle[(gridWidth + 1) * 2][(gridHeight + 1) * 2];
         for (int i = 0; i < pointGrid.length; i++) {
@@ -93,14 +97,19 @@ public class ControlGrid implements BaseDrawnEntity {
     public void paintEntity(Graphics g) {
         // As original list of triangles is updated concurrently, create a copy of list to prevent problems
         var copyOfTriangles = pointTriangles.clone();
-        for (Triangle[] copyOfTriangle : copyOfTriangles) {
-            for (Triangle triangle : copyOfTriangle) {
-                if (!Objects.isNull(triangle)) {
-                    var prevColor = g.getColor();
-                    g.setColor(Color.BLUE);
-                    triangle.draw(g);
-                    g.setColor(prevColor);
+//        for (Triangle[] copyOfTriangle : copyOfTriangles) {
+//            for (Triangle triangle : copyOfTriangle) {
+        for (int x = 0; x < copyOfTriangles.length; x++) {
+            for (int y = 0; y < copyOfTriangles[0].length; y++) {
+                var triangle = copyOfTriangles[x][y];
+
+                if (Objects.isNull(triangle)) {
+                    System.err.println("ERROR: Triangle[" + x + "]" + "[" + y + "]" + " is null, for some reason");
                 }
+                var prevColor = g.getColor();
+                g.setColor(Color.BLUE);
+                triangle.draw(g);
+                g.setColor(prevColor);
             }
         }
         for (ControlPoint[] controlPoints : pointGrid) {
@@ -134,16 +143,17 @@ public class ControlGrid implements BaseDrawnEntity {
         for (int i = 0; i < pointGrid.length; i++) {
             for (int j = 0; j < pointGrid[i].length; j++) {
                 if (i > 0 && j > 0) {
+                    var scaledI = i * 2 - 1;
                     var triangleLowerRegion = new Triangle(pointGrid[i - 1][j - 1].getPosition().x,
                             pointGrid[i - 1][j - 1].getPosition().y, pointGrid[i - 1][j].getPosition().x,
                             pointGrid[i - 1][j].getPosition().y, pointGrid[i][j].getPosition().x,
                             pointGrid[i][j].getPosition().y);
-                    pointTriangles[i - 1][j - 1] = triangleLowerRegion;
+                    pointTriangles[scaledI - 1][j - 1] = triangleLowerRegion;
                     var triangleUpperRegion = new Triangle(pointGrid[i - 1][j - 1].getPosition().x,
                             pointGrid[i - 1][j - 1].getPosition().y, pointGrid[i][j - 1].getPosition().x,
                             pointGrid[i][j - 1].getPosition().y, pointGrid[i][j].getPosition().x,
                             pointGrid[i][j].getPosition().y);
-                    pointTriangles[i][j - 1] = triangleUpperRegion;
+                    pointTriangles[scaledI][j - 1] = triangleUpperRegion;
                 }
             }
         }

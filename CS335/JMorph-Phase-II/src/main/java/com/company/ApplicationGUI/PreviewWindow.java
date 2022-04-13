@@ -40,7 +40,6 @@ public class PreviewWindow extends JFrame {
         previewPanel.add(previewAnimatedPanel);
         previewAnimatedPanel.addEntity(imageBufferA);
         previewAnimatedPanel.addEntity(imageBufferB);
-        previewAnimatedPanel.addEntity(animatedGrid);
         add(previewPanel);
         setVisible(true);
         setResizable(false);
@@ -72,11 +71,13 @@ public class PreviewWindow extends JFrame {
         imageBufferA.setAlpha(alphaValue);
         imageBufferB.setAlpha(1f - alphaValue);
 
-        var triangles = animatedGrid.getActiveFrame().getPointTriangles();
-        for (int x = 0; x < triangles.length - 1; x++) {
-            for (int y = 0; y < triangles[0].length - 1; y++) {
-                imageBufferB.morph(triangles[x][y], triangles[x + 1][y]);
-                imageBufferA.morph(triangles[x][y], triangles[x + 1][y]);
+        var initialTriangles = animatedGrid.getKeyframes().get(0).getPointTriangles();
+        var activeTriangles = animatedGrid.getActiveFrame().getPointTriangles();
+        var destinationTriangles = animatedGrid.getKeyframes().get(1).getPointTriangles();
+        for (int x = 0; x < activeTriangles.length; x++) {
+            for (int y = 0; y < activeTriangles[0].length; y++) {
+                imageBufferB.morph(initialTriangles[x][y], activeTriangles[x][y]);
+                imageBufferA.morph(activeTriangles[x][y], destinationTriangles[x][y]);
             }
         }
     }

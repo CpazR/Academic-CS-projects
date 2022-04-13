@@ -12,9 +12,8 @@ public class AnimatedGrid implements BaseDrawnEntity {
     private final int totalFrames;
 
     public AnimatedGrid(List<ControlGrid> keyframes, int totalFrames) {
-        activeFrame = new ControlGrid(keyframes.get(0));
-
         gridKeyframes.addAll(keyframes);
+        activeFrame = new ControlGrid(keyframes.get(0));
         this.totalFrames = totalFrames;
     }
 
@@ -85,5 +84,9 @@ public class AnimatedGrid implements BaseDrawnEntity {
 
     public ControlGrid getActiveFrame() {
         return activeFrame;
+    }
+
+    public List<ControlGrid> getKeyframes() {
+        return gridKeyframes;
     }
 }
