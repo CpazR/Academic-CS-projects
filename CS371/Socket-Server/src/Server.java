@@ -1,7 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -53,8 +50,8 @@ public class Server {
             }
             // Client connected, establish data input/output
             System.out.println("Client accepted: " + socket.getInetAddress());
-            inputStream = new DataInputStream(socket.getInputStream());
-            outputStream = new DataOutputStream(socket.getOutputStream());
+            inputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            outputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             isConnected = true;
 
             if (!directory.exists()) {
@@ -67,68 +64,77 @@ public class Server {
     }
 
     private void listener() {
-        while (!socket.isClosed()) {
+        var listener = new Thread(() -> {
 
-            if (isConnected()) {
-                var unParameterizedInput = waitForInput();
-                var inputTokenList = new ArrayList<String>();
-                var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
-                while (matcher.find())
-                    inputTokenList.add(matcher.group(1));
-                var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(), String[].class);
-                var userOperation = ServerOperations.getOperation(inputFromClient[0]);
+            while (!socket.isClosed()) {
 
-                if (Objects.nonNull(userOperation)) {
-                    try {
-                        switch (userOperation) {
-                            case UPLOAD:
-                                if (inputFromClient.length == 3) {
-                                    var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
-                                    uploadFile(inputFromClient[1].replaceAll("\"", ""), (int) fileSizeInBytes);
-                                } else {
-                                    throw new IOException("ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
-                                }
-                                break;
-                            case DOWNLOAD:
-                                downloadFile(inputFromClient[1].replaceAll("\"", ""));
-                                break;
-                            case DIR:
-                                showFolderContents();
-                                break;
-                            case DELETE:
-                                deleteFile(inputFromClient[1].replaceAll("\"", ""));
-                                break;
-                            case CLOSE:
+                if (isConnected()) {
+                    var unParameterizedInput = waitForInput();
+                    var inputTokenList = new ArrayList<String>();
+                    var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
+                    while (matcher.find())
+                        inputTokenList.add(matcher.group(1));
+                    var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(),
+                            String[].class);
+                    var userOperation = ServerOperations.getOperation(inputFromClient[0]);
+
+                    if (Objects.nonNull(userOperation)) {
+                        try {
+                            switch (userOperation) {
+                                case UPLOAD:
+                                    if (inputFromClient.length == 3) {
+                                        var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
+                                        uploadFile(inputFromClient[1].replaceAll("\"", ""), (int) fileSizeInBytes);
+                                    } else {
+                                        throw new IOException(
+                                                "ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
+                                    }
+                                    break;
+                                case DOWNLOAD:
+                                    downloadFile(inputFromClient[1].replaceAll("\"", ""));
+                                    break;
+                                case DIR:
+                                    showFolderContents();
+                                    break;
+                                case DELETE:
+                                    deleteFile(inputFromClient[1].replaceAll("\"", ""));
+                                    break;
+                                case CLOSE:
+                                    closeServer();
+                                    break;
+                                case HEARTBEAT:
+                                    // Do not perform any operations, try next iteration for valid input
+                                    System.out.println("INFO: Heartbeat at " + LocalDateTime.now());
+                                    break;
+                                default:
+                                    System.err.println("INVALID OPERATION: " + userOperation);
+                                    break;
+                            }
+                        } catch (IOException e) {
+                            sendNack();
+                            System.err.println("ERROR: Failed to execute operation " + userOperation);
+                            e.printStackTrace();
+
+                            if (e instanceof SocketException) {
+                                System.err.println("ERROR: Connection reset, closing socket");
                                 closeServer();
-                                break;
-                            case HEARTBEAT:
-                                // Do not perform any operations, try next iteration for valid input
-                                System.out.println("INFO: Heartbeat at " + LocalDateTime.now());
-                                break;
-                            default:
-                                System.err.println("INVALID OPERATION: " + userOperation);
-                                break;
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        sendNack();
-                        System.err.println("ERROR: Failed to execute operation " + userOperation);
-                        e.printStackTrace();
-
-                        if (e instanceof SocketException) {
-                            System.err.println("ERROR: Connection reset, closing socket");
-                            closeServer();
-                        }
+                    } else {
+                        System.err.println("ERROR: Failed to receive operation from client.");
                     }
-                } else {
-                    System.err.println("ERROR: Failed to receive operation from client.");
                 }
             }
-        }
+        });
+        listener.start();
     }
 
     private void sendNack() {
         try {
             outputStream.writeUTF(ServerOperations.NEG_ACKNOWLEDGE.getInputValue());
+            outputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -137,6 +143,7 @@ public class Server {
     private void sendAck() {
         try {
             outputStream.writeUTF(ServerOperations.ACKNOWLEDGE.getInputValue());
+            outputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -172,7 +179,7 @@ public class Server {
     /**
      * CLIENT is uploading a file
      */
-    public void uploadFile(String fileName, int fileByteSize) throws IOException {
+    public void uploadFile(String fileName, int fileByteSize) throws IOException, InterruptedException {
         System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
         var uploadedFile = new File(directory.getAbsolutePath() + "/" + fileName);
 
@@ -181,13 +188,22 @@ public class Server {
         }
         // Wait for file stream
         var receivedBytes = 0;
+        var bytesPerSecond = 0;
         var uploadedFileByteData = new byte[fileByteSize];
         // So long as bytes are available in stream, collect data until all bytes in file are collected
+        var startTime = System.currentTimeMillis();
         while (receivedBytes < fileByteSize && receivedBytes != -1) {
             try {
-                if (inputStream.available() > 0) {
-                    uploadedFileByteData[receivedBytes] = inputStream.readByte();
-                    receivedBytes++;
+                uploadedFileByteData[receivedBytes] = inputStream.readByte();
+                receivedBytes++;
+                bytesPerSecond++;
+
+                // Send number of bytes processed per second back to client
+                if (System.currentTimeMillis() - startTime >= 1000) {
+                    startTime = System.currentTimeMillis();
+                    outputStream.writeInt(bytesPerSecond);
+                    outputStream.flush();
+                    bytesPerSecond = 0;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -197,12 +213,12 @@ public class Server {
         }
 
         if (receivedBytes != -1) {
+            // Flush any possible remaining output from stream
+            outputStream.flush();
             Files.write(uploadedFile.toPath(), uploadedFileByteData);
             System.out.println("INFO: File received from client");
 
-            // Send ACK back to client
-            sendAck();
-            System.out.println("INFO: ACK send. Waiting for new command.");
+            System.out.println("INFO: Waiting for new command.");
         } else {
             System.err.println("ERROR: An error occurred when receiving uploaded file");
             sendNack();
@@ -221,20 +237,17 @@ public class Server {
             sendAck();
             // Send signal back to client with size of requested file.
             outputStream.writeLong(Files.size(fileToUpload.toPath()));
+            outputStream.flush();
             System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
-
-            var bytesPerSecond = 0;
-            var totalByteCount = 0;
             var startTime = System.currentTimeMillis();
             for (byte b : fileBuffer) {
                 outputStream.write(b);
-                bytesPerSecond++;
-                totalByteCount++;
-
+                if (System.currentTimeMillis() - startTime >= 1000) {
+                    outputStream.flush();
+                    startTime = System.currentTimeMillis();
+                }
             }
-            outputStream.flush();
-            System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
             System.out.println("INFO: Sent file to client");
         } else {
             System.err.println("ERROR: Specified file does not exist");
@@ -245,9 +258,11 @@ public class Server {
     public void showFolderContents() throws IOException {
         System.out.println("INFO: Sending file list to client");
         // Build directory content message
-        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(File::getName).collect(Collectors.joining("\n"));
+        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(
+                File::getName).collect(Collectors.joining("\n"));
 
         outputStream.writeUTF(directoryListString);
+        outputStream.flush();
     }
 
     public void deleteFile(String fileName) throws IOException {

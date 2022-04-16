@@ -10,16 +10,14 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
 
     /* Socket operations have a timeout of 10 seconds */
     private static final int SOCKET_TIMEOUT = 10000;
-    // Byte buffer size for chunks in one KB
-    public static final int MAX_BUFFER_SIZE = 10000;
-    private static final boolean TIMEOUT_ENABLED = false;
-    /* Total number of times an operation can be attempted before decided a failure */
-    private static final int OPERATION_RETRY_COUNT = 3;
+    private static final boolean TIMEOUT_ENABLED = true;
 
     private Socket mainSocket = null;
 
@@ -29,6 +27,11 @@ public class Client {
     private DataOutputStream outputStream = null;
     private boolean isConnected = false;
     private boolean isBusy = false;
+
+    private Thread uploadThread;
+    private Thread downloadThread;
+    private Thread uploadRateListener;
+    private Thread downloadRateListener;
 
     private final File directory = new File("./sharedFiles/");
 
@@ -63,7 +66,8 @@ public class Client {
             throw new SocketException("Connection not established");
         }
 
-        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
+        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(
+                ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
             if (arguments.length == 0) {
                 throw new IOException("No file name given for operation that requires a file name.");
             } else {
@@ -78,7 +82,9 @@ public class Client {
     private ServerOperations waitForResponse() throws IOException {
         ServerOperations responseOperation;
         var responseCode = inputStream.readUTF();
-        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
+        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(
+                ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(
+                ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
             var errorMessage = "Unknown response operation received: " + responseCode;
             throw new IOException(errorMessage);
         } else {
@@ -108,7 +114,6 @@ public class Client {
         var successfulConnect = false;
         try {
             mainSocket = new Socket();
-            mainSocket.setTcpNoDelay(true);
             mainSocket.connect(new InetSocketAddress(address, port), SOCKET_TIMEOUT);
             if (TIMEOUT_ENABLED) {
                 mainSocket.setSoTimeout(SOCKET_TIMEOUT);
@@ -160,46 +165,49 @@ public class Client {
             // Send initial upload request with file size in bytes to server. Signals it to wait for file.
             performInitialRequest(ServerOperations.UPLOAD, fileName, String.valueOf(Files.size(fileToUpload.toPath())));
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
+            AtomicBoolean measureDownloadRate = new AtomicBoolean(true);
 
-            var uploadThread = new Thread(() -> {
+            uploadThread = new Thread(() -> {
                 isBusy = true;
-                ServerOperations response = null;
-                var bytesPerSecond = 0;
-                var totalByteCount = 0;
                 try {
-                    var startTime = System.currentTimeMillis();
                     for (byte b : fileBuffer) {
                         outputStream.write(b);
-                        bytesPerSecond++;
-                        totalByteCount++;
-
-                        if (System.currentTimeMillis() - startTime >= 1000) {
-                            System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
-                            startTime = System.currentTimeMillis();
-                            bytesPerSecond = 0;
-                        }
                     }
+                    measureDownloadRate.set(false);
                     outputStream.flush();
-                    System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileBuffer.length);
-
-                    System.out.println("INFO: Waiting for server ACK");
-                    response = waitForResponse();
                 } catch (SocketTimeoutException e) {
                     System.err.println("ERROR: Request timed out");
                 } catch (IOException e) {
+                    uploadThread.interrupt();
                     e.printStackTrace();
-
+                    isBusy = false;
+                    return;
                 }
+                System.out.println("INFO: File uploaded successfully");
 
-                Objects.requireNonNull(response);
-                if (response.equals(ServerOperations.ACKNOWLEDGE)) {
-                    System.out.println("INFO: File uploaded successfully");
-                } else {
-                    System.err.println("ERROR: Failure when uploading file - " + response);
+                try {
+                    uploadRateListener.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 isBusy = false;
             });
+            uploadRateListener = new Thread(() -> {
+                while (measureDownloadRate.get()) {
+                    int bytesPerSecond;
+                    try {
+                        if (inputStream.available() > 0) {
+                            bytesPerSecond = inputStream.readInt();
+                            System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
             uploadThread.start();
+            uploadRateListener.start();
         } else {
             System.err.println("ERROR: Specified file does not exist");
         }
@@ -215,14 +223,14 @@ public class Client {
             System.out.println("INFO: File created");
         }
         var fileByteSize = inputStream.readLong();
+        AtomicInteger bytesPerSecond = new AtomicInteger();
+        AtomicBoolean measureDownloadRate = new AtomicBoolean(true);
 
         // Wait for file stream
-        var downloadThread = new Thread(() -> {
+        downloadThread = new Thread(() -> {
             isBusy = true;
-            var bytesPerSecond = 0;
             var totalByteCount = 0;
             var uploadedFileByteData = new byte[(int) fileByteSize];
-            var startTime = System.currentTimeMillis();
             while (totalByteCount < fileByteSize && totalByteCount != -1) {
                 try {
                     // So long as bytes are available in stream, collect data until all bytes in file are collected
@@ -231,20 +239,24 @@ public class Client {
                         totalByteCount++;
                     }
 
-                    bytesPerSecond++;
-                    if (System.currentTimeMillis() - startTime >= 1000) {
-                        System.out.println("INFO: Uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
-                        startTime = System.currentTimeMillis();
-                        bytesPerSecond = 0;
-                    }
+                    //                    bytesPerSecond.getAndIncrement();
+                    //                    if (System.currentTimeMillis() - startTime >= 1000) {
+                    //                        System.out.println("INFO: Uploaded " + (double) bytesPerSecond.get() / Math.pow(10,
+                    //                                6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+                    //                        startTime = System.currentTimeMillis();
+                    //                        bytesPerSecond.set(0);
+                    //                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    downloadRateListener.interrupt();
                     // Set received bytes to -1, indicating an error
                     totalByteCount = -1;
                 }
             }
-            System.out.println("INFO: File uploaded " + (double) bytesPerSecond / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+            System.out.println("INFO: File uploaded " + (double) bytesPerSecond.get() / Math.pow(10,
+                    6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+
             if (totalByteCount != -1) {
                 try {
                     Files.write(uploadedFile.toPath(), uploadedFileByteData);
@@ -258,8 +270,25 @@ public class Client {
             }
             isBusy = false;
         });
+        // Run separate thread to listen for number of bytes processed per second
+        downloadRateListener = new Thread(() -> {
+            var startTime = System.currentTimeMillis();
+            while (measureDownloadRate.get()) {
+                try {
+                    if (System.currentTimeMillis() - startTime >= 1000) {
+                        bytesPerSecond.set(inputStream.readInt());
+                        System.out.println(
+                                "INFO: Downloaded " + (double) bytesPerSecond.get() / Math.pow(10, 6) + " mb/s");
+                        bytesPerSecond.set(0);
+                        startTime = System.currentTimeMillis();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         downloadThread.start();
-        // NOTE: Ack isn't required here. If error occurs, client will safely alert user of failure
+        downloadRateListener.start();
     }
 
     public String[] showRemoteFolderContents() throws IOException {
