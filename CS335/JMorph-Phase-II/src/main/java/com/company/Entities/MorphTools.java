@@ -12,7 +12,7 @@ public class MorphTools {
     public MorphTools() {
     }
 
-    public static void warpTriangle(BufferedImage src, BufferedImage dest, Triangle S, Triangle D, Object ALIASING, Object INTERPOLATION, Boolean clearBackground) {
+    public static void warpTriangle(BufferedImage src, BufferedImage dest, Triangle S, Triangle D, float transparency, Object ALIASING, Object INTERPOLATION, Boolean clearBackground) {
 
         if (ALIASING == null)
             ALIASING = RenderingHints.VALUE_ANTIALIAS_ON;
@@ -115,6 +115,7 @@ public class MorphTools {
         // Apply the clip region so that any pixels that fall outside
         // this region will be clipped
         g2.clip(destPath);
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC, transparency));
         // Apply the affine transform, which will map the pixels in
         // the source triangle onto the destination image
         // the destination

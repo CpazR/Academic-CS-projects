@@ -3,7 +3,12 @@ package com.company.ApplicationGUI;
 import com.company.Entities.AnimatedGrid;
 import com.company.Entities.ControlImage;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,6 +29,7 @@ public class PreviewWindow extends JFrame {
     private int currentFrame;
     private final int totalFrames;
     private boolean paused;
+    private boolean isRendering;
 
     // A thread that will run at roughly a fixed rate
     private ScheduledExecutorService animatorThread;
@@ -40,7 +46,6 @@ public class PreviewWindow extends JFrame {
         previewPanel.add(previewAnimatedPanel);
         previewAnimatedPanel.addEntity(imageBufferA);
         previewAnimatedPanel.addEntity(imageBufferB);
-//        previewAnimatedPanel.addEntity(animatedGrid);
         add(previewPanel);
         setVisible(true);
         setResizable(false);
@@ -78,7 +83,7 @@ public class PreviewWindow extends JFrame {
         for (int x = 0; x < activeTriangles.length; x++) {
             for (int y = 0; y < activeTriangles[0].length; y++) {
                 imageBufferB.morph(initialTriangles[x][y], activeTriangles[x][y]);
-                imageBufferA.morph(activeTriangles[x][y], destinationTriangles[x][y]);
+                imageBufferA.morph(destinationTriangles[x][y], activeTriangles[x][y]);
             }
         }
     }
@@ -119,5 +124,27 @@ public class PreviewWindow extends JFrame {
     public void dispose() {
         super.dispose();
         animatorThread.shutdown();
+    }
+
+    public void renderMorph() {
+        isRendering = true;
+        for (int frame = 0; frame <= totalFrames; frame++) {
+            currentFrame = frame;
+            previewControlPanel.updateControlBar();
+            updateImage();
+            var currentFrameFile = new File("frame" + frame + ".png");
+            try {
+
+                var compositeImageBuffer = new BufferedImage(imageBufferA.getImageBuffer().getWidth(), imageBufferA.getImageBuffer().getHeight(), BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2d = compositeImageBuffer.createGraphics();
+                g2d.drawImage(imageBufferA.getWarpedImageBuffer(), 0, 0, null);
+                g2d.drawImage(imageBufferB.getWarpedImageBuffer(), 0, 0, null);
+                g2d.dispose();
+                ImageIO.write(compositeImageBuffer, "png", currentFrameFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        isRendering = false;
     }
 }
