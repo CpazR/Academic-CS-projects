@@ -6,8 +6,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerRunner {
     private static BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
+    private static boolean isBusy;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         AtomicBoolean serverActive = new AtomicBoolean(true);
         var serverHostList = new ArrayList<Server>();
         // Determine is whole server is busy with an operation
@@ -54,5 +55,12 @@ public class ServerRunner {
         //        }
 
     }
-}
 
+    public static void setIsBusy(boolean isBusy) {
+        ServerRunner.isBusy = isBusy;
+    }
+
+    public static boolean isBusy() {
+        return ServerRunner.isBusy;
+    }
+}

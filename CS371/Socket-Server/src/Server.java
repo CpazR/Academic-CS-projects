@@ -4,9 +4,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -15,7 +14,6 @@ public class Server {
      * Socket operations have a timeout of 10 seconds
      */
     private static final int SOCKET_TIMEOUT = 10000;
-    public static final int MAX_BUFFER_SIZE = Integer.MAX_VALUE;
     private final static int SERVER_PORT = 4444;
     private static final boolean TIMEOUT_ENABLED = false;
 
@@ -30,6 +28,10 @@ public class Server {
     private boolean isConnected = false;
 
     private final File directory = new File("sharedFiles/");
+
+    private final Map<String, Long> fileSize = new HashMap<>();
+    private final Map<String, Integer> downloadCount = new HashMap<>();
+    private final Map<String, String> uploadTime = new HashMap<>();
 
     Server() {
         initializeServer();
@@ -72,13 +74,11 @@ public class Server {
                     var unParameterizedInput = waitForInput();
                     var inputTokenList = new ArrayList<String>();
                     var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
-                    while (matcher.find())
-                        inputTokenList.add(matcher.group(1));
-                    var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(),
-                            String[].class);
+                    while (matcher.find()) inputTokenList.add(matcher.group(1));
+                    var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(), String[].class);
                     var userOperation = ServerOperations.getOperation(inputFromClient[0]);
 
-                    if (Objects.nonNull(userOperation)) {
+                    if (!ServerRunner.isBusy() && Objects.nonNull(userOperation)) {
                         try {
                             switch (userOperation) {
                                 case UPLOAD:
@@ -86,8 +86,7 @@ public class Server {
                                         var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
                                         uploadFile(inputFromClient[1].replaceAll("\"", ""), (int) fileSizeInBytes);
                                     } else {
-                                        throw new IOException(
-                                                "ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
+                                        throw new IOException("ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
                                     }
                                     break;
                                 case DOWNLOAD:
@@ -123,7 +122,12 @@ public class Server {
                             e.printStackTrace();
                         }
                     } else {
-                        System.err.println("ERROR: Failed to receive operation from client.");
+                        if (ServerRunner.isBusy()) {
+                            sendNack();
+                            System.err.println("ERROR: Server is currently busy on another thread.");
+                        } else {
+                            System.err.println("ERROR: Failed to receive operation from client.");
+                        }
                     }
                 }
             }
@@ -180,6 +184,7 @@ public class Server {
      * CLIENT is uploading a file
      */
     public void uploadFile(String fileName, int fileByteSize) throws IOException, InterruptedException {
+        ServerRunner.setIsBusy(true);
         System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
         var uploadedFile = new File(directory.getAbsolutePath() + "/" + fileName);
 
@@ -212,6 +217,11 @@ public class Server {
             }
         }
 
+        fileSize.put(fileName, (long) fileByteSize);
+        uploadTime.put(fileName, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        downloadCount.put(fileName, 0);
+
+
         if (receivedBytes != -1) {
             // Flush any possible remaining output from stream
             outputStream.flush();
@@ -223,13 +233,14 @@ public class Server {
             System.err.println("ERROR: An error occurred when receiving uploaded file");
             sendNack();
         }
+        ServerRunner.setIsBusy(false);
     }
 
     /**
      * CLIENT is requesting to download a file
      */
     public void downloadFile(String fileName) throws IOException {
-
+        ServerRunner.setIsBusy(true);
         // Check if file exists
         var fileToUpload = new File(directory.getAbsolutePath() + "/" + fileName);
         if (fileToUpload.exists()) {
@@ -240,26 +251,26 @@ public class Server {
             outputStream.flush();
             System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
-            var startTime = System.currentTimeMillis();
             for (byte b : fileBuffer) {
                 outputStream.write(b);
-                if (System.currentTimeMillis() - startTime >= 1000) {
-                    outputStream.flush();
-                    startTime = System.currentTimeMillis();
-                }
             }
+            outputStream.flush();
+            downloadCount.put(fileName, downloadCount.get(fileName) + 1);
             System.out.println("INFO: Sent file to client");
         } else {
             System.err.println("ERROR: Specified file does not exist");
             sendNack();
         }
+        ServerRunner.setIsBusy(false);
     }
 
     public void showFolderContents() throws IOException {
         System.out.println("INFO: Sending file list to client");
         // Build directory content message
-        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(
-                File::getName).collect(Collectors.joining("\n"));
+        var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(file -> {
+            var fileName = file.getName();
+            return fileName + "\t Size: " + fileSize.get(fileName) + "\t Uploaded at: " + uploadTime.get(fileName) + "\t Times Downloaded: " + downloadCount.get(fileName);
+        }).collect(Collectors.joining("\n"));
 
         outputStream.writeUTF(directoryListString);
         outputStream.flush();
@@ -269,6 +280,10 @@ public class Server {
 
         var fileToDelete = new File(directory.getAbsolutePath() + "/" + fileName);
         Files.deleteIfExists(fileToDelete.toPath());
+
+        fileSize.remove(fileName);
+        uploadTime.remove(fileName);
+        downloadCount.remove(fileName);
 
         // Send ack back to client
         sendAck();

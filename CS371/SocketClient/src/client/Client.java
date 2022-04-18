@@ -66,8 +66,7 @@ public class Client {
             throw new SocketException("Connection not established");
         }
 
-        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(
-                ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
+        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
             if (arguments.length == 0) {
                 throw new IOException("No file name given for operation that requires a file name.");
             } else {
@@ -82,9 +81,7 @@ public class Client {
     private ServerOperations waitForResponse() throws IOException {
         ServerOperations responseOperation;
         var responseCode = inputStream.readUTF();
-        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(
-                ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(
-                ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
+        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
             var errorMessage = "Unknown response operation received: " + responseCode;
             throw new IOException(errorMessage);
         } else {
@@ -136,16 +133,21 @@ public class Client {
     }
 
     public void closeClient() {
+        //Try to tell server to close
         try {
             outputStream.writeUTF("CLOSE");
             outputStream.flush();
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Then close client
+        try {
             mainSocket.close();
             inputStream.close();
             outputStream.close();
             isConnected = false;
             System.out.println("Client disconnected successfully.");
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -231,22 +233,13 @@ public class Client {
             isBusy = true;
             var totalByteCount = 0;
             var uploadedFileByteData = new byte[(int) fileByteSize];
+            var startTime = System.currentTimeMillis();
             while (totalByteCount < fileByteSize && totalByteCount != -1) {
                 try {
                     // So long as bytes are available in stream, collect data until all bytes in file are collected
-                    if (inputStream.available() > 0) {
-                        uploadedFileByteData[totalByteCount] = inputStream.readByte();
-                        totalByteCount++;
-                    }
-
-                    //                    bytesPerSecond.getAndIncrement();
-                    //                    if (System.currentTimeMillis() - startTime >= 1000) {
-                    //                        System.out.println("INFO: Uploaded " + (double) bytesPerSecond.get() / Math.pow(10,
-                    //                                6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
-                    //                        startTime = System.currentTimeMillis();
-                    //                        bytesPerSecond.set(0);
-                    //                    }
-
+                    uploadedFileByteData[totalByteCount] = inputStream.readByte();
+                    totalByteCount++;
+                    bytesPerSecond.getAndIncrement();
                 } catch (IOException e) {
                     e.printStackTrace();
                     downloadRateListener.interrupt();
@@ -254,8 +247,8 @@ public class Client {
                     totalByteCount = -1;
                 }
             }
-            System.out.println("INFO: File uploaded " + (double) bytesPerSecond.get() / Math.pow(10,
-                    6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+            measureDownloadRate.set(false);
+            System.out.println("INFO: File uploaded " + (double) bytesPerSecond.get() / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
 
             if (totalByteCount != -1) {
                 try {
@@ -274,16 +267,10 @@ public class Client {
         downloadRateListener = new Thread(() -> {
             var startTime = System.currentTimeMillis();
             while (measureDownloadRate.get()) {
-                try {
-                    if (System.currentTimeMillis() - startTime >= 1000) {
-                        bytesPerSecond.set(inputStream.readInt());
-                        System.out.println(
-                                "INFO: Downloaded " + (double) bytesPerSecond.get() / Math.pow(10, 6) + " mb/s");
-                        bytesPerSecond.set(0);
-                        startTime = System.currentTimeMillis();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (System.currentTimeMillis() - startTime >= 1000) {
+                    System.out.println("INFO: Downloaded " + (double) bytesPerSecond.get() / Math.pow(10, 6) + " mb/s");
+                    bytesPerSecond.set(0);
+                    startTime = System.currentTimeMillis();
                 }
             }
         });
@@ -299,7 +286,7 @@ public class Client {
         System.out.println(directoryListString);
         System.out.println("------------");
         isBusy = false;
-        return directoryListString.split("\n");
+        return Arrays.stream(directoryListString.split("\n")).map(fileDescription -> fileDescription.split("\t")[0]).toArray(String[]::new);
     }
 
     public String[] showLocalFolderContents() throws IOException {
