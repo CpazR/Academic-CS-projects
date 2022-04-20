@@ -14,7 +14,6 @@ public class Server {
      * Socket operations have a timeout of 10 seconds
      */
     private static final int SOCKET_TIMEOUT = 10000;
-    private final static int SERVER_PORT = 4444;
     private static final boolean TIMEOUT_ENABLED = false;
 
     // Socket to manage client connection
@@ -33,17 +32,14 @@ public class Server {
     private final Map<String, Integer> downloadCount = new HashMap<>();
     private final Map<String, String> uploadTime = new HashMap<>();
 
-    Server() {
+    Server(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
         initializeServer();
         listener();
     }
 
     private void initializeServer() {
         try {
-            // Establish server on port {#serverPort}
-            serverSocket = new ServerSocket(SERVER_PORT);
-            System.out.println("Server started");
-
             // Wait for client to connect
             System.out.println("Waiting for client...");
             socket = serverSocket.accept();
@@ -184,84 +180,88 @@ public class Server {
      * CLIENT is uploading a file
      */
     public void uploadFile(String fileName, int fileByteSize) throws IOException, InterruptedException {
-        ServerRunner.setIsBusy(true);
-        System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
-        var uploadedFile = new File(directory.getAbsolutePath() + "/" + fileName);
+        if (!ServerRunner.isBusy()) {
+            ServerRunner.setIsCurrentlyBusy(true);
+            System.out.println("INFO: Attempting to receive file from client \"" + fileName + "\"");
+            var uploadedFile = new File(directory.getAbsolutePath() + "/" + fileName);
 
-        if (uploadedFile.createNewFile()) {
-            System.out.println("INFO: File created");
-        }
-        // Wait for file stream
-        var receivedBytes = 0;
-        var bytesPerSecond = 0;
-        var uploadedFileByteData = new byte[fileByteSize];
-        // So long as bytes are available in stream, collect data until all bytes in file are collected
-        var startTime = System.currentTimeMillis();
-        while (receivedBytes < fileByteSize && receivedBytes != -1) {
-            try {
-                uploadedFileByteData[receivedBytes] = inputStream.readByte();
-                receivedBytes++;
-                bytesPerSecond++;
-
-                // Send number of bytes processed per second back to client
-                if (System.currentTimeMillis() - startTime >= 1000) {
-                    startTime = System.currentTimeMillis();
-                    outputStream.writeInt(bytesPerSecond);
-                    outputStream.flush();
-                    bytesPerSecond = 0;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                // Set received bytes to -1, indicating an error
-                receivedBytes = -1;
+            if (uploadedFile.createNewFile()) {
+                System.out.println("INFO: File created");
             }
+            // Wait for file stream
+            var receivedBytes = 0;
+            var bytesPerSecond = 0;
+            var uploadedFileByteData = new byte[fileByteSize];
+            // So long as bytes are available in stream, collect data until all bytes in file are collected
+            var startTime = System.currentTimeMillis();
+            while (receivedBytes < fileByteSize && receivedBytes != -1) {
+                try {
+                    uploadedFileByteData[receivedBytes] = inputStream.readByte();
+                    receivedBytes++;
+                    bytesPerSecond++;
+
+                    // Send number of bytes processed per second back to client
+                    if (System.currentTimeMillis() - startTime >= 1000) {
+                        startTime = System.currentTimeMillis();
+                        outputStream.writeInt(bytesPerSecond);
+                        outputStream.flush();
+                        bytesPerSecond = 0;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Set received bytes to -1, indicating an error
+                    receivedBytes = -1;
+                }
+            }
+
+            fileSize.put(fileName, (long) fileByteSize);
+            uploadTime.put(fileName, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            downloadCount.put(fileName, 0);
+
+
+            if (receivedBytes != -1) {
+                // Flush any possible remaining output from stream
+                outputStream.flush();
+                Files.write(uploadedFile.toPath(), uploadedFileByteData);
+                System.out.println("INFO: File received from client");
+
+                System.out.println("INFO: Waiting for new command.");
+            } else {
+                System.err.println("ERROR: An error occurred when receiving uploaded file");
+                sendNack();
+            }
+            ServerRunner.setIsCurrentlyBusy(false);
         }
-
-        fileSize.put(fileName, (long) fileByteSize);
-        uploadTime.put(fileName, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        downloadCount.put(fileName, 0);
-
-
-        if (receivedBytes != -1) {
-            // Flush any possible remaining output from stream
-            outputStream.flush();
-            Files.write(uploadedFile.toPath(), uploadedFileByteData);
-            System.out.println("INFO: File received from client");
-
-            System.out.println("INFO: Waiting for new command.");
-        } else {
-            System.err.println("ERROR: An error occurred when receiving uploaded file");
-            sendNack();
-        }
-        ServerRunner.setIsBusy(false);
     }
 
     /**
      * CLIENT is requesting to download a file
      */
     public void downloadFile(String fileName) throws IOException {
-        ServerRunner.setIsBusy(true);
-        // Check if file exists
-        var fileToUpload = new File(directory.getAbsolutePath() + "/" + fileName);
-        if (fileToUpload.exists()) {
-            // Use an ACK / NACK to indicate to client that file exists
-            sendAck();
-            // Send signal back to client with size of requested file.
-            outputStream.writeLong(Files.size(fileToUpload.toPath()));
-            outputStream.flush();
-            System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
-            var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
-            for (byte b : fileBuffer) {
-                outputStream.write(b);
+        if (!ServerRunner.isBusy()) {
+            ServerRunner.setIsCurrentlyBusy(true);
+            // Check if file exists
+            var fileToUpload = new File(directory.getAbsolutePath() + "/" + fileName);
+            if (fileToUpload.exists()) {
+                // Use an ACK / NACK to indicate to client that file exists
+                sendAck();
+                // Send signal back to client with size of requested file.
+                outputStream.writeLong(Files.size(fileToUpload.toPath()));
+                outputStream.flush();
+                System.out.println("INFO: Attempting to send file to client \"" + fileName + "\"");
+                var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
+                for (byte b : fileBuffer) {
+                    outputStream.write(b);
+                }
+                outputStream.flush();
+                downloadCount.put(fileName, downloadCount.get(fileName) + 1);
+                System.out.println("INFO: Sent file to client");
+            } else {
+                System.err.println("ERROR: Specified file does not exist");
+                sendNack();
             }
-            outputStream.flush();
-            downloadCount.put(fileName, downloadCount.get(fileName) + 1);
-            System.out.println("INFO: Sent file to client");
-        } else {
-            System.err.println("ERROR: Specified file does not exist");
-            sendNack();
+            ServerRunner.setIsCurrentlyBusy(false);
         }
-        ServerRunner.setIsBusy(false);
     }
 
     public void showFolderContents() throws IOException {
@@ -277,16 +277,17 @@ public class Server {
     }
 
     public void deleteFile(String fileName) throws IOException {
+        if (!ServerRunner.isBusy()) {
+            var fileToDelete = new File(directory.getAbsolutePath() + "/" + fileName);
+            Files.deleteIfExists(fileToDelete.toPath());
 
-        var fileToDelete = new File(directory.getAbsolutePath() + "/" + fileName);
-        Files.deleteIfExists(fileToDelete.toPath());
+            fileSize.remove(fileName);
+            uploadTime.remove(fileName);
+            downloadCount.remove(fileName);
 
-        fileSize.remove(fileName);
-        uploadTime.remove(fileName);
-        downloadCount.remove(fileName);
-
-        // Send ack back to client
-        sendAck();
+            // Send ack back to client
+            sendAck();
+        }
     }
 
     public void closeServer() {
