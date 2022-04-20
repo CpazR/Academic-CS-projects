@@ -66,7 +66,8 @@ public class Client {
             throw new SocketException("Connection not established");
         }
 
-        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
+        if (operation.equals(ServerOperations.UPLOAD) || operation.equals(
+                ServerOperations.DOWNLOAD) || operation.equals(ServerOperations.DELETE)) {
             if (arguments.length == 0) {
                 throw new IOException("No file name given for operation that requires a file name.");
             } else {
@@ -81,7 +82,9 @@ public class Client {
     private ServerOperations waitForResponse() throws IOException {
         ServerOperations responseOperation;
         var responseCode = inputStream.readUTF();
-        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
+        if (!Objects.equals(ServerOperations.getOperation(responseCode), ServerOperations.HEARTBEAT) && !Objects.equals(
+                ServerOperations.getOperation(responseCode), ServerOperations.ACKNOWLEDGE) && !Objects.equals(
+                ServerOperations.getOperation(responseCode), ServerOperations.NEG_ACKNOWLEDGE)) {
             var errorMessage = "Unknown response operation received: " + responseCode;
             throw new IOException(errorMessage);
         } else {
@@ -233,7 +236,6 @@ public class Client {
             isBusy = true;
             var totalByteCount = 0;
             var uploadedFileByteData = new byte[(int) fileByteSize];
-            var startTime = System.currentTimeMillis();
             while (totalByteCount < fileByteSize && totalByteCount != -1) {
                 try {
                     // So long as bytes are available in stream, collect data until all bytes in file are collected
@@ -248,7 +250,8 @@ public class Client {
                 }
             }
             measureDownloadRate.set(false);
-            System.out.println("INFO: File uploaded " + (double) bytesPerSecond.get() / Math.pow(10, 6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
+            System.out.println("INFO: File uploaded " + (double) bytesPerSecond.get() / Math.pow(10,
+                    6) + " mb/s | " + totalByteCount + " of " + fileByteSize);
 
             if (totalByteCount != -1) {
                 try {
@@ -286,7 +289,8 @@ public class Client {
         System.out.println(directoryListString);
         System.out.println("------------");
         isBusy = false;
-        return Arrays.stream(directoryListString.split("\n")).map(fileDescription -> fileDescription.split("\t")[0]).toArray(String[]::new);
+        return Arrays.stream(directoryListString.split("\n")).map(
+                fileDescription -> fileDescription.split("\t")[0]).toArray(String[]::new);
     }
 
     public String[] showLocalFolderContents() throws IOException {

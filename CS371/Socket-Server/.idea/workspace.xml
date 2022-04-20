@@ -4,7 +4,6 @@
     <list default="true" id="743fb999-d5c5-4c7f-95e6-86a34f22e2f8" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ServerRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ServerRunner.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/../SocketClient/src/client/Client.java" afterDir="false" />
@@ -94,11 +93,6 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "WebServerToolWindowFactoryState": "false"
-  }
-}]]></component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="" />

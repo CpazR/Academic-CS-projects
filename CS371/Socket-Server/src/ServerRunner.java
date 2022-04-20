@@ -18,6 +18,7 @@ public class ServerRunner {
                 try {
                     var userInput = inputReader.readLine();
                     if (userInput.equals("quit") || userInput.equals("close") || userInput.equals("stop")) {
+                        serverHostList.forEach(Server::closeServer);
                         serverActive.set(false);
                     }
                 } catch (IOException e) {
@@ -45,15 +46,13 @@ public class ServerRunner {
         maintenanceInputThread.start();
         serverLifetimeThread.start();
 
-        //        while (serverActive.get()) {
-        // Block main thread curing connection. Next iteration create a new server for another client to attempt to connect.
-        var newServer = new Server();
-
-        //            if (newServer.isConnected()) {
-        //                serverHostList.add(newServer);
-        //            }
-        //        }
-
+        while (serverActive.get()) {
+            // Block main thread curing connection. Next iteration create a new server for another client to attempt to connect.
+            var newServer = new Server();
+            if (newServer.isConnected()) {
+                serverHostList.add(newServer);
+            }
+        }
     }
 
     public static void setIsBusy(boolean isBusy) {
