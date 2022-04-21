@@ -58,6 +58,12 @@ public class Server {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if (e instanceof SocketException) {
+                var socketException = (SocketException) e;
+                if (socketException.getMessage().contains("Socket is closed")) {
+                    ServerRunner.forceCloseServer();
+                }
+            }
         }
     }
 

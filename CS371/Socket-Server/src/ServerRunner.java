@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -8,6 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ServerRunner {
     private static final BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
     private static final AtomicBoolean isCurrentlyBusy = new AtomicBoolean(false);
+    private static final AtomicBoolean serverActive = new AtomicBoolean(true);
+
     private final static int SERVER_PORT = 4444;
 
     public static void main(String[] args) throws IOException {
@@ -15,7 +18,8 @@ public class ServerRunner {
         /**
          * Persistent server socket that each connection is based on
          */
-        var serverSocket = new ServerSocket(SERVER_PORT);
+        var inetAddr = InetAddress.getByName("0.0.0.0");
+        var serverSocket = new ServerSocket(SERVER_PORT, 50, inetAddr);
         System.out.println("Server started");
         var serverActive = new AtomicBoolean(true);
         var serverHostList = new ArrayList<Server>();
@@ -40,14 +44,6 @@ public class ServerRunner {
                         serverHostList.remove(server);
                     }
                 });
-//                if (serverHostList.isEmpty()) {
-//                    serverActive.set(false);
-//                    try {
-//                        inputReader.close();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
             }
         });
         maintenanceInputThread.start();
@@ -68,5 +64,9 @@ public class ServerRunner {
 
     public static boolean isBusy() {
         return ServerRunner.isCurrentlyBusy.get();
+    }
+
+    public static void forceCloseServer() {
+        serverActive.set(false);
     }
 }
