@@ -15,7 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Client {
 
-    /* Socket operations have a timeout of 10 seconds */
+    /**
+     * Socket operations have a timeout of 10 seconds
+     */
     private static final int SOCKET_TIMEOUT = 10000;
     private static final boolean TIMEOUT_ENABLED = true;
 
@@ -284,6 +286,7 @@ public class Client {
     public String[] showRemoteFolderContents() throws IOException {
         isBusy = true;
         performInitialRequest(ServerOperations.DIR);
+        waitForResponse();
         var directoryListString = inputStream.readUTF();
         System.out.println("Remote files:\n------------");
         System.out.println(directoryListString);

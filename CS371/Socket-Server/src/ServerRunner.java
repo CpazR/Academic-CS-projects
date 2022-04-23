@@ -10,10 +10,12 @@ public class ServerRunner {
     private static final BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
     private static final AtomicBoolean isCurrentlyBusy = new AtomicBoolean(false);
     private static final AtomicBoolean serverActive = new AtomicBoolean(true);
+    private static Server newServer = null;
 
     private final static int SERVER_PORT = 4444;
 
     public static void main(String[] args) throws IOException {
+
         // Establish server on port {#serverPort}
         /**
          * Persistent server socket that each connection is based on
@@ -29,7 +31,10 @@ public class ServerRunner {
                 try {
                     var userInput = inputReader.readLine();
                     if (userInput.equals("quit") || userInput.equals("close") || userInput.equals("stop")) {
+                        // Close active server instances
                         serverHostList.forEach(Server::closeServer);
+                        // Close main server instance
+                        serverSocket.close();
                         serverActive.set(false);
                     }
                 } catch (IOException e) {
@@ -51,7 +56,8 @@ public class ServerRunner {
 
         while (serverActive.get()) {
             // Block main thread curing connection. Next iteration create a new server for another client to attempt to connect.
-            var newServer = new Server(serverSocket);
+            newServer = new Server(serverSocket);
+            newServer.init();
             if (newServer.isConnected()) {
                 serverHostList.add(newServer);
             }

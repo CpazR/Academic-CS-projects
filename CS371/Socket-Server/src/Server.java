@@ -19,7 +19,7 @@ public class Server {
     // Socket to manage client connection
     private Socket socket = null;
     // Socket to manage server state
-    private ServerSocket serverSocket = null;
+    private final ServerSocket serverSocket;
     // Receive data from client
     private DataInputStream inputStream = null;
     // Send data to client
@@ -34,6 +34,9 @@ public class Server {
 
     Server(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
+    }
+
+    public void init() {
         initializeServer();
         listener();
     }
@@ -60,8 +63,9 @@ public class Server {
             e.printStackTrace();
             if (e instanceof SocketException) {
                 var socketException = (SocketException) e;
-                if (socketException.getMessage().contains("Socket is closed")) {
-                    ServerRunner.forceCloseServer();
+                var message = socketException.getMessage();
+                if (message.equals("Socket closed")) {
+                    closeServer();
                 }
             }
         }
@@ -73,11 +77,16 @@ public class Server {
             while (!socket.isClosed()) {
 
                 if (isConnected()) {
+                    // Parse input into easily read tokens
                     var unParameterizedInput = waitForInput();
                     var inputTokenList = new ArrayList<String>();
                     var matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(unParameterizedInput);
-                    while (matcher.find()) inputTokenList.add(matcher.group(1));
-                    var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(), String[].class);
+                    while (matcher.find())
+                        inputTokenList.add(matcher.group(1));
+                    var inputFromClient = Arrays.copyOf(inputTokenList.toArray(), inputTokenList.size(),
+                            String[].class);
+
+                    // Get specific operation from tokens
                     var userOperation = ServerOperations.getOperation(inputFromClient[0]);
 
                     if (!ServerRunner.isBusy() && Objects.nonNull(userOperation)) {
@@ -88,7 +97,8 @@ public class Server {
                                         var fileSizeInBytes = Long.parseLong(inputFromClient[2]);
                                         uploadFile(inputFromClient[1].replaceAll("\"", ""), (int) fileSizeInBytes);
                                     } else {
-                                        throw new IOException("ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
+                                        throw new IOException(
+                                                "ERROR: UPLOAD operation requires two arguments, {\"fileName\", \"fileSizeInBytes\"}");
                                     }
                                     break;
                                 case DOWNLOAD:
@@ -125,8 +135,8 @@ public class Server {
                         }
                     } else {
                         if (ServerRunner.isBusy()) {
-                            sendNack();
                             System.err.println("ERROR: Server is currently busy on another thread.");
+                            sendNack();
                         } else {
                             System.err.println("ERROR: Failed to receive operation from client.");
                         }
@@ -275,8 +285,10 @@ public class Server {
         // Build directory content message
         var directoryListString = Arrays.stream(Objects.requireNonNull(directory.listFiles())).map(file -> {
             var fileName = file.getName();
-            return fileName + "\t Size: " + fileSize.get(fileName) + "\t Uploaded at: " + uploadTime.get(fileName) + "\t Times Downloaded: " + downloadCount.get(fileName);
+            return fileName + "\t Size: " + fileSize.get(fileName) + "\t Uploaded at: " + uploadTime.get(
+                    fileName) + "\t Times Downloaded: " + downloadCount.get(fileName);
         }).collect(Collectors.joining("\n"));
+        sendAck();
 
         outputStream.writeUTF(directoryListString);
         outputStream.flush();
@@ -302,7 +314,7 @@ public class Server {
 
             socket.close();
             inputStream.close();
-            serverSocket.close();
+            outputStream.close();
             isConnected = false;
         } catch (IOException ioException) {
             ioException.printStackTrace();
