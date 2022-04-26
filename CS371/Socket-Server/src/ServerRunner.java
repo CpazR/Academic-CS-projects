@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerRunner {
@@ -13,6 +15,11 @@ public class ServerRunner {
     private static Server newServer = null;
 
     private final static int SERVER_PORT = 4444;
+
+    // Shared analytics between server instances
+    private static final Map<String, Long> fileSize = new HashMap<>();
+    private static final Map<String, Integer> downloadCount = new HashMap<>();
+    private static final Map<String, String> uploadTime = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
 
@@ -56,20 +63,12 @@ public class ServerRunner {
 
         while (serverActive.get()) {
             // Block main thread curing connection. Next iteration create a new server for another client to attempt to connect.
-            newServer = new Server(serverSocket);
+            newServer = new Server(serverSocket, fileSize, downloadCount, uploadTime);
             newServer.init();
             if (newServer.isConnected()) {
                 serverHostList.add(newServer);
             }
         }
-    }
-
-    public static void setIsCurrentlyBusy(boolean isCurrentlyBusy) {
-        ServerRunner.isCurrentlyBusy.set(isCurrentlyBusy);
-    }
-
-    public static boolean isBusy() {
-        return ServerRunner.isCurrentlyBusy.get();
     }
 
     public static void forceCloseServer() {
