@@ -9,6 +9,7 @@ public enum ServerOperations {
     DIR("DIR"),
     CLOSE("CLOSE"),
     HEARTBEAT("HB"), // short message to satisfy timeout
+    ERROR("ERR"),
     ACKNOWLEDGE("ACK"),
     NEG_ACKNOWLEDGE("NACK"),
     RETRY("RETRY");
