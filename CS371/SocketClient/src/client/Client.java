@@ -171,6 +171,7 @@ public class Client {
         if (fileToUpload.exists()) {
             // Send initial upload request with file size in bytes to server. Signals it to wait for file.
             performInitialRequest(ServerOperations.UPLOAD, fileName, String.valueOf(Files.size(fileToUpload.toPath())));
+            waitForResponse();
             var fileBuffer = Files.readAllBytes(fileToUpload.toPath());
             AtomicBoolean measureDownloadRate = new AtomicBoolean(true);
 
