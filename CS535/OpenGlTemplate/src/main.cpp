@@ -27,12 +27,9 @@
 // Bezier curves updated accordingly.
 //*******************************************************************************************************
 
-//#include <X11/Xlib.h>
-//#include <GLUT/glut.h>
-//#include <OpenGL/gl.h>
-#include <GL/glut.h>
-//#include <GL/GL.h>
-//#include <GL/GLU.h>
+#include <Windows.h>
+#include <GL/GL.h>
+#include <GL/GLU.h>
 #include <iostream>
 #include <sstream>
 #include <vector>
