@@ -13,27 +13,48 @@ using namespace std;
 GLuint renderingProgram;
 GLuint vao[numVAOs], vbo;
 
-float rectangleWidth = 40.0f;
-float rectangleHeight = 40.0f;
-GLfloat rectangleVertexSize = 20.0f;
-float testPos = 0.1f;
+float polygonPos = .1f;
 
 // Organized as (x, y)
 float vertices[] = {
-	-testPos, -testPos,
-	+testPos, -testPos,
+	// Lower rectangle
+	-polygonPos, -polygonPos,
+	+polygonPos, -polygonPos,
+	+polygonPos, -polygonPos / 2,
 
-	+testPos, -testPos,
-	+testPos, +testPos,
+	-polygonPos, -polygonPos / 2,
+	+polygonPos, -polygonPos / 2,
+	-polygonPos, -polygonPos,
 
-	+testPos, +testPos,
-	-testPos, +testPos,
+	// Top rectangle
+	+polygonPos, +polygonPos,
+	-polygonPos, +polygonPos,
+	-polygonPos, +polygonPos / 2,
 
-	-testPos, +testPos,
-	-testPos, -testPos,
+	+polygonPos, +polygonPos / 2,
+	-polygonPos, +polygonPos / 2,
+	+polygonPos, +polygonPos,
+
+	// Right rectangle
+	+polygonPos, +polygonPos,
+	+polygonPos, -polygonPos,
+	+polygonPos / 2, +polygonPos,
+
+	+polygonPos / 2, +polygonPos,
+	+polygonPos, -polygonPos,
+	+polygonPos / 2, -polygonPos,
+
+	// Left rectangle
+	-polygonPos, +polygonPos,
+	-polygonPos, -polygonPos,
+	-polygonPos / 2, +polygonPos,
+
+	-polygonPos / 2, +polygonPos,
+	-polygonPos, -polygonPos,
+	-polygonPos / 2, -polygonPos,
 };
 
-// Taken from program 2.3
+// Taken from program 2.3 for debugging purposes
 void printShaderLog(GLuint shader) {
 	int len = 0;
 	int chWrittn = 0;
@@ -49,7 +70,7 @@ void printShaderLog(GLuint shader) {
 }
 
 GLuint createShaderProgram() {
-	// Shader allows for 2d vectors to be passed in
+	// Shader allows for 2d vectors to be passed in for variable positions
 	const char* vshaderSource =
 		"#version 430    \n"
 		"layout (location=0) in vec2 pos;\n"
@@ -113,8 +134,7 @@ void init(GLFWwindow* window) {
 void display(GLFWwindow* window, double currentTime) {
 	glUseProgram(renderingProgram);
 	glBindVertexArray(vao[0]);
-	glLineWidth(rectangleVertexSize);
-	glDrawArrays(GL_LINES, 0, 16);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 int main(void) {
