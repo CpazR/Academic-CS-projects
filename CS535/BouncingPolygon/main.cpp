@@ -29,6 +29,7 @@
 
 #include <Windows.h>
 #include <GL/glew.h>
+#include <GL/glut.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
@@ -49,6 +50,9 @@ const GLfloat rotationDamp = 2800;//Dampening effect on the rotation speed
 //State variables
 GLint B_WIDTH = WINDOW_WIDTH / 8;
 GLint B_HEIGHT = WINDOW_HEIGHT / 15;
+
+//Window context
+GLFWwindow* context;
 
 //A simple struct defined to hold a 2-D point.
 struct Point2D
@@ -668,6 +672,7 @@ void onMouse(int button, int state, int x, int y)
 int main(int argc, char** argv)
 {
 	//Initialization functions
+	//if (!glfwInit()) {return -1;}
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(640, 480);
@@ -679,10 +684,14 @@ int main(int argc, char** argv)
 	glutDisplayFunc(onDisplay);
 	glutKeyboardFunc(onKeyboard);
 	glutMouseFunc(onMouse);
-	//glutIdleFunc(onIdle);
+	glutIdleFunc(onIdle);
 
 	//Infinite Loop
+	//while (!glfwWindowShouldClose(context)) {}
 	glutMainLoop();
+
+	//glfwDestroyWindow(context);
+	//glfwTerminate();
 	return 0;
 }
 
