@@ -29,7 +29,7 @@
 
 #include <Windows.h>
 #include <GL/glew.h>
-#include <GL/glut.h>
+//#include <GL/glut.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
@@ -244,6 +244,7 @@ void displayText(ostringstream& os)
 	glColor3f(0.0f, 0.0f, 0.0f); //Black text
 	for (GLint j = 0; j < output.length(); j++)
 	{
+		glBitmap();
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
 	}
 }
@@ -490,7 +491,7 @@ void displayPolygon()
 //	polygon, text output)
 //Parameters: None
 //Returns: Nothing
-void onDisplay()
+void onDisplay(GLFWwindow *window)
 {
 	glClear(GL_COLOR_BUFFER_BIT); //clearing the buffer
 
@@ -499,7 +500,7 @@ void onDisplay()
 	if (showPolygon)
 		displayPolygon();
 
-	glutSwapBuffers();//display the buffer
+	glfwSwapBuffers(window);//display the buffer
 }
 
 //*************************************************************************************
@@ -511,7 +512,7 @@ void onDisplay()
 //Parameters: unsigned char key, the key hit
 //				int x, y, the current position
 //Returns: Nothing
-void onKeyboard(unsigned char key, int x, int y)
+void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 {//Handles keyboard events
 	switch (key)
 	{
@@ -539,8 +540,6 @@ void onIdle()
 		centroid.x += directionSpeed / speedDamp * (directionVector.x / directionSpeed);
 		centroid.y += directionSpeed / speedDamp * (directionVector.y / directionSpeed);
 	}
-
-	glutPostRedisplay();
 }
 
 //*************************************************************************************
@@ -612,12 +611,12 @@ GLint getButtonPushed(GLint x, GLint y)
 		theta = 0;
 		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
 		directionVector = originalDirection;//In case input is not completed before restarting animation.
-		glutIdleFunc(NULL);//Stop animation while accepting input.
+		//glutIdleFunc(NULL);//Stop animation while accepting input.
 	}
 	else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
 		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y)))
 	{
-		glutIdleFunc(onIdle);
+		//glutIdleFunc(onIdle);
 		textOutput << "Animation Started";
 		inputState = 0;
 		button = 3;
@@ -625,7 +624,7 @@ GLint getButtonPushed(GLint x, GLint y)
 	else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
 		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y)))
 	{
-		glutIdleFunc(NULL);
+		//glutIdleFunc(NULL);
 		textOutput << "Animation Stopped";
 		theta = 0;
 		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
@@ -648,13 +647,17 @@ GLint getButtonPushed(GLint x, GLint y)
 //				button, the mouse buttons used
 //				state, the properties of the mouse
 //Returns: Nothing
-void onMouse(int button, int state, int x, int y)
+void onMouse(GLFWwindow* window, int button, int action, int mods)
 {
 	GLint menuButton = 1;
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-		menuButton = getButtonPushed(x, y);
+	int state = glfwGetMouseButton(window, button);
 
-	glutPostRedisplay();
+	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
+	{
+		double xPos, yPos;
+		glfwGetCursorPos(window, &xPos, &yPos);
+		menuButton = getButtonPushed(xPos, yPos);
+	}
 }
 
 //*************************************************************************************
@@ -672,26 +675,28 @@ void onMouse(int button, int state, int x, int y)
 int main(int argc, char** argv)
 {
 	//Initialization functions
-	//if (!glfwInit()) {return -1;}
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(640, 480);
-	glutInitWindowPosition(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-	glutCreateWindow("Program 1");
+	if (!glfwInit()) {return -1;}
+
+	GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1", NULL, NULL);
 	initialize();
 
 	//Call-back functions
-	glutDisplayFunc(onDisplay);
-	glutKeyboardFunc(onKeyboard);
-	glutMouseFunc(onMouse);
-	glutIdleFunc(onIdle);
+	//glutDisplayFunc(onDisplay);
+	glfwSetMouseButtonCallback(appWindow, onMouse);
+	glfwSetKeyCallback(appWindow, onKeyboard);
 
 	//Infinite Loop
-	//while (!glfwWindowShouldClose(context)) {}
-	glutMainLoop();
+	while (!glfwWindowShouldClose(context))
+	{
+		// TODO: Should be callback???
+		onIdle();
+		onDisplay(appWindow);
+		glfwPollEvents();
+	}
+	//glutMainLoop();
 
-	//glfwDestroyWindow(context);
-	//glfwTerminate();
+	glfwDestroyWindow(context);
+	glfwTerminate();
 	return 0;
 }
 
