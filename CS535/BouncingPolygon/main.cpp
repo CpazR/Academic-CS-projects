@@ -29,7 +29,7 @@
 
 #include <Windows.h>
 #include <GL/glew.h>
-//#include <GL/glut.h>
+#include <GL/glut.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
@@ -52,7 +52,7 @@ GLint B_WIDTH = WINDOW_WIDTH / 8;
 GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 
 //Window context
-GLFWwindow* context;
+GLFWwindow* appWindow;
 
 //A simple struct defined to hold a 2-D point.
 struct Point2D
@@ -101,6 +101,18 @@ Point2D originalDirection; //A "backup" for resetting the animation.
 GLfloat directionSpeed;//The speed at which the polygon moves.
 GLint rotationSpeed;//The speed factor for the polygon's rotation.
 GLfloat theta;//The amount to rotate the polygon; updated by the animation process.
+
+//*************************************************************************************
+//Name: bitmapCharacter
+//Description: Abstracted function for drawing bitmap character. Simplifies migration process.
+//Parameters:	void* font, pointer to font,
+//				int character, integer
+//Returns: Nothing
+void bitmapCharacter(void* font, int character)
+{
+	// TODO: figure out replacement for drawing text. Or figure out GLUT for 64 bit systems?
+	//glutBitmapCharacter(font, character);
+}
 
 //*************************************************************************************
 //Name: calcMidpoints
@@ -206,7 +218,7 @@ void drawButton(GLint buttonNum)
 	glRasterPos2f(buttonNum * WINDOW_WIDTH / 5 - (B_WIDTH / 15), 11 * WINDOW_HEIGHT / 12 - (B_HEIGHT / 5));
 	ostringstream os;
 	os << buttonNum;
-	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
+	bitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
 }
 
 
@@ -244,8 +256,7 @@ void displayText(ostringstream& os)
 	glColor3f(0.0f, 0.0f, 0.0f); //Black text
 	for (GLint j = 0; j < output.length(); j++)
 	{
-		glBitmap();
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
+		bitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
 	}
 }
 
@@ -321,8 +332,6 @@ Point2D findIntersect(Point2D A, Point2D B)
 //*************************************************************************************
 //Name: clip
 //Description: Clips the polygon defined by rotatedPolygon against the viewing area.
-//Function calls: vector::size, vector::at, Point2D constructor, findIntersect,
-//					vector::push_back
 //Preconditions: rotatedPolygon must be a valid polygon (list of vertices)
 //Postconditions: clipPolygon contains a set of vertices that represents the clipped
 //					polygon
@@ -411,8 +420,6 @@ bool clip()
 //*************************************************************************************
 //Name: displayPolygon
 //Description: Draws the polygon in the viewing area
-//Function calls: glColor3f, vector::clear, vector::size, cos, sin, vector::push_back,
-//	Point2D constructor, clip, vector::at, glBegin, glEnd, bezierCurve, glVertex2f
 //Preconditions: centroid is a valid point, directionVector is valid, rotationSpeed
 //	is valid, polygon represents a set of vertices
 //Postconditions: The polygon is drawn to the viewing area
@@ -420,6 +427,7 @@ bool clip()
 //Returns: Nothing
 void displayPolygon()
 {
+	// TODO: Define polygon using VAOs, likely shaders as well
 	glColor3f(0, 0, 0);
 	GLfloat newTheta = theta;
 
@@ -485,7 +493,6 @@ void displayPolygon()
 //*************************************************************************************
 //Name: onDisplay
 //Description: The display callback
-//Function calls: glClear, drawButtonBar, displayText, displayPolygon, glutSwapBuffers
 //Preconditions: None
 //Postconditions: The contents of the window are shown (button menu, viewing area,
 //	polygon, text output)
@@ -506,7 +513,6 @@ void onDisplay(GLFWwindow *window)
 //*************************************************************************************
 //Name: onKeyboard
 //Description: The keyboard event callback
-//Function calls: exit
 //Preconditions: A key was hit
 //Postconditions: The key event is handles
 //Parameters: unsigned char key, the key hit
@@ -527,7 +533,6 @@ void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 //*************************************************************************************
 //Name: onIdle
 //Description: The idle event callback (used for animation)
-//Function calls: glutPostRedisplay
 //Preconditions: None
 //Postconditions: The gloabl variables theta and centoid are updated
 //Parameters: None
@@ -545,7 +550,6 @@ void onIdle()
 //*************************************************************************************
 //Name: acceptInputs
 //Description: A FSM to accept data
-//Function calls: Point2D constrctuor
 //Preconditions: x and y are valid points
 //Postconditions: Text is ouput, state variables are updated
 //Parameters: GLint x, y, the mouise position
@@ -585,7 +589,6 @@ void acceptInputs(GLint x, GLint y)
 //*************************************************************************************
 //Name: getButtonPushed
 //Description: Finds which button was pushed
-//Function calls: vector::at, glutIdleFunc, acceptInputs
 //Preconditions: x and y are valid points, vector buttons was initialized
 //Postconditions: The appropriate button's behavior is handled
 //Parameters: GLint x, y, the mouise position
@@ -640,7 +643,6 @@ GLint getButtonPushed(GLint x, GLint y)
 //*************************************************************************************
 //Name: onMouse
 //Description: The mouse event callback
-//Function calls: getButtonPushed, glutPostResdisplay
 //Preconditions: x,y are a valid point
 //Postconditions: The mouse event is handled
 //Parameters: GLint x, y, the mouise position
@@ -663,9 +665,6 @@ void onMouse(GLFWwindow* window, int button, int action, int mods)
 //*************************************************************************************
 //Name: main
 //Description: The main function
-//Function calls: glutInit, glutInitDisplayMode, glutInitWindowSize, glutInitWindowPosition,
-//		glutCreateWindow, initialize, glutKeyboardFunc, glutMouseFunc, glutDisplayFunc,
-//		glutIdleFunc, glutMainLoop
 //Preconditions: None
 //Postconditions: The program runs in an infinite loop, for displaying grapics.
 //					An OpenGL graphics window is displayed
@@ -677,25 +676,26 @@ int main(int argc, char** argv)
 	//Initialization functions
 	if (!glfwInit()) {return -1;}
 
-	GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1", NULL, NULL);
+	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1", NULL, NULL);
 	initialize();
 
 	//Call-back functions
-	//glutDisplayFunc(onDisplay);
 	glfwSetMouseButtonCallback(appWindow, onMouse);
 	glfwSetKeyCallback(appWindow, onKeyboard);
 
+	// TODO: Init for VAO buffers
+
 	//Infinite Loop
-	while (!glfwWindowShouldClose(context))
+	while (!glfwWindowShouldClose(appWindow))
 	{
 		// TODO: Should be callback???
 		onIdle();
 		onDisplay(appWindow);
+		// TODO: Update VAOs position
 		glfwPollEvents();
 	}
-	//glutMainLoop();
 
-	glfwDestroyWindow(context);
+	glfwDestroyWindow(appWindow);
 	glfwTerminate();
 	return 0;
 }
