@@ -6,12 +6,15 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <string>
 using namespace std;
 
 #define numVAOs 1
 
 GLuint renderingProgram;
 GLuint vao[numVAOs], vbo;
+GLfloat timeInterval;
 
 float polygonPos = .1f;
 
@@ -69,19 +72,25 @@ void printShaderLog(GLuint shader) {
 	}
 }
 
+// Taken from program 2.5
+string readFile(const char* filePath) {
+	string content;
+	ifstream fileStream(filePath, ios::in);
+	string line;
+	while (!fileStream.eof()) {
+		getline(fileStream, line);
+		content.append(line + "\n");
+	}
+	fileStream.close();
+	return content;
+}
+
 GLuint createShaderProgram() {
 	// Shader allows for 2d vectors to be passed in for variable positions
-	const char* vshaderSource =
-		"#version 430    \n"
-		"layout (location=0) in vec2 pos;\n"
-		"void main(void) \n"
-		"{ gl_Position = vec4(pos.x, pos.y, 0.0, 1.0); }";
-
-	const char* fshaderSource =
-		"#version 430    \n"
-		"out vec4 color; \n"
-		"void main(void) \n"
-		"{ color = vec4(0.0, 0.0, 1.0, 1.0); }";
+	string vertShaderStr = readFile("vertShader.glsl");
+	string fragShaderStr = readFile("fragShader.glsl");
+	const char* vshaderSource = vertShaderStr.c_str();
+	const char* fshaderSource = fragShaderStr.c_str();
 
 	GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -132,7 +141,14 @@ void init(GLFWwindow* window) {
 }
 
 void display(GLFWwindow* window, double currentTime) {
+	// Clear screen and recalculate shader
+	glClear(GL_COLOR_BUFFER_BIT);
 	glUseProgram(renderingProgram);
+	// Update time constant
+	const int timeUniformLocation = glGetUniformLocation(renderingProgram, "u_time");
+	glUniform1f(timeUniformLocation, timeInterval);
+	timeInterval += 0.01f;
+	// Draw vertices
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
@@ -141,7 +157,7 @@ int main(void) {
 	if (!glfwInit()) { exit(EXIT_FAILURE); }
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	GLFWwindow* window = glfwCreateWindow(400, 400, "HW2 - Question 3; Nicholas Reel", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(400, 400, "HW3 - Question 1; Nicholas Reel", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
@@ -156,5 +172,5 @@ int main(void) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
