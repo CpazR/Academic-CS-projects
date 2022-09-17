@@ -16,7 +16,7 @@ GLuint renderingProgram;
 GLuint vao[numVAOs], vbo;
 GLfloat timeInterval;
 
-float polygonPos = .1f;
+float polygonPos = .3f;
 
 // Organized as (x, y)
 float vertices[] = {
@@ -142,7 +142,8 @@ void init(GLFWwindow* window) {
 
 void display(GLFWwindow* window, double currentTime) {
 	// Clear screen and recalculate shader
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(renderingProgram);
 	// Update time constant
 	const int timeUniformLocation = glGetUniformLocation(renderingProgram, "u_time");
