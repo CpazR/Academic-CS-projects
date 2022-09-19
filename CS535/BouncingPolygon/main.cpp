@@ -33,6 +33,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <math.h>
 
@@ -53,6 +54,82 @@ GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 
 //Window context
 GLFWwindow* appWindow;
+
+GLuint renderingProgram;
+GLuint vao[1], vbo;
+
+// Organized as (x, y)
+float vertices[100];
+
+// Taken from program 2.3 for debugging purposes
+void printShaderLog(GLuint shader) {
+	int len = 0;
+	int chWrittn = 0;
+	char* log;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+	if (len > 0)
+	{
+		log = (char*)malloc(len);
+		glGetShaderInfoLog(shader, len, &chWrittn, log);
+		cout << "Shader Info Log: " << log << endl;
+		free(log);
+	}
+}
+
+// Taken from program 2.5
+string readFile(const char* filePath) {
+	string content;
+	ifstream fileStream(filePath, ios::in);
+	string line;
+	while (!fileStream.eof()) {
+		getline(fileStream, line);
+		content.append(line + "\n");
+	}
+	fileStream.close();
+	return content;
+}
+
+GLuint createShaderProgram() {
+	// Shader allows for 2d vectors to be passed in for variable positions
+	string vertShaderStr = readFile("vertShader.glsl");
+	string fragShaderStr = readFile("fragShader.glsl");
+	const char* vshaderSource = vertShaderStr.c_str();
+	const char* fshaderSource = fragShaderStr.c_str();
+
+	GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
+	GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+	GLint vertCompiled;
+	GLint fragCompiled;
+	GLuint vfprogram = glCreateProgram();
+
+	glShaderSource(vShader, 1, &vshaderSource, NULL);
+	glShaderSource(fShader, 1, &fshaderSource, NULL);
+	glCompileShader(vShader);
+	glGetShaderiv(vShader, GL_COMPILE_STATUS, &vertCompiled);
+	if (vertCompiled != 1) {
+		cout << "Vertex shader compilation failed" << endl;
+		printShaderLog(vShader);
+	}
+	else {
+		cout << "Vertex shader compilation successful" << endl;
+	}
+
+	glCompileShader(fShader);
+	glGetShaderiv(fShader, GL_COMPILE_STATUS, &fragCompiled);
+	if (fragCompiled != 1) {
+		cout << "Fragment shader compilation failed" << endl;
+		printShaderLog(fShader);
+	}
+	else {
+		cout << "Fragment shader compilation successful" << endl;
+	}
+
+	glAttachShader(vfprogram, vShader);
+	glAttachShader(vfprogram, fShader);
+	glLinkProgram(vfprogram);
+
+	return vfprogram;
+}
 
 //A simple struct defined to hold a 2-D point.
 struct Point2D
@@ -146,9 +223,23 @@ void calcMidpoints(vector<Point2D> p)
 //Returns: Nothing
 void initialize()
 {
+	// Initialize shaders
+	renderingProgram = createShaderProgram();
+
+	// Establish VAO and VBO buffers
+	glGenVertexArrays(1, vao);
+	glGenBuffers(1, &vbo);
+	glBindVertexArray(vao[0]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), NULL);
+	glEnableVertexAttribArray(0);
+
 	//Performs certain window initalizations
 	glClearColor(1.0, 1.0, 1.0, 0.0);   // set background color to be white
-	glColor3f(0.0f, 0.0f, 0.0f);       // set the drawing color to be black
+	//glColor3f(0.0f, 0.0f, 0.0f);       // set the drawing color to be black
 	glMatrixMode(GL_PROJECTION);       // set "camera shape"
 	glLoadIdentity();                    // clearing the viewing matrix
 	gluOrtho2D(0.0, 640.0, 0.0, 480.0);  // setting the world window to be 640 by 480
@@ -676,7 +767,14 @@ int main(int argc, char** argv)
 	//Initialization functions
 	if (!glfwInit()) {return -1;}
 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1", NULL, NULL);
+	glfwMakeContextCurrent(appWindow);
+
+	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
+	glfwSwapInterval(1);
+
 	initialize();
 
 	//Call-back functions
