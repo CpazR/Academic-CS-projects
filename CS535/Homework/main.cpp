@@ -8,6 +8,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 using namespace std;
 
 #define numVAOs 1
@@ -16,7 +20,7 @@ GLuint renderingProgram;
 GLuint vao[numVAOs], vbo;
 GLfloat timeInterval;
 
-float polygonPos = .3f;
+float polygonPos = 60.0f;
 
 // Organized as (x, y)
 float vertices[] = {
@@ -155,18 +159,31 @@ void display(GLFWwindow* window, double currentTime) {
 }
 
 int main(void) {
+	double displayWidth  = 400;
+	double displayHeight = 400;
 	if (!glfwInit()) { exit(EXIT_FAILURE); }
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	GLFWwindow* window = glfwCreateWindow(400, 400, "HW3 - Question 1; Nicholas Reel", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(displayWidth, displayHeight, "HW3 - Question 1; Nicholas Reel", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
 
 	init(window);
 
+
+	GLuint projMatLoc = glGetUniformLocation(renderingProgram, "u_projMat");
+	GLuint translationVecLoc = glGetUniformLocation(renderingProgram, "u_transVec");
+
 	while (!glfwWindowShouldClose(window)) {
+
 		display(window, glfwGetTime());
+		glm::mat4 projMatrix = glm::ortho(0.0, displayWidth, displayHeight, 0.0);
+		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, value_ptr(projMatrix));
+
+		glm::mat4 translateMatrix = glm::translate(projMatrix, glm::vec3(displayWidth / 2, displayHeight / 2, 0.0));
+		glUniformMatrix4fv(translationVecLoc, 1, GL_FALSE, value_ptr(translateMatrix));
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
