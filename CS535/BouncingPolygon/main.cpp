@@ -37,6 +37,10 @@
 #include <vector>
 #include <math.h>
 
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 using namespace std;
 
 //Global constants
@@ -47,6 +51,7 @@ const GLfloat PI = 3.14159265;
 //	of the user's system. The higher the dampener, the slower the movement/rotation.
 const GLfloat speedDamp = 600;//Dampening effect on the translation speed
 const GLfloat rotationDamp = 2800;//Dampening effect on the rotation speed
+const int VAOS = 2;
 
 //State variables
 GLint B_WIDTH = WINDOW_WIDTH / 8;
@@ -56,10 +61,13 @@ GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 GLFWwindow* appWindow;
 
 GLuint renderingProgram;
-GLuint vao[1], vbo;
+GLuint vao[VAOS], vbo;
 
 // Organized as (x, y)
-float vertices[100];
+const int MAX_VERTICES = 100;
+int vaoCount = 0;
+int vertexCount[VAOS];
+float vertices[VAOS][MAX_VERTICES];
 
 // Taken from program 2.3 for debugging purposes
 void printShaderLog(GLuint shader) {
@@ -184,7 +192,6 @@ GLfloat theta;//The amount to rotate the polygon; updated by the animation proce
 //Description: Abstracted function for drawing bitmap character. Simplifies migration process.
 //Parameters:	void* font, pointer to font,
 //				int character, integer
-//Returns: Nothing
 void bitmapCharacter(void* font, int character)
 {
 	// TODO: figure out replacement for drawing text. Or figure out GLUT for 64 bit systems?
@@ -199,7 +206,6 @@ void bitmapCharacter(void* font, int character)
 //Postconditions: The vector midpoints contains the set of midpoints for the
 //		polygon's edges.
 //Parameters: vector<Point2D> p, the polygon to process
-//Returns: Nothing
 void calcMidpoints(vector<Point2D> p)
 {
 	//Calculate the midpoints of the edges
@@ -217,41 +223,32 @@ void calcMidpoints(vector<Point2D> p)
 //Description: Initializes various variables and states
 //Function calls: glClearColor, glColor3f, glMatrixMode, glLoadIdentity, gluOrtho2D,
 //	vector::push_back, Point2D constructor, calcMidpoints
-//Preconditions: None
 //Postconditions: The program is initialized
-//Parameters: None
-//Returns: Nothing
 void initialize()
 {
 	// Initialize shaders
 	renderingProgram = createShaderProgram();
+	GLuint projMatLoc = glGetUniformLocation(renderingProgram, "u_projMat");
 
 	// Establish VAO and VBO buffers
-	glGenVertexArrays(1, vao);
+	glGenVertexArrays(VAOS, vao);
 	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao[0]);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), NULL);
 	glEnableVertexAttribArray(0);
 
 	//Performs certain window initalizations
-	glClearColor(1.0, 1.0, 1.0, 0.0);   // set background color to be white
-	//glColor3f(0.0f, 0.0f, 0.0f);       // set the drawing color to be black
 	glMatrixMode(GL_PROJECTION);       // set "camera shape"
 	glLoadIdentity();                    // clearing the viewing matrix
 	gluOrtho2D(0.0, 640.0, 0.0, 480.0);  // setting the world window to be 640 by 480
 
-	//Set the button vertices
-	buttons.push_back(Rect2D());//Dummy button
-	for (GLint i = 1; i <= 4; i++)
-	{
-		buttons.push_back(Rect2D(
-			Point2D(i * WINDOW_WIDTH / 5 - B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 - B_HEIGHT / 2),
-			Point2D(i * WINDOW_WIDTH / 5 + B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 + B_HEIGHT / 2)));
-	}
+	// Camera is static, so uniform only needs to be assigned once
+	glm::mat4 projMatrix = glm::ortho(0.0, 640.0, 0.0, 480.0);
+	glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, value_ptr(projMatrix));
 
 	showPolygon = false;
 	inputState = 0;
@@ -276,6 +273,19 @@ void initialize()
 	polygon.push_back(Point2D(-unit, -unit));
 	polygon.push_back(Point2D(-unit, -3 * unit));
 
+	// Insert point values into VBO
+	for (auto point2D : polygon)
+	{
+		vertices[0][vertexCount[0]]	 = point2D.x;
+		vertices[0][vertexCount[0] + 1] = point2D.y;
+		vertexCount[0] += 2;
+
+		if (vertexCount[0] > MAX_VERTICES)
+		{
+			throw "ARRAY OVERFLOW: too many vertices in a vao";
+		}
+	}
+
 	//Initialize the midpoints
 	calcMidpoints(polygon);
 	clipPolygon = vector<Point2D>(polygon);//Copy the polygon
@@ -288,7 +298,6 @@ void initialize()
 //Preconditions: buttonNum must be between 1 and 4, inclusively
 //Postconditions: The button is drawn to the screen
 //Parameters: GLint buttonNum, the number of the button
-//Returns: Nothing
 void drawButton(GLint buttonNum)
 {
 	if (buttonNum == 1)
@@ -317,10 +326,7 @@ void drawButton(GLint buttonNum)
 //Name: drawButtonBar
 //Description: Draws the menu at the top of the window, with 4 buttons
 //Function calls: glColor3f, glRectf, drawButton
-//Preconditions: None
 //Postconditions: The menu is drawn
-//Parameters: None
-//Returns: Nothing
 void drawButtonBar()
 {
 	glColor3f(.5, .5, .5);//Set to grey
@@ -339,7 +345,6 @@ void drawButtonBar()
 //Preconditions: ostringstream os is not empty
 //Postconditions: The text is displayed to the viewing area
 //Parameters: ostringstream os, the text to display
-//Returns: Nothing
 void displayText(ostringstream& os)
 {
 	string output = os.str();
@@ -356,7 +361,6 @@ void displayText(ostringstream& os)
 //Description: A mathematical function to calculate a degree-2 Bezier curve's value
 //Function calls: Point2D constructor
 //Preconditions: A, B, C, and t are all valid; t is in [0,1]
-//Postconditions: None
 //Parameters: Point2D A, B, C, points that define the curve
 //				GLfloat t, the value to plug into the equation
 //Returns: Point2D, the result of the eqaution.
@@ -374,7 +378,6 @@ Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t)
 //				returned.
 //Function calls: Point2D constructor
 //Preconditions: A and B must be valid points
-//Postconditions: None
 //Parameters: Point2D A, B, points that define a line
 //Returns: Point2D that represents the intersection, or no intersection
 Point2D findIntersect(Point2D A, Point2D B)
@@ -511,15 +514,13 @@ bool clip()
 //*************************************************************************************
 //Name: displayPolygon
 //Description: Draws the polygon in the viewing area
-//Preconditions: centroid is a valid point, directionVector is valid, rotationSpeed
-//	is valid, polygon represents a set of vertices
-//Postconditions: The polygon is drawn to the viewing area
-//Parameters: None
-//Returns: Nothing
 void displayPolygon()
 {
 	// TODO: Define polygon using VAOs, likely shaders as well
-	glColor3f(0, 0, 0);
+	
+	glUseProgram(renderingProgram);
+	glBindVertexArray(vao[0]);
+	glDrawArrays(GL_POINTS, 0, vertexCount[0] - 1);
 	GLfloat newTheta = theta;
 
 	if (inputState == 0)
@@ -591,12 +592,11 @@ void displayPolygon()
 //Returns: Nothing
 void onDisplay(GLFWwindow *window)
 {
-	glClear(GL_COLOR_BUFFER_BIT); //clearing the buffer
+	// Set refresh buffers
+	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	drawButtonBar();
-	displayText(textOutput);
-	if (showPolygon)
-		displayPolygon();
+	displayPolygon();
 
 	glfwSwapBuffers(window);//display the buffer
 }
@@ -769,7 +769,7 @@ int main(int argc, char** argv)
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1", NULL, NULL);
+	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1 - Nicholas Reel", NULL, NULL);
 	glfwMakeContextCurrent(appWindow);
 
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
@@ -778,8 +778,8 @@ int main(int argc, char** argv)
 	initialize();
 
 	//Call-back functions
-	glfwSetMouseButtonCallback(appWindow, onMouse);
-	glfwSetKeyCallback(appWindow, onKeyboard);
+	//glfwSetMouseButtonCallback(appWindow, onMouse);
+	//glfwSetKeyCallback(appWindow, onKeyboard);
 
 	// TODO: Init for VAO buffers
 
