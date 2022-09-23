@@ -1,8 +1,9 @@
 #version 430
+uniform mat4 u_modelViewProjection;
+
 layout (location=0) in vec2 pos;
-uniform mat4 u_projMat;
 
 void main(void)
 {
-	gl_Position = u_projMat * vec4(pos, 1.0);
+	gl_Position = u_modelViewProjection * vec4(pos.x, pos.y, 0.0, 1.0);
 }

@@ -1,8 +1,9 @@
 
 //*******************************************************************************************************
-// Tim Meyers
 // CS535
 // Programming Assignment 1
+// Nicholas Reel
+// Based on original program by: Tim Meyers
 // This OpenGL program is designed to demonstrate the concepts of 2D clipping, object rotation, object
 // translation, and "button" interaction.  The interface for this application is a "menu" area,
 // consisting of 4 rudimentary buttons, and a viewing area, where the object is displayed.  For the
@@ -40,18 +41,20 @@
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/string_cast.hpp"
 
 using namespace std;
 
 //Global constants
-const GLint WINDOW_WIDTH = 640 - 1;//The -1 is to not be directly against the window's edge.
-const GLint WINDOW_HEIGHT = 480 - 1;//The -1 is to not be directly against the window's edge.
+const double WINDOW_WIDTH = 640 - 1;//The -1 is to not be directly against the window's edge.
+const double WINDOW_HEIGHT = 480 - 1;//The -1 is to not be directly against the window's edge.
+const int DIMENSIONS = 2; // Total dimensions being used for rendering
 const GLfloat PI = 3.14159265;
 //These next two constants should be changed depending on the graphical abilities
 //	of the user's system. The higher the dampener, the slower the movement/rotation.
 const GLfloat speedDamp = 600;//Dampening effect on the translation speed
 const GLfloat rotationDamp = 2800;//Dampening effect on the rotation speed
-const int VAOS = 2;
+const int VAOS = 1;
 
 //State variables
 GLint B_WIDTH = WINDOW_WIDTH / 8;
@@ -64,10 +67,7 @@ GLuint renderingProgram;
 GLuint vao[VAOS], vbo;
 
 // Organized as (x, y)
-const int MAX_VERTICES = 100;
-int vaoCount = 0;
-int vertexCount[VAOS];
-float vertices[VAOS][MAX_VERTICES];
+vector<GLfloat> vertices;
 
 // Taken from program 2.3 for debugging purposes
 void printShaderLog(GLuint shader) {
@@ -117,8 +117,7 @@ GLuint createShaderProgram() {
 	if (vertCompiled != 1) {
 		cout << "Vertex shader compilation failed" << endl;
 		printShaderLog(vShader);
-	}
-	else {
+	} else {
 		cout << "Vertex shader compilation successful" << endl;
 	}
 
@@ -127,8 +126,7 @@ GLuint createShaderProgram() {
 	if (fragCompiled != 1) {
 		cout << "Fragment shader compilation failed" << endl;
 		printShaderLog(fShader);
-	}
-	else {
+	} else {
 		cout << "Fragment shader compilation successful" << endl;
 	}
 
@@ -140,8 +138,7 @@ GLuint createShaderProgram() {
 }
 
 //A simple struct defined to hold a 2-D point.
-struct Point2D
-{
+struct Point2D {
 	GLfloat x;
 	GLfloat y;
 	Point2D() { x = 0; y = 0; }
@@ -154,18 +151,15 @@ struct Point2D
 
 //A struct to hold a rectangular shape, as defined by the bottom left
 //  and the upper right corner points.
-struct Rect2D
-{
+struct Rect2D {
 	Point2D bottomleft;
 	Point2D topright;
 	Rect2D() { bottomleft = Point2D();  topright = Point2D(); }
-	Rect2D(Point2D bl, Point2D tr)
-	{
+	Rect2D(Point2D bl, Point2D tr) {
 		bottomleft = bl;
 		topright = tr;
 	}
-	void operator=(const Rect2D& r)
-	{
+	void operator=(const Rect2D& r) {
 		bottomleft = r.bottomleft;
 		topright = r.topright;
 	}
@@ -187,27 +181,12 @@ GLfloat directionSpeed;//The speed at which the polygon moves.
 GLint rotationSpeed;//The speed factor for the polygon's rotation.
 GLfloat theta;//The amount to rotate the polygon; updated by the animation process.
 
-//*************************************************************************************
-//Name: bitmapCharacter
-//Description: Abstracted function for drawing bitmap character. Simplifies migration process.
-//Parameters:	void* font, pointer to font,
-//				int character, integer
-void bitmapCharacter(void* font, int character)
-{
+void bitmapCharacter(void* font, int character) {
 	// TODO: figure out replacement for drawing text. Or figure out GLUT for 64 bit systems?
 	//glutBitmapCharacter(font, character);
 }
 
-//*************************************************************************************
-//Name: calcMidpoints
-//Description: Recalculates the midpoints of the polygon's edges.
-//Function calls: vector::clear(), vector::size(), vector::push_back, Point2D constructor
-//Preconditions: vector p is not empty, and defines a polygon
-//Postconditions: The vector midpoints contains the set of midpoints for the
-//		polygon's edges.
-//Parameters: vector<Point2D> p, the polygon to process
-void calcMidpoints(vector<Point2D> p)
-{
+void calcMidpoints(vector<Point2D> p) {
 	//Calculate the midpoints of the edges
 	midpoints.clear();
 	for (GLint j = 0; j < p.size(); j++)
@@ -218,38 +197,7 @@ void calcMidpoints(vector<Point2D> p)
 	}
 }
 
-//*************************************************************************************
-//Name: initialize
-//Description: Initializes various variables and states
-//Function calls: glClearColor, glColor3f, glMatrixMode, glLoadIdentity, gluOrtho2D,
-//	vector::push_back, Point2D constructor, calcMidpoints
-//Postconditions: The program is initialized
-void initialize()
-{
-	// Initialize shaders
-	renderingProgram = createShaderProgram();
-	GLuint projMatLoc = glGetUniformLocation(renderingProgram, "u_projMat");
-
-	// Establish VAO and VBO buffers
-	glGenVertexArrays(VAOS, vao);
-	glGenBuffers(1, &vbo);
-	glBindVertexArray(vao[0]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices[0], GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), NULL);
-	glEnableVertexAttribArray(0);
-
-	//Performs certain window initalizations
-	glMatrixMode(GL_PROJECTION);       // set "camera shape"
-	glLoadIdentity();                    // clearing the viewing matrix
-	gluOrtho2D(0.0, 640.0, 0.0, 480.0);  // setting the world window to be 640 by 480
-
-	// Camera is static, so uniform only needs to be assigned once
-	glm::mat4 projMatrix = glm::ortho(0.0, 640.0, 0.0, 480.0);
-	glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, value_ptr(projMatrix));
-
+void initPolygon() {
 	showPolygon = false;
 	inputState = 0;
 	directionVector = Point2D();
@@ -274,32 +222,17 @@ void initialize()
 	polygon.push_back(Point2D(-unit, -3 * unit));
 
 	// Insert point values into VBO
-	for (auto point2D : polygon)
-	{
-		vertices[0][vertexCount[0]]	 = point2D.x;
-		vertices[0][vertexCount[0] + 1] = point2D.y;
-		vertexCount[0] += 2;
-
-		if (vertexCount[0] > MAX_VERTICES)
-		{
-			throw "ARRAY OVERFLOW: too many vertices in a vao";
-		}
+	for (auto point2D : polygon) {
+		vertices.push_back(point2D.x);
+		vertices.push_back(point2D.y);
 	}
 
 	//Initialize the midpoints
-	calcMidpoints(polygon);
-	clipPolygon = vector<Point2D>(polygon);//Copy the polygon
+	//calcMidpoints(polygon);
+	//clipPolygon = vector<Point2D>(polygon);//Copy the polygon
 }
 
-//*************************************************************************************
-//Name: drawButton
-//Description: Draws a button for the menu
-//Function calls: glColor3f, glRectf, glColor3d, glRasterPos2f, glutBitmapCharacter
-//Preconditions: buttonNum must be between 1 and 4, inclusively
-//Postconditions: The button is drawn to the screen
-//Parameters: GLint buttonNum, the number of the button
-void drawButton(GLint buttonNum)
-{
+void drawButton(GLint buttonNum) {
 	if (buttonNum == 1)
 		glColor3f(1, 0, 0);//Red
 	else if (buttonNum == 2)
@@ -321,14 +254,7 @@ void drawButton(GLint buttonNum)
 	bitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
 }
 
-
-//*************************************************************************************
-//Name: drawButtonBar
-//Description: Draws the menu at the top of the window, with 4 buttons
-//Function calls: glColor3f, glRectf, drawButton
-//Postconditions: The menu is drawn
-void drawButtonBar()
-{
+void drawButtonBar() {
 	glColor3f(.5, .5, .5);//Set to grey
 	glRectf(0.0f, 5 * WINDOW_HEIGHT / 6, WINDOW_WIDTH, WINDOW_HEIGHT);//Drawing the bar background
 
@@ -338,15 +264,7 @@ void drawButtonBar()
 	glColor3f(0.0f, 0.0f, 0.0f); // Reset the drawing color to be black
 }
 
-//*************************************************************************************
-//Name: displayText
-//Description: A general use function to draw given text to the viewing area.
-//Function calls: glRaster2f, glColor3f, glutBitmapCharacter
-//Preconditions: ostringstream os is not empty
-//Postconditions: The text is displayed to the viewing area
-//Parameters: ostringstream os, the text to display
-void displayText(ostringstream& os)
-{
+void displayText(ostringstream& os) {
 	string output = os.str();
 	glRasterPos2f(WINDOW_WIDTH / 25, 5 * WINDOW_HEIGHT / 6 - 12);//Reset position
 	glColor3f(0.0f, 0.0f, 0.0f); //Black text
@@ -356,32 +274,13 @@ void displayText(ostringstream& os)
 	}
 }
 
-//*************************************************************************************
-//Name: bezierCurve
-//Description: A mathematical function to calculate a degree-2 Bezier curve's value
-//Function calls: Point2D constructor
-//Preconditions: A, B, C, and t are all valid; t is in [0,1]
-//Parameters: Point2D A, B, C, points that define the curve
-//				GLfloat t, the value to plug into the equation
-//Returns: Point2D, the result of the eqaution.
-Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t)
-{
+Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t) {
 	GLfloat fx = pow(1 - t, 2) * A.x + 2 * t * (1 - t) * B.x + pow(t, 2) * C.x;
 	GLfloat fy = pow(1 - t, 2) * A.y + 2 * t * (1 - t) * B.y + pow(t, 2) * C.y;
 	return Point2D(fx, fy);
 }
 
-//*************************************************************************************
-//Name: findIntersect
-//Description: Finds the intersection point between the line AB and a viewing area
-//				border, and returns it. If no intersection exists, (99999, 99999) is
-//				returned.
-//Function calls: Point2D constructor
-//Preconditions: A and B must be valid points
-//Parameters: Point2D A, B, points that define a line
-//Returns: Point2D that represents the intersection, or no intersection
-Point2D findIntersect(Point2D A, Point2D B)
-{
+Point2D findIntersect(Point2D A, Point2D B) {
 	Point2D C, D;
 	GLfloat t = -1;
 	if ((B.x < 0 && A.x >= 0) || (A.x < 0 && B.x >= 0))//Left clipping
@@ -422,18 +321,7 @@ Point2D findIntersect(Point2D A, Point2D B)
 	return Point2D(interX, interY);
 }
 
-
-//*************************************************************************************
-//Name: clip
-//Description: Clips the polygon defined by rotatedPolygon against the viewing area.
-//Preconditions: rotatedPolygon must be a valid polygon (list of vertices)
-//Postconditions: clipPolygon contains a set of vertices that represents the clipped
-//					polygon
-//Parameters: None
-//Returns: bool indicating that the polygon has been clipped
-//Notes: This function is based on the Weiler-Atherton algorithm for polygon clipping.
-bool clip()
-{
+bool clip() {
 	bool updatedP = false;
 	Point2D intersection;
 	bool lookingForEnter = false;
@@ -511,16 +399,116 @@ bool clip()
 	return updatedP;
 }
 
-//*************************************************************************************
-//Name: displayPolygon
-//Description: Draws the polygon in the viewing area
-void displayPolygon()
-{
-	// TODO: Define polygon using VAOs, likely shaders as well
-	
-	glUseProgram(renderingProgram);
-	glBindVertexArray(vao[0]);
-	glDrawArrays(GL_POINTS, 0, vertexCount[0] - 1);
+void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {//Handles keyboard events
+	switch (key)
+	{
+	case 27:  //Typed the Escape key, so exit.
+		exit(0);
+		break;
+	default:
+		break;
+	}
+}
+
+void onIdle() {
+	if (inputState == 0)
+	{
+		theta += 1 / (2 * PI);//Add 1 radian
+		centroid.x += directionSpeed / speedDamp * (directionVector.x / directionSpeed);
+		centroid.y += directionSpeed / speedDamp * (directionVector.y / directionSpeed);
+	}
+}
+
+void acceptInputs(GLint x, GLint y) {
+	switch (inputState)
+	{
+	case 1:
+		directionVector = Point2D(x, y);
+		textOutput << "Please select the second point for the direction vector.";
+		inputState = 2;
+		break;
+	case 2:
+		directionVector = Point2D(x - directionVector.x, y - directionVector.y);
+		originalDirection = directionVector;
+		directionSpeed = sqrt(pow(directionVector.x, 2) + pow(directionVector.y, 2));
+		textOutput << "Please select the first point for the rotation speed.";
+		inputState = 3;
+		break;
+	case 3:
+		rotationSpeed = x;
+		textOutput << "Please select the second point for the rotation speed.";
+		inputState = 4;
+		break;
+	case 4:
+		rotationSpeed = abs(x - rotationSpeed);
+		textOutput << "Data input successfully completed.";
+		inputState = 0;
+		break;
+	default://Invalid state, this case shouldn't arise.
+		inputState = 0;
+		break;
+	}
+}
+
+GLint getButtonPushed(GLint x, GLint y) {
+	GLint button = -1;
+	y = WINDOW_HEIGHT - y;
+	textOutput.str("");
+	if ((x >= buttons.at(1).bottomleft.x && x <= buttons.at(1).topright.x)
+		&& (y >= (buttons.at(1).bottomleft.y) && y <= (buttons.at(1).topright.y)))
+	{
+		showPolygon = !showPolygon; //Toggle showing the polygon.
+		button = 1;
+	}
+	else if ((x >= buttons.at(2).bottomleft.x && x <= buttons.at(2).topright.x)
+		&& (y >= (buttons.at(2).bottomleft.y) && y <= (buttons.at(2).topright.y)))
+	{
+		textOutput << "Please select the first point for the direction vector.";
+		button = 2;
+		inputState = 1;//Ready to accept input.
+		directionVector = Point2D();
+		theta = 0;
+		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
+		directionVector = originalDirection;//In case input is not completed before restarting animation.
+		//glutIdleFunc(NULL);//Stop animation while accepting input.
+	}
+	else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
+		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y)))
+	{
+		//glutIdleFunc(onIdle);
+		textOutput << "Animation Started";
+		inputState = 0;
+		button = 3;
+	}
+	else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
+		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y)))
+	{
+		//glutIdleFunc(NULL);
+		textOutput << "Animation Stopped";
+		theta = 0;
+		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
+		directionVector = originalDirection;
+		button = 4;
+	}
+	else if (inputState > 0)
+		acceptInputs(x, y);
+
+	return button;
+}
+
+void onMouse(GLFWwindow* window, int button, int action, int mods) {
+	GLint menuButton = 1;
+	int state = glfwGetMouseButton(window, button);
+
+	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
+	{
+		double xPos, yPos;
+		glfwGetCursorPos(window, &xPos, &yPos);
+		menuButton = getButtonPushed(xPos, yPos);
+	}
+}
+
+void calculatePolygon() {
 	GLfloat newTheta = theta;
 
 	if (inputState == 0)
@@ -582,220 +570,81 @@ void displayPolygon()
 	glEnd();
 }
 
-//*************************************************************************************
-//Name: onDisplay
-//Description: The display callback
-//Preconditions: None
-//Postconditions: The contents of the window are shown (button menu, viewing area,
-//	polygon, text output)
-//Parameters: None
-//Returns: Nothing
-void onDisplay(GLFWwindow *window)
-{
+void displayShader() {
+	GLuint modelViewProjectionLoc = glGetUniformLocation(renderingProgram, "u_modelViewProjection");
+	glm::mat4 modelMatrix(1.0f), viewMatrix(1.0f);
+	glm::mat4 projMatrix = glm::ortho(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
+	modelMatrix = glm::translate(modelMatrix, glm::vec3(centroid.x, centroid.y, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, theta, glm::vec3(0, 0, 1));
+
+	glm::mat4 mvpMatrix = projMatrix * modelMatrix;
+	glUniformMatrix4fv(modelViewProjectionLoc, 1, GL_FALSE, value_ptr(mvpMatrix));
+}
+
+void displayPolygon() {
+	glBindVertexArray(vao[0]);
+	glDrawArrays(GL_LINE_LOOP, 0, vertices.size() / DIMENSIONS);
+	calculatePolygon();
+}
+
+void onDisplay(GLFWwindow* window) {
 	// Set refresh buffers
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	displayShader();
 	displayPolygon();
-
-	glfwSwapBuffers(window);//display the buffer
 }
 
-//*************************************************************************************
-//Name: onKeyboard
-//Description: The keyboard event callback
-//Preconditions: A key was hit
-//Postconditions: The key event is handles
-//Parameters: unsigned char key, the key hit
-//				int x, y, the current position
-//Returns: Nothing
-void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
-{//Handles keyboard events
-	switch (key)
-	{
-	case 27:  //Typed the Escape key, so exit.
-		exit(0);
-		break;
-	default:
-		break;
-	}
+void shaderInit() {
+	glUseProgram(renderingProgram);
+	displayShader();
 }
 
-//*************************************************************************************
-//Name: onIdle
-//Description: The idle event callback (used for animation)
-//Preconditions: None
-//Postconditions: The gloabl variables theta and centoid are updated
-//Parameters: None
-//Returns: Nothing
-void onIdle()
-{
-	if (inputState == 0)
-	{
-		theta += 1 / (2 * PI);//Add 1 radian
-		centroid.x += directionSpeed / speedDamp * (directionVector.x / directionSpeed);
-		centroid.y += directionSpeed / speedDamp * (directionVector.y / directionSpeed);
-	}
+void init(GLFWwindow* window) {
+	renderingProgram = createShaderProgram();
+	// Establish vao and vbo buffers
+	glGenVertexArrays(VAOS, vao);
+	glGenBuffers(1, &vbo);
+	glBindVertexArray(vao[0]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+	// Pipe buffer for shader input
+	glVertexAttribPointer(0, DIMENSIONS, GL_FLOAT, GL_FALSE, DIMENSIONS * sizeof(float), NULL);
+	glEnableVertexAttribArray(0);
 }
 
-//*************************************************************************************
-//Name: acceptInputs
-//Description: A FSM to accept data
-//Preconditions: x and y are valid points
-//Postconditions: Text is ouput, state variables are updated
-//Parameters: GLint x, y, the mouise position
-//Returns: Nothing
-void acceptInputs(GLint x, GLint y)
-{
-	switch (inputState)
-	{
-	case 1:
-		directionVector = Point2D(x, y);
-		textOutput << "Please select the second point for the direction vector.";
-		inputState = 2;
-		break;
-	case 2:
-		directionVector = Point2D(x - directionVector.x, y - directionVector.y);
-		originalDirection = directionVector;
-		directionSpeed = sqrt(pow(directionVector.x, 2) + pow(directionVector.y, 2));
-		textOutput << "Please select the first point for the rotation speed.";
-		inputState = 3;
-		break;
-	case 3:
-		rotationSpeed = x;
-		textOutput << "Please select the second point for the rotation speed.";
-		inputState = 4;
-		break;
-	case 4:
-		rotationSpeed = abs(x - rotationSpeed);
-		textOutput << "Data input successfully completed.";
-		inputState = 0;
-		break;
-	default://Invalid state, this case shouldn't arise.
-		inputState = 0;
-		break;
-	}
-}
-
-//*************************************************************************************
-//Name: getButtonPushed
-//Description: Finds which button was pushed
-//Preconditions: x and y are valid points, vector buttons was initialized
-//Postconditions: The appropriate button's behavior is handled
-//Parameters: GLint x, y, the mouise position
-//Returns: GLint, the button that was pushed
-GLint getButtonPushed(GLint x, GLint y)
-{
-	GLint button = -1;
-	y = WINDOW_HEIGHT - y;
-	textOutput.str("");
-	if ((x >= buttons.at(1).bottomleft.x && x <= buttons.at(1).topright.x)
-		&& (y >= (buttons.at(1).bottomleft.y) && y <= (buttons.at(1).topright.y)))
-	{
-		showPolygon = !showPolygon; //Toggle showing the polygon.
-		button = 1;
-	}
-	else if ((x >= buttons.at(2).bottomleft.x && x <= buttons.at(2).topright.x)
-		&& (y >= (buttons.at(2).bottomleft.y) && y <= (buttons.at(2).topright.y)))
-	{
-		textOutput << "Please select the first point for the direction vector.";
-		button = 2;
-		inputState = 1;//Ready to accept input.
-		directionVector = Point2D();
-		theta = 0;
-		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
-		directionVector = originalDirection;//In case input is not completed before restarting animation.
-		//glutIdleFunc(NULL);//Stop animation while accepting input.
-	}
-	else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
-		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y)))
-	{
-		//glutIdleFunc(onIdle);
-		textOutput << "Animation Started";
-		inputState = 0;
-		button = 3;
-	}
-	else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
-		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y)))
-	{
-		//glutIdleFunc(NULL);
-		textOutput << "Animation Stopped";
-		theta = 0;
-		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
-		directionVector = originalDirection;
-		button = 4;
-	}
-	else if (inputState > 0)
-		acceptInputs(x, y);
-
-	return button;
-}
-
-//*************************************************************************************
-//Name: onMouse
-//Description: The mouse event callback
-//Preconditions: x,y are a valid point
-//Postconditions: The mouse event is handled
-//Parameters: GLint x, y, the mouise position
-//				button, the mouse buttons used
-//				state, the properties of the mouse
-//Returns: Nothing
-void onMouse(GLFWwindow* window, int button, int action, int mods)
-{
-	GLint menuButton = 1;
-	int state = glfwGetMouseButton(window, button);
-
-	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
-	{
-		double xPos, yPos;
-		glfwGetCursorPos(window, &xPos, &yPos);
-		menuButton = getButtonPushed(xPos, yPos);
-	}
-}
-
-//*************************************************************************************
-//Name: main
-//Description: The main function
-//Preconditions: None
-//Postconditions: The program runs in an infinite loop, for displaying grapics.
-//					An OpenGL graphics window is displayed
-//Parameters: int argc, the number of command line arguments
-//				char** argv, the command line arguments
-//Returns: int, the exit code
-int main(int argc, char** argv)
-{
-	//Initialization functions
+int main(int argc, char** argv) {
 	if (!glfwInit()) {return -1;}
-
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1 - Nicholas Reel", NULL, NULL);
 	glfwMakeContextCurrent(appWindow);
-
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
 
-	initialize();
+	// Initialize vertices before they are piped into buffers
+	initPolygon();
 
-	//Call-back functions
-	//glfwSetMouseButtonCallback(appWindow, onMouse);
-	//glfwSetKeyCallback(appWindow, onKeyboard);
-
-	// TODO: Init for VAO buffers
+	init(appWindow);
+	shaderInit();
 
 	//Infinite Loop
-	while (!glfwWindowShouldClose(appWindow))
-	{
+	while (!glfwWindowShouldClose(appWindow)) {
 		// TODO: Should be callback???
-		onIdle();
+		//onIdle();
+
 		onDisplay(appWindow);
-		// TODO: Update VAOs position
+
+		// TODO: Maybe keep behind `displayPolygon()`?
+		//display the buffer
+		glfwSwapBuffers(appWindow);
+
 		glfwPollEvents();
 	}
 
 	glfwDestroyWindow(appWindow);
 	glfwTerminate();
-	return 0;
+	return EXIT_SUCCESS;
 }
-
-//End of Program1_Meyers.cpp
