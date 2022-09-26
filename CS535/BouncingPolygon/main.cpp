@@ -52,9 +52,9 @@ const int DIMENSIONS = 2; // Total dimensions being used for rendering
 const GLfloat PI = 3.14159265;
 //These next two constants should be changed depending on the graphical abilities
 //	of the user's system. The higher the dampener, the slower the movement/rotation.
-const GLfloat speedDamp = 600;//Dampening effect on the translation speed
+const GLfloat speedDamp = 200;//Dampening effect on the translation speed
 const GLfloat rotationDamp = 2800;//Dampening effect on the rotation speed
-const int VAOS = 1;
+const int VERTEX_OBJS = 2;
 
 //State variables
 GLint B_WIDTH = WINDOW_WIDTH / 8;
@@ -64,10 +64,11 @@ GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 GLFWwindow* appWindow;
 
 GLuint renderingProgram;
-GLuint vao[VAOS], vbo;
+GLuint vao[VERTEX_OBJS], vbo[VERTEX_OBJS];
 
 // Organized as (x, y)
 vector<GLfloat> vertices;
+vector<GLfloat> verticesBezier;
 
 // Taken from program 2.3 for debugging purposes
 void printShaderLog(GLuint shader) {
@@ -186,6 +187,14 @@ void bitmapCharacter(void* font, int character) {
 	//glutBitmapCharacter(font, character);
 }
 
+void insertPointsIntoVectorBuffer(vector<GLfloat> *vectorBuffer, vector<Point2D> pointVectorInput) {
+	// Insert point values into VBO
+	for (auto point2D : pointVectorInput) {
+		vectorBuffer->push_back(point2D.x);
+		vectorBuffer->push_back(point2D.y);
+	}
+}
+
 void calcMidpoints(vector<Point2D> p) {
 	//Calculate the midpoints of the edges
 	midpoints.clear();
@@ -200,8 +209,8 @@ void calcMidpoints(vector<Point2D> p) {
 void initPolygon() {
 	showPolygon = false;
 	inputState = 0;
-	directionVector = Point2D();
-	directionSpeed = 1;
+	directionVector = Point2D(-100, -50);
+	directionSpeed = 10;
 	rotationSpeed = 0;
 	theta = 0;
 
@@ -221,15 +230,19 @@ void initPolygon() {
 	polygon.push_back(Point2D(-unit, -unit));
 	polygon.push_back(Point2D(-unit, -3 * unit));
 
-	// Insert point values into VBO
-	for (auto point2D : polygon) {
-		vertices.push_back(point2D.x);
-		vertices.push_back(point2D.y);
-	}
+	insertPointsIntoVectorBuffer(&vertices, polygon);
+
+	// TODO: Remove once midpoint situation is figured out
+	verticesBezier.push_back(unit);
+	verticesBezier.push_back(unit);
+	verticesBezier.push_back(unit);
+	verticesBezier.push_back(-unit);
+	verticesBezier.push_back(-unit);
+	verticesBezier.push_back(unit);
 
 	//Initialize the midpoints
-	//calcMidpoints(polygon);
-	//clipPolygon = vector<Point2D>(polygon);//Copy the polygon
+	calcMidpoints(polygon);
+	clipPolygon = vector<Point2D>(polygon);//Copy the polygon
 }
 
 void drawButton(GLint buttonNum) {
@@ -411,12 +424,17 @@ void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 }
 
 void onIdle() {
-	if (inputState == 0)
-	{
-		theta += 1 / (2 * PI);//Add 1 radian
-		centroid.x += directionSpeed / speedDamp * (directionVector.x / directionSpeed);
-		centroid.y += directionSpeed / speedDamp * (directionVector.y / directionSpeed);
-	}
+	//if (inputState == 0)
+	
+	//newTheta *= rotationSpeed / (rotationDamp * PI);
+	theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
+	// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
+	float xDelta = directionVector.x / directionSpeed;
+	float yDelta = directionVector.y / directionSpeed;
+	centroid.x += (directionSpeed / speedDamp) * xDelta;
+	centroid.y += (directionSpeed / speedDamp) *  yDelta;
+	//cout << "Delta: [" << to_string(xDelta) << ", " << to_string(yDelta) << "] \t Direction: <"
+	//		<< directionVector.x << ", " << directionVector.y << ">" << endl;
 }
 
 void acceptInputs(GLint x, GLint y) {
@@ -455,14 +473,11 @@ GLint getButtonPushed(GLint x, GLint y) {
 	y = WINDOW_HEIGHT - y;
 	textOutput.str("");
 	if ((x >= buttons.at(1).bottomleft.x && x <= buttons.at(1).topright.x)
-		&& (y >= (buttons.at(1).bottomleft.y) && y <= (buttons.at(1).topright.y)))
-	{
+		&& (y >= (buttons.at(1).bottomleft.y) && y <= (buttons.at(1).topright.y))) {
 		showPolygon = !showPolygon; //Toggle showing the polygon.
 		button = 1;
-	}
-	else if ((x >= buttons.at(2).bottomleft.x && x <= buttons.at(2).topright.x)
-		&& (y >= (buttons.at(2).bottomleft.y) && y <= (buttons.at(2).topright.y)))
-	{
+	} else if ((x >= buttons.at(2).bottomleft.x && x <= buttons.at(2).topright.x)
+		&& (y >= (buttons.at(2).bottomleft.y) && y <= (buttons.at(2).topright.y))) {
 		textOutput << "Please select the first point for the direction vector.";
 		button = 2;
 		inputState = 1;//Ready to accept input.
@@ -471,26 +486,21 @@ GLint getButtonPushed(GLint x, GLint y) {
 		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
 		directionVector = originalDirection;//In case input is not completed before restarting animation.
 		//glutIdleFunc(NULL);//Stop animation while accepting input.
-	}
-	else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
-		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y)))
-	{
+	} else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
+		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y))) {
 		//glutIdleFunc(onIdle);
 		textOutput << "Animation Started";
 		inputState = 0;
 		button = 3;
-	}
-	else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
-		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y)))
-	{
+	} else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
+		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y))) {
 		//glutIdleFunc(NULL);
 		textOutput << "Animation Stopped";
 		theta = 0;
 		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
 		directionVector = originalDirection;
 		button = 4;
-	}
-	else if (inputState > 0)
+	} else if (inputState > 0)
 		acceptInputs(x, y);
 
 	return button;
@@ -511,18 +521,16 @@ void onMouse(GLFWwindow* window, int button, int action, int mods) {
 void calculatePolygon() {
 	GLfloat newTheta = theta;
 
-	if (inputState == 0)
-	{
+	//if (inputState == 0) {
 		if (centroid.x <= 0 || centroid.x >= WINDOW_WIDTH)
 			directionVector.x *= -1;
 		if (centroid.y <= 0 || centroid.y >= 5 * WINDOW_HEIGHT / 6)
 			directionVector.y *= -1;
-	}
+	//}
 	newTheta *= rotationSpeed / (rotationDamp * PI);
 
 	rotatedPolygon.clear();
-	for (GLint n = 0; n < polygon.size(); n++)
-	{
+	for (GLint n = 0; n < polygon.size(); n++) {
 		GLfloat rotatedX = polygon.at(n % polygon.size()).x * cos(newTheta)
 			+ polygon.at(n % polygon.size()).y * sin(newTheta);
 		GLfloat rotatedY = polygon.at(n % polygon.size()).x * -sin(newTheta)
@@ -535,10 +543,10 @@ void calculatePolygon() {
 
 	bool updatedP = clip();
 
+	// TODO: Move to shader
 	//Draw the polygon
 	glBegin(GL_LINE_STRIP);
-	for (GLint i = 0; i <= clipPolygon.size(); i++)
-	{
+	for (GLint i = 0; i <= clipPolygon.size(); i++) {
 		GLfloat newX = clipPolygon.at(i % clipPolygon.size()).x;
 		GLfloat newY = clipPolygon.at(i % clipPolygon.size()).y;
 		glVertex2f(newX, newY);
@@ -547,17 +555,16 @@ void calculatePolygon() {
 
 	calcMidpoints(clipPolygon);
 
+	// TODO: Move to shader
 	//Draw the Bezier curves
 	glBegin(GL_LINE_STRIP);
-	for (GLint k = 0; k < midpoints.size(); k++)
-	{
+	for (GLint k = 0; k < midpoints.size(); k++) {
 		Point2D old = Point2D(midpoints.at(k % midpoints.size()).x,
 			midpoints.at(k % midpoints.size()).y);
 		Point2D A = old;
 		GLfloat deltaT = .1;
 
-		for (GLfloat t = 0; t <= 1; t += deltaT)
-		{
+		for (GLfloat t = 0; t <= 1; t += deltaT) {
 			Point2D B = Point2D(clipPolygon.at((k + 1) % clipPolygon.size()).x,
 				clipPolygon.at((k + 1) % clipPolygon.size()).y);
 			Point2D C = Point2D(midpoints.at((k + 1) % midpoints.size()).x,
@@ -572,6 +579,7 @@ void calculatePolygon() {
 
 void displayShader() {
 	GLuint modelViewProjectionLoc = glGetUniformLocation(renderingProgram, "u_modelViewProjection");
+	// Build matrices for shader computation
 	glm::mat4 modelMatrix(1.0f), viewMatrix(1.0f);
 	glm::mat4 projMatrix = glm::ortho(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
 	modelMatrix = glm::translate(modelMatrix, glm::vec3(centroid.x, centroid.y, 0.0f));
@@ -581,38 +589,27 @@ void displayShader() {
 	glUniformMatrix4fv(modelViewProjectionLoc, 1, GL_FALSE, value_ptr(mvpMatrix));
 }
 
-void displayPolygon() {
-	glBindVertexArray(vao[0]);
-	glDrawArrays(GL_LINE_LOOP, 0, vertices.size() / DIMENSIONS);
-	calculatePolygon();
+void polygonInit(int vaoNum, vector<float>* polygonVertices) {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[vaoNum]);
+	glBufferData(GL_ARRAY_BUFFER, polygonVertices->size() * sizeof(float), polygonVertices->data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(vaoNum);
 }
 
-void onDisplay(GLFWwindow* window) {
-	// Set refresh buffers
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	displayShader();
-	displayPolygon();
-}
-
-void shaderInit() {
-	glUseProgram(renderingProgram);
-	displayShader();
+void displayPolygon(int vaoNum, vector<float>* polygonVertices) {
+	glBindBuffer(GL_ARRAY_BUFFER, vao[vaoNum]);
+	glVertexAttribPointer(vaoNum, DIMENSIONS, GL_FLOAT, GL_FALSE, DIMENSIONS * sizeof(float), NULL);
+	glDrawArrays(GL_LINE_LOOP, vaoNum, polygonVertices->size() / DIMENSIONS);
 }
 
 void init(GLFWwindow* window) {
 	renderingProgram = createShaderProgram();
 	// Establish vao and vbo buffers
-	glGenVertexArrays(VAOS, vao);
-	glGenBuffers(1, &vbo);
+	glGenVertexArrays(VERTEX_OBJS, vao);
+	glGenBuffers(VERTEX_OBJS, vbo);
 	glBindVertexArray(vao[0]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	// Pipe buffer for shader input
-	glVertexAttribPointer(0, DIMENSIONS, GL_FLOAT, GL_FALSE, DIMENSIONS * sizeof(float), NULL);
-	glEnableVertexAttribArray(0);
+	polygonInit(0, &vertices);
+	polygonInit(1, &verticesBezier);
 }
 
 int main(int argc, char** argv) {
@@ -628,14 +625,29 @@ int main(int argc, char** argv) {
 	initPolygon();
 
 	init(appWindow);
-	shaderInit();
+	
+	// Init shaders
+	glUseProgram(renderingProgram);
+	displayShader();
 
 	//Infinite Loop
 	while (!glfwWindowShouldClose(appWindow)) {
 		// TODO: Should be callback???
-		//onIdle();
+		onIdle();
 
-		onDisplay(appWindow);
+		/// "onDisplay"
+
+		// Set refresh buffers
+		glClearColor(1.0, 1.0, 1.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		displayShader();
+
+		displayPolygon(0, &vertices);
+		displayPolygon(1, &verticesBezier);
+
+		calculatePolygon();
+
+		/// "onDisplay" end
 
 		// TODO: Maybe keep behind `displayPolygon()`?
 		//display the buffer
