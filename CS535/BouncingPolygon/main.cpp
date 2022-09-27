@@ -52,7 +52,7 @@ const int DIMENSIONS = 2; // Total dimensions being used for rendering
 const GLfloat PI = 3.14159265;
 //These next two constants should be changed depending on the graphical abilities
 //	of the user's system. The higher the dampener, the slower the movement/rotation.
-const GLfloat speedDamp = 200;//Dampening effect on the translation speed
+const GLfloat speedDamp = 50;//Dampening effect on the translation speed
 const GLfloat rotationDamp = 2800;//Dampening effect on the rotation speed
 const int VERTEX_OBJS = 2;
 
@@ -68,6 +68,7 @@ GLuint vao[VERTEX_OBJS], vbo[VERTEX_OBJS];
 
 // Organized as (x, y)
 vector<GLfloat> vertices;
+vector<GLfloat> midpointVertices;
 vector<GLfloat> verticesBezier;
 
 // Taken from program 2.3 for debugging purposes
@@ -230,18 +231,12 @@ void initPolygon() {
 	polygon.push_back(Point2D(-unit, -unit));
 	polygon.push_back(Point2D(-unit, -3 * unit));
 
-	insertPointsIntoVectorBuffer(&vertices, polygon);
-
-	// TODO: Remove once midpoint situation is figured out
-	verticesBezier.push_back(unit);
-	verticesBezier.push_back(unit);
-	verticesBezier.push_back(unit);
-	verticesBezier.push_back(-unit);
-	verticesBezier.push_back(-unit);
-	verticesBezier.push_back(unit);
-
 	//Initialize the midpoints
 	calcMidpoints(polygon);
+
+	insertPointsIntoVectorBuffer(&vertices, polygon);
+	insertPointsIntoVectorBuffer(&midpointVertices, midpoints);
+
 	clipPolygon = vector<Point2D>(polygon);//Copy the polygon
 }
 
@@ -340,7 +335,7 @@ bool clip() {
 	bool lookingForEnter = false;
 	bool cornerAdded = false;
 	vector<Point2D> newPolygon;
-	clipPolygon = rotatedPolygon;
+	clipPolygon = polygon;
 
 	for (GLint i = 0; i < clipPolygon.size(); i++)
 	{
@@ -529,52 +524,36 @@ void calculatePolygon() {
 	//}
 	newTheta *= rotationSpeed / (rotationDamp * PI);
 
-	rotatedPolygon.clear();
-	for (GLint n = 0; n < polygon.size(); n++) {
-		GLfloat rotatedX = polygon.at(n % polygon.size()).x * cos(newTheta)
-			+ polygon.at(n % polygon.size()).y * sin(newTheta);
-		GLfloat rotatedY = polygon.at(n % polygon.size()).x * -sin(newTheta)
-			+ polygon.at(n % polygon.size()).y * cos(newTheta);
-		GLfloat newX = rotatedX + centroid.x;
-		GLfloat newY = rotatedY + centroid.y;
-		rotatedPolygon.push_back(Point2D(newX, newY));
-	}
-	clipPolygon = rotatedPolygon;
+	clipPolygon = polygon;
 
 	bool updatedP = clip();
 
 	// TODO: Move to shader
-	//Draw the polygon
-	glBegin(GL_LINE_STRIP);
-	for (GLint i = 0; i <= clipPolygon.size(); i++) {
-		GLfloat newX = clipPolygon.at(i % clipPolygon.size()).x;
-		GLfloat newY = clipPolygon.at(i % clipPolygon.size()).y;
-		glVertex2f(newX, newY);
-	}
-	glEnd();
-
-	calcMidpoints(clipPolygon);
-
-	// TODO: Move to shader
 	//Draw the Bezier curves
-	glBegin(GL_LINE_STRIP);
+	verticesBezier.clear();
 	for (GLint k = 0; k < midpoints.size(); k++) {
 		Point2D old = Point2D(midpoints.at(k % midpoints.size()).x,
 			midpoints.at(k % midpoints.size()).y);
 		Point2D A = old;
 		GLfloat deltaT = .1;
 
+		int polygonSize = polygon.size();
+
 		for (GLfloat t = 0; t <= 1; t += deltaT) {
-			Point2D B = Point2D(clipPolygon.at((k + 1) % clipPolygon.size()).x,
-				clipPolygon.at((k + 1) % clipPolygon.size()).y);
-			Point2D C = Point2D(midpoints.at((k + 1) % midpoints.size()).x,
-				midpoints.at((k + 1) % midpoints.size()).y);
+			Point2D polygonPoint = polygon.at((k + 1) % polygonSize);
+			Point2D midpoint = midpoints.at((k + 1) % midpoints.size());
+			Point2D B = Point2D(polygonPoint.x, polygonPoint.y);
+			Point2D C = Point2D(midpoint.x, midpoint.y);
 			Point2D current = bezierCurve(A, B, C, t);
-			glVertex2f(current.x, current.y);
+			verticesBezier.push_back(current.x);
+			verticesBezier.push_back(current.y);
 			old = current;
 		}
 	}
-	glEnd();
+
+	// Update VBO to use calculated bezier vertices
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, verticesBezier.size() * sizeof(float), verticesBezier.data(), GL_DYNAMIC_DRAW);
 }
 
 void displayShader() {
@@ -590,26 +569,33 @@ void displayShader() {
 }
 
 void polygonInit(int vaoNum, vector<float>* polygonVertices) {
+	// Setup selected VAO and VBO
+	glGenVertexArrays(1, &vao[vaoNum]);
+	glBindVertexArray(vao[vaoNum]);
+	glGenBuffers(1, &vbo[vaoNum]);
+
+	// Bind polygon vector to buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[vaoNum]);
-	glBufferData(GL_ARRAY_BUFFER, polygonVertices->size() * sizeof(float), polygonVertices->data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(vaoNum);
+	glBufferData(GL_ARRAY_BUFFER, polygonVertices->size() * sizeof(float), polygonVertices->data(), GL_DYNAMIC_DRAW);
+
+	// Bind position vector in shader
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, DIMENSIONS, GL_FLOAT, GL_FALSE, DIMENSIONS * sizeof(float), NULL);
 }
 
 void displayPolygon(int vaoNum, vector<float>* polygonVertices) {
-	glBindBuffer(GL_ARRAY_BUFFER, vao[vaoNum]);
-	glVertexAttribPointer(vaoNum, DIMENSIONS, GL_FLOAT, GL_FALSE, DIMENSIONS * sizeof(float), NULL);
-	glDrawArrays(GL_LINE_LOOP, vaoNum, polygonVertices->size() / DIMENSIONS);
+	glBindVertexArray(vao[vaoNum]);
+	glDrawArrays(GL_LINE_LOOP, 0, polygonVertices->size() / DIMENSIONS);
 }
 
 void init(GLFWwindow* window) {
 	renderingProgram = createShaderProgram();
-	// Establish vao and vbo buffers
-	glGenVertexArrays(VERTEX_OBJS, vao);
-	glGenBuffers(VERTEX_OBJS, vbo);
-	glBindVertexArray(vao[0]);
+	
+	polygonInit(0, &verticesBezier);
+	polygonInit(1, &vertices);
 
-	polygonInit(0, &vertices);
-	polygonInit(1, &verticesBezier);
+	glBindVertexArray(0);
+
 }
 
 int main(int argc, char** argv) {
@@ -630,26 +616,26 @@ int main(int argc, char** argv) {
 	glUseProgram(renderingProgram);
 	displayShader();
 
+	GLuint isBezierFlagLoc = glGetUniformLocation(renderingProgram, "u_isBezier");
+
 	//Infinite Loop
 	while (!glfwWindowShouldClose(appWindow)) {
 		// TODO: Should be callback???
 		onIdle();
-
-		/// "onDisplay"
 
 		// Set refresh buffers
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		displayShader();
 
-		displayPolygon(0, &vertices);
-		displayPolygon(1, &verticesBezier);
+		glUniform1i(isBezierFlagLoc, true);
+		displayPolygon(0, &verticesBezier);
+
+		glUniform1i(isBezierFlagLoc, false);
+		displayPolygon(1, &vertices);
 
 		calculatePolygon();
 
-		/// "onDisplay" end
-
-		// TODO: Maybe keep behind `displayPolygon()`?
 		//display the buffer
 		glfwSwapBuffers(appWindow);
 
