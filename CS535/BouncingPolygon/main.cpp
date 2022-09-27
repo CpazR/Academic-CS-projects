@@ -30,7 +30,7 @@
 
 #include <Windows.h>
 #include <GL/glew.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
@@ -185,7 +185,7 @@ GLfloat theta;//The amount to rotate the polygon; updated by the animation proce
 
 void bitmapCharacter(void* font, int character) {
 	// TODO: figure out replacement for drawing text. Or figure out GLUT for 64 bit systems?
-	//glutBitmapCharacter(font, character);
+	glutBitmapCharacter(font, character);
 }
 
 void insertPointsIntoVectorBuffer(vector<GLfloat> *vectorBuffer, vector<Point2D> pointVectorInput) {
@@ -234,10 +234,11 @@ void initPolygon() {
 	//Initialize the midpoints
 	calcMidpoints(polygon);
 
+	clipPolygon = vector<Point2D>(polygon);
+
+	// Move polygons into simplified vectors for easy use with VAO/VBOs
 	insertPointsIntoVectorBuffer(&vertices, polygon);
 	insertPointsIntoVectorBuffer(&midpointVertices, midpoints);
-
-	clipPolygon = vector<Point2D>(polygon);//Copy the polygon
 }
 
 void drawButton(GLint buttonNum) {
@@ -276,8 +277,7 @@ void displayText(ostringstream& os) {
 	string output = os.str();
 	glRasterPos2f(WINDOW_WIDTH / 25, 5 * WINDOW_HEIGHT / 6 - 12);//Reset position
 	glColor3f(0.0f, 0.0f, 0.0f); //Black text
-	for (GLint j = 0; j < output.length(); j++)
-	{
+	for (GLint j = 0; j < output.length(); j++) {
 		bitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
 	}
 }
@@ -288,126 +288,8 @@ Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t) {
 	return Point2D(fx, fy);
 }
 
-Point2D findIntersect(Point2D A, Point2D B) {
-	Point2D C, D;
-	GLfloat t = -1;
-	if ((B.x < 0 && A.x >= 0) || (A.x < 0 && B.x >= 0))//Left clipping
-	{
-		C = Point2D(0, 0);
-		D = Point2D(0, 5 * WINDOW_HEIGHT / 6);
-	}
-	else if ((B.x > WINDOW_WIDTH && A.x <= WINDOW_WIDTH)
-		|| (A.x > WINDOW_WIDTH && B.x <= WINDOW_WIDTH))//Right clipping
-	{
-		C = Point2D(WINDOW_WIDTH, 5 * WINDOW_HEIGHT / 6);
-		D = Point2D(WINDOW_WIDTH, 0);
-	}
-	else if ((B.y < 0 && A.y >= 0) || (A.y < 0 && B.y >= 0))//Bottom clipping
-	{
-		C = Point2D(WINDOW_WIDTH, 0);
-		D = Point2D(0, 0);
-	}
-	else if ((B.y > (5 * WINDOW_HEIGHT / 6) && A.y <= (5 * WINDOW_HEIGHT / 6))
-		|| (A.y > (5 * WINDOW_HEIGHT / 6) && B.y <= (5 * WINDOW_HEIGHT / 6)))//Top clipping
-	{
-		C = Point2D(0, 5 * WINDOW_HEIGHT / 6);
-		D = Point2D(WINDOW_WIDTH, 5 * WINDOW_HEIGHT / 6);
-	}
-	else
-		return Point2D(99999, 99999);//No intersection
-
-	GLfloat denom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
-	if (denom != 0)
-		t = ((D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x)) / denom;
-
-	GLfloat interX = 99999, interY = 99999;
-	if (t >= 0 && t <= 1)
-	{
-		interX = (1 - t) * A.x + t * B.x;
-		interY = (1 - t) * A.y + t * B.y;
-	}
-	return Point2D(interX, interY);
-}
-
-bool clip() {
-	bool updatedP = false;
-	Point2D intersection;
-	bool lookingForEnter = false;
-	bool cornerAdded = false;
-	vector<Point2D> newPolygon;
-	clipPolygon = polygon;
-
-	for (GLint i = 0; i < clipPolygon.size(); i++)
-	{
-		Point2D A = clipPolygon.at(i % clipPolygon.size());
-		Point2D B = clipPolygon.at((i + 1) % clipPolygon.size());
-
-		Point2D I1 = Point2D(99999, 99999);
-
-		if ((A.x < 0 && B.x < 0) || (A.x > WINDOW_WIDTH && B.x > WINDOW_WIDTH)
-			|| (A.y < 0 && B.y < 0) || (A.y > (5 * WINDOW_HEIGHT / 6) && B.y > (5 * WINDOW_HEIGHT / 6)))
-		{
-			lookingForEnter = true;
-		}
-		else
-		{
-			I1 = findIntersect(A, B);
-		}
-
-		if ((A.x<0 || A.x>WINDOW_WIDTH || A.y<0 || A.y>(5 * WINDOW_HEIGHT / 6))
-			&& !lookingForEnter)
-			lookingForEnter = true;
-
-		if (lookingForEnter && !cornerAdded)
-		{
-			if (A.y > (5 * WINDOW_HEIGHT / 6) && A.x < 0)
-			{
-				newPolygon.push_back(Point2D(0, 5 * WINDOW_HEIGHT / 6));
-				cornerAdded = true;
-			}
-			else if (A.x < 0 && A.y < 0)
-			{
-				newPolygon.push_back(Point2D(0, 0));
-				cornerAdded = true;
-			}
-			else if (A.y<0 && A.x>WINDOW_WIDTH)
-			{
-				newPolygon.push_back(Point2D(WINDOW_WIDTH, 0));
-				cornerAdded = true;
-			}
-			else if (A.x > WINDOW_WIDTH && A.y > (5 * WINDOW_HEIGHT / 6))
-			{
-				newPolygon.push_back(Point2D(WINDOW_WIDTH, 5 * WINDOW_HEIGHT / 6));
-				cornerAdded = true;
-			}
-		}
-
-		if (!lookingForEnter)
-			newPolygon.push_back(clipPolygon.at(i % clipPolygon.size()));
-
-		if (I1.x != 99999 && I1.y != 99999)//If the point is valid.
-		{
-			if (!lookingForEnter)
-			{
-				lookingForEnter = true;
-				newPolygon.push_back(I1);
-				updatedP = true;
-				intersection = I1;
-			}
-			else
-			{
-				lookingForEnter = false;
-				newPolygon.push_back(I1);
-				updatedP = true;
-			}
-		}
-	}
-	clipPolygon = newPolygon;
-
-	return updatedP;
-}
-
-void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {//Handles keyboard events
+//Handles keyboard events
+void onKeyboard(unsigned char key, int x, int y) {
 	switch (key)
 	{
 	case 27:  //Typed the Escape key, so exit.
@@ -416,20 +298,6 @@ void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
 	default:
 		break;
 	}
-}
-
-void onIdle() {
-	//if (inputState == 0)
-	
-	//newTheta *= rotationSpeed / (rotationDamp * PI);
-	theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
-	// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
-	float xDelta = directionVector.x / directionSpeed;
-	float yDelta = directionVector.y / directionSpeed;
-	centroid.x += (directionSpeed / speedDamp) * xDelta;
-	centroid.y += (directionSpeed / speedDamp) *  yDelta;
-	//cout << "Delta: [" << to_string(xDelta) << ", " << to_string(yDelta) << "] \t Direction: <"
-	//		<< directionVector.x << ", " << directionVector.y << ">" << endl;
 }
 
 void acceptInputs(GLint x, GLint y) {
@@ -501,49 +369,44 @@ GLint getButtonPushed(GLint x, GLint y) {
 	return button;
 }
 
-void onMouse(GLFWwindow* window, int button, int action, int mods) {
+void onMouse(int button, int state, int x, int y) {
 	GLint menuButton = 1;
-	int state = glfwGetMouseButton(window, button);
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+		menuButton = getButtonPushed(x, y);
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT && state == GLFW_PRESS)
-	{
-		double xPos, yPos;
-		glfwGetCursorPos(window, &xPos, &yPos);
-		menuButton = getButtonPushed(xPos, yPos);
-	}
+	glutPostRedisplay();
 }
 
 void calculatePolygon() {
-	GLfloat newTheta = theta;
-
 	//if (inputState == 0) {
+		theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
+		//newTheta *= rotationSpeed / (rotationDamp * PI);
+			// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
+		float xDelta = directionVector.x / directionSpeed;
+		float yDelta = directionVector.y / directionSpeed;
+		centroid.x += (directionSpeed / speedDamp) * xDelta;
+		centroid.y += (directionSpeed / speedDamp) * yDelta;
 		if (centroid.x <= 0 || centroid.x >= WINDOW_WIDTH)
 			directionVector.x *= -1;
 		if (centroid.y <= 0 || centroid.y >= 5 * WINDOW_HEIGHT / 6)
 			directionVector.y *= -1;
 	//}
-	newTheta *= rotationSpeed / (rotationDamp * PI);
 
-	clipPolygon = polygon;
-
-	bool updatedP = clip();
-
-	// TODO: Move to shader
 	//Draw the Bezier curves
 	verticesBezier.clear();
 	for (GLint k = 0; k < midpoints.size(); k++) {
 		Point2D old = Point2D(midpoints.at(k % midpoints.size()).x,
-			midpoints.at(k % midpoints.size()).y);
+						      midpoints.at(k % midpoints.size()).y);
 		Point2D A = old;
 		GLfloat deltaT = .1;
 
-		int polygonSize = polygon.size();
+		int polygonSize = clipPolygon.size();
 
 		for (GLfloat t = 0; t <= 1; t += deltaT) {
-			Point2D polygonPoint = polygon.at((k + 1) % polygonSize);
-			Point2D midpoint = midpoints.at((k + 1) % midpoints.size());
-			Point2D B = Point2D(polygonPoint.x, polygonPoint.y);
-			Point2D C = Point2D(midpoint.x, midpoint.y);
+			Point2D nextPoint = clipPolygon.at((k + 1) % polygonSize);
+			Point2D nextMidpoint = midpoints.at((k + 1) % midpoints.size());
+			Point2D B = Point2D(nextPoint.x, nextPoint.y);
+			Point2D C = Point2D(nextMidpoint.x, nextMidpoint.y);
 			Point2D current = bezierCurve(A, B, C, t);
 			verticesBezier.push_back(current.x);
 			verticesBezier.push_back(current.y);
@@ -551,7 +414,7 @@ void calculatePolygon() {
 		}
 	}
 
-	// Update VBO to use calculated bezier vertices
+	// Update vertex buffer to use calculated bezier vertices
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, verticesBezier.size() * sizeof(float), verticesBezier.data(), GL_DYNAMIC_DRAW);
 }
@@ -589,13 +452,21 @@ void displayPolygon(int vaoNum, vector<float>* polygonVertices) {
 }
 
 void init(GLFWwindow* window) {
+	//Set the button vertices
+	buttons.push_back(Rect2D());//Dummy button
+	for (GLint i = 1; i <= 4; i++)
+	{
+		buttons.push_back(Rect2D(
+			Point2D(i * WINDOW_WIDTH / 5 - B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 - B_HEIGHT / 2),
+			Point2D(i * WINDOW_WIDTH / 5 + B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 + B_HEIGHT / 2)));
+	}
+
 	renderingProgram = createShaderProgram();
 	
 	polygonInit(0, &verticesBezier);
 	polygonInit(1, &vertices);
 
 	glBindVertexArray(0);
-
 }
 
 int main(int argc, char** argv) {
@@ -607,6 +478,10 @@ int main(int argc, char** argv) {
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
 	glfwSwapInterval(1);
 
+	glutInit(&argc, argv);
+	glutKeyboardFunc(onKeyboard);
+	glutMouseFunc(onMouse);
+
 	// Initialize vertices before they are piped into buffers
 	initPolygon();
 
@@ -616,22 +491,18 @@ int main(int argc, char** argv) {
 	glUseProgram(renderingProgram);
 	displayShader();
 
-	GLuint isBezierFlagLoc = glGetUniformLocation(renderingProgram, "u_isBezier");
-
 	//Infinite Loop
 	while (!glfwWindowShouldClose(appWindow)) {
-		// TODO: Should be callback???
-		onIdle();
-
 		// Set refresh buffers
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		drawButtonBar();
+		displayText(textOutput);
+
 		displayShader();
 
-		glUniform1i(isBezierFlagLoc, true);
 		displayPolygon(0, &verticesBezier);
-
-		glUniform1i(isBezierFlagLoc, false);
 		displayPolygon(1, &vertices);
 
 		calculatePolygon();
