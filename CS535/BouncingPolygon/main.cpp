@@ -63,8 +63,18 @@ GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 //Window context
 GLFWwindow* appWindow;
 
+double POLY_RENDER_WINDOW_HEIGHT = WINDOW_HEIGHT / 6;
+double BUTTON_RENDER_WINDOW_HEIGHT = 5 * POLY_RENDER_WINDOW_HEIGHT;
+
+float topBoundary = 100;
+float botBoundary = 300;
+float lefBoundary = 50;
+float ritBoundary = WINDOW_WIDTH - 50;
+
 GLuint renderingProgram;
 GLuint vao[VERTEX_OBJS], vbo[VERTEX_OBJS];
+
+glm::mat4 modelMatrix(1.0f), viewMatrix(1.0f);
 
 // Organized as (x, y)
 vector<GLfloat> vertices;
@@ -144,6 +154,11 @@ struct Point2D {
 	GLfloat x;
 	GLfloat y;
 	Point2D() { x = 0; y = 0; }
+	Point2D(const Point2D& pointToCopy)
+	{
+		x = pointToCopy.x;
+		y = pointToCopy.y;
+	}
 	Point2D(GLfloat xc, GLfloat yc)
 	{
 		x = xc;
@@ -183,13 +198,12 @@ GLfloat directionSpeed;//The speed at which the polygon moves.
 GLint rotationSpeed;//The speed factor for the polygon's rotation.
 GLfloat theta;//The amount to rotate the polygon; updated by the animation process.
 
-void bitmapCharacter(void* font, int character) {
-	// TODO: figure out replacement for drawing text. Or figure out GLUT for 64 bit systems?
-	glutBitmapCharacter(font, character);
-}
-
-void insertPointsIntoVectorBuffer(vector<GLfloat> *vectorBuffer, vector<Point2D> pointVectorInput) {
+void insertPointsIntoVectorBuffer(vector<GLfloat> *vectorBuffer, vector<Point2D> pointVectorInput, bool emptyFirst) {
 	// Insert point values into VBO
+	if (emptyFirst) {
+		vectorBuffer->clear();
+	}
+
 	for (auto point2D : pointVectorInput) {
 		vectorBuffer->push_back(point2D.x);
 		vectorBuffer->push_back(point2D.y);
@@ -210,7 +224,7 @@ void calcMidpoints(vector<Point2D> p) {
 void initPolygon() {
 	showPolygon = false;
 	inputState = 0;
-	directionVector = Point2D(-100, -50);
+	directionVector = Point2D(100, -50);
 	directionSpeed = 10;
 	rotationSpeed = 0;
 	theta = 0;
@@ -237,8 +251,8 @@ void initPolygon() {
 	clipPolygon = vector<Point2D>(polygon);
 
 	// Move polygons into simplified vectors for easy use with VAO/VBOs
-	insertPointsIntoVectorBuffer(&vertices, polygon);
-	insertPointsIntoVectorBuffer(&midpointVertices, midpoints);
+	insertPointsIntoVectorBuffer(&vertices, clipPolygon, true);
+	insertPointsIntoVectorBuffer(&midpointVertices, midpoints, true);
 }
 
 void drawButton(GLint buttonNum) {
@@ -260,12 +274,12 @@ void drawButton(GLint buttonNum) {
 	glRasterPos2f(buttonNum * WINDOW_WIDTH / 5 - (B_WIDTH / 15), 11 * WINDOW_HEIGHT / 12 - (B_HEIGHT / 5));
 	ostringstream os;
 	os << buttonNum;
-	bitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
+	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
 }
 
 void drawButtonBar() {
 	glColor3f(.5, .5, .5);//Set to grey
-	glRectf(0.0f, 5 * WINDOW_HEIGHT / 6, WINDOW_WIDTH, WINDOW_HEIGHT);//Drawing the bar background
+	glRectf(0.0f, BUTTON_RENDER_WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);//Drawing the bar background
 
 	for (GLint i = 1; i <= 4; i++)
 		drawButton(i);
@@ -275,11 +289,135 @@ void drawButtonBar() {
 
 void displayText(ostringstream& os) {
 	string output = os.str();
-	glRasterPos2f(WINDOW_WIDTH / 25, 5 * WINDOW_HEIGHT / 6 - 12);//Reset position
+	glRasterPos2f(WINDOW_WIDTH / 25, BUTTON_RENDER_WINDOW_HEIGHT - 12);//Reset position
 	glColor3f(0.0f, 0.0f, 0.0f); //Black text
 	for (GLint j = 0; j < output.length(); j++) {
-		bitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
 	}
+}
+
+// Convert point from "model" to "world"
+Point2D convertPointToProjectionPoint(Point2D pointToCovnert) {
+	glm::vec4 unrotatedPoint = glm::vec4(modelMatrix * glm::vec4(pointToCovnert.x, pointToCovnert.y, 0.0, 1.0));
+	return Point2D(unrotatedPoint.x, unrotatedPoint.y);
+}
+
+// Convert point from "world" to "model"
+Point2D convertPointToModelPoint(Point2D pointToCovnert) {
+	glm::vec4 unrotatedPoint = glm::vec4(modelMatrix / glm::vec4(pointToCovnert.x, pointToCovnert.y, 0.0, 1.0));
+	return Point2D(unrotatedPoint.x, unrotatedPoint.y);
+}
+
+Point2D findIntersect(Point2D A, Point2D B) {
+	// Pair of points representing intersecting border to be checked against
+	Point2D C, D;
+	GLfloat t = -1;
+	if ((B.x <= lefBoundary && A.x >= lefBoundary) || (A.x <= lefBoundary && B.x >= lefBoundary)) {//Left clipping
+		C = Point2D(lefBoundary, topBoundary);
+		D = Point2D(lefBoundary, botBoundary);
+	} else if ((B.x >= ritBoundary && A.x <= ritBoundary) || (A.x >= ritBoundary && B.x <= ritBoundary)) {//Right clipping
+		C = Point2D(ritBoundary, botBoundary);
+		D = Point2D(ritBoundary, topBoundary);
+	} else if ((B.y <= topBoundary && A.y >= topBoundary) || (A.y <= topBoundary && B.y >= topBoundary)) {//Bottom clipping
+		C = Point2D(ritBoundary, topBoundary);
+		D = Point2D(lefBoundary, topBoundary);
+	} else if ((B.y >= botBoundary && A.y <= botBoundary) || (A.y >= botBoundary && B.y <= botBoundary)) {//Top clipping
+		C = Point2D(lefBoundary, botBoundary);
+		D = Point2D(ritBoundary, botBoundary);
+	} else
+		return Point2D(99999, 99999);//No intersection
+
+	GLfloat denom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
+	if (denom != 0)
+		t = ((D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x)) / denom;
+
+	GLfloat interX = 99999, interY = 99999;
+	if (t >= 0 && t <= 1) {
+		// Clamp intersection values to the boundaries
+		interX = max(lefBoundary, min((1 - t) * A.x + t * B.x, ritBoundary));
+		interY = max(topBoundary, min((1 - t) * A.y + t * B.y, botBoundary));
+	}
+	return Point2D(interX, interY);
+}
+
+bool clip() {
+	bool updatedP = false;
+	Point2D intersection;
+	bool lookingForEnter = false;
+	vector<Point2D> newPolygon;
+
+	for (GLint i = 0; i < clipPolygon.size(); i++) {
+		Point2D A = Point2D(clipPolygon.at(i % clipPolygon.size()));
+		Point2D B = Point2D(clipPolygon.at((i + 1) % clipPolygon.size()));
+
+		float oldAx = A.x;
+		float oldAy = A.y;
+		float oldBx = B.x;
+		float oldBy = B.y;
+
+		// Apply model matrix to rotate points and put in relation to the "world"
+		Point2D rotatedA = convertPointToProjectionPoint(A);
+		Point2D rotatedB = convertPointToProjectionPoint(B);
+
+		A.x = rotatedA.x;
+		A.y = rotatedA.y;
+		B.x = rotatedB.x;
+		B.y = rotatedB.y;
+
+		Point2D I1 = Point2D(99999, 99999);
+
+		if ((A.x < lefBoundary && B.x < lefBoundary)
+			|| (A.x > ritBoundary && B.x > ritBoundary)
+			|| (A.y < topBoundary && B.y < topBoundary)
+			|| (A.y > botBoundary && B.y > botBoundary)) {
+			lookingForEnter = true;
+		} else {
+			I1 = findIntersect(A, B);
+		}
+
+		if ((A.x <= lefBoundary || A.x >= ritBoundary || A.y <= topBoundary || A.y >= botBoundary)
+			&& !lookingForEnter)
+			lookingForEnter = true;
+
+		// Check corners
+		if (lookingForEnter) {
+			if (A.y >= botBoundary && A.x <= lefBoundary) { // Bottom left
+				newPolygon.push_back(convertPointToModelPoint(Point2D(lefBoundary, botBoundary)));
+			} else if (A.x <= lefBoundary&& A.y <= topBoundary) { // Top left
+				newPolygon.push_back(convertPointToModelPoint(Point2D(lefBoundary, topBoundary)));
+			} else if (A.y <= topBoundary && A.x >= ritBoundary) { // Top right
+				newPolygon.push_back(convertPointToModelPoint(Point2D(ritBoundary, topBoundary)));
+			} else if (A.x >= ritBoundary && A.y >= botBoundary) { // Bottom right
+				newPolygon.push_back(convertPointToModelPoint(Point2D(ritBoundary, botBoundary)));
+			}
+		}
+
+		if (!lookingForEnter)
+			newPolygon.push_back(Point2D(clipPolygon.at(i % clipPolygon.size())));
+
+		if (I1.x != 99999 && I1.y != 99999) {//If the point is valid.
+			if (!lookingForEnter) {
+				lookingForEnter = true;
+				newPolygon.push_back(convertPointToModelPoint(Point2D(I1.x, I1.y)));
+				updatedP = true;
+				intersection = I1;
+			} else {
+				lookingForEnter = false;
+				newPolygon.push_back(convertPointToModelPoint(Point2D(I1.x, I1.y)));
+				updatedP = true;
+			}
+		}
+
+		// Reverse rotation
+		A.x = oldAx;
+		A.y = oldAy;
+		B.x = oldBx;
+		B.y = oldBy;
+	}
+	clipPolygon.clear();
+	clipPolygon.insert(clipPolygon.end(), newPolygon.begin(), newPolygon.end());
+
+	return updatedP;
 }
 
 Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t) {
@@ -379,51 +517,64 @@ void onMouse(int button, int state, int x, int y) {
 
 void calculatePolygon() {
 	//if (inputState == 0) {
-		theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
-		//newTheta *= rotationSpeed / (rotationDamp * PI);
-			// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
-		float xDelta = directionVector.x / directionSpeed;
-		float yDelta = directionVector.y / directionSpeed;
-		centroid.x += (directionSpeed / speedDamp) * xDelta;
-		centroid.y += (directionSpeed / speedDamp) * yDelta;
-		if (centroid.x <= 0 || centroid.x >= WINDOW_WIDTH)
-			directionVector.x *= -1;
-		if (centroid.y <= 0 || centroid.y >= 5 * WINDOW_HEIGHT / 6)
-			directionVector.y *= -1;
+	theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
+	//newTheta *= rotationSpeed / (rotationDamp * PI);
+		// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
+	float xDelta = directionVector.x / directionSpeed;
+	float yDelta = directionVector.y / directionSpeed;
+	centroid.x += (directionSpeed / speedDamp) * xDelta;
+	centroid.y += (directionSpeed / speedDamp) * yDelta;
+	if (centroid.x <= lefBoundary || centroid.x >= ritBoundary)
+		directionVector.x *= -1;
+	if (centroid.y <= topBoundary || centroid.y >= botBoundary)
+		directionVector.y *= -1;
 	//}
 
-	//Draw the Bezier curves
-	verticesBezier.clear();
-	for (GLint k = 0; k < midpoints.size(); k++) {
-		Point2D old = Point2D(midpoints.at(k % midpoints.size()).x,
-						      midpoints.at(k % midpoints.size()).y);
-		Point2D A = old;
-		GLfloat deltaT = .1;
+	clipPolygon = vector<Point2D>(polygon);
 
-		int polygonSize = clipPolygon.size();
+	// Calcualte polygon clipping and insert them into buffer for VBO
+	bool didClipPolygon = clip();
+	insertPointsIntoVectorBuffer(&vertices, clipPolygon, true);
 
-		for (GLfloat t = 0; t <= 1; t += deltaT) {
-			Point2D nextPoint = clipPolygon.at((k + 1) % polygonSize);
-			Point2D nextMidpoint = midpoints.at((k + 1) % midpoints.size());
-			Point2D B = Point2D(nextPoint.x, nextPoint.y);
-			Point2D C = Point2D(nextMidpoint.x, nextMidpoint.y);
-			Point2D current = bezierCurve(A, B, C, t);
-			verticesBezier.push_back(current.x);
-			verticesBezier.push_back(current.y);
-			old = current;
+	// Recalculate midpoints of polygon for updated bezier polygon
+	calcMidpoints(clipPolygon);
+	if (clipPolygon.size() > 0) {
+		verticesBezier.clear();
+		for (GLint k = 0; k < midpoints.size(); k++) {
+			Point2D old = Point2D(midpoints.at(k % midpoints.size()));
+			Point2D A = old;
+			GLfloat deltaT = .1;
+
+			int polygonSize = clipPolygon.size();
+
+			for (GLfloat t = 0; t <= 1; t += deltaT) {
+				Point2D nextPoint = clipPolygon.at((k + 1) % clipPolygon.size());
+				Point2D nextMidpoint = midpoints.at((k + 1) % midpoints.size());
+				Point2D B = Point2D(nextPoint.x, nextPoint.y);
+				Point2D C = Point2D(nextMidpoint.x, nextMidpoint.y);
+				Point2D current = bezierCurve(A, B, C, t);
+				verticesBezier.push_back(current.x);
+				verticesBezier.push_back(current.y);
+				old = current;
+			}
 		}
+	} else {
+		// Unexpeted error when calcualting clip resulting in empty polygon
+		throw "ERROR: Miscalculation in clipped polygon";
 	}
 
-	// Update vertex buffer to use calculated bezier vertices
+	// Update vertex buffer to use calculated vertices
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, verticesBezier.size() * sizeof(float), verticesBezier.data(), GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
 }
 
 void displayShader() {
 	GLuint modelViewProjectionLoc = glGetUniformLocation(renderingProgram, "u_modelViewProjection");
 	// Build matrices for shader computation
-	glm::mat4 modelMatrix(1.0f), viewMatrix(1.0f);
 	glm::mat4 projMatrix = glm::ortho(0.0, WINDOW_WIDTH, WINDOW_HEIGHT, 0.0);
+	modelMatrix = glm::mat4(1.0f);
 	modelMatrix = glm::translate(modelMatrix, glm::vec3(centroid.x, centroid.y, 0.0f));
 	modelMatrix = glm::rotate(modelMatrix, theta, glm::vec3(0, 0, 1));
 
@@ -454,8 +605,7 @@ void displayPolygon(int vaoNum, vector<float>* polygonVertices) {
 void init(GLFWwindow* window) {
 	//Set the button vertices
 	buttons.push_back(Rect2D());//Dummy button
-	for (GLint i = 1; i <= 4; i++)
-	{
+	for (GLint i = 1; i <= 4; i++) {
 		buttons.push_back(Rect2D(
 			Point2D(i * WINDOW_WIDTH / 5 - B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 - B_HEIGHT / 2),
 			Point2D(i * WINDOW_WIDTH / 5 + B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 + B_HEIGHT / 2)));
