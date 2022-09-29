@@ -29,19 +29,23 @@
 //*******************************************************************************************************
 
 #include <Windows.h>
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <math.h>
 
-#include "glm/mat4x4.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/string_cast.hpp"
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_impl_glfw.h>
+#include <ImGui/imgui_impl_opengl3.h>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 using namespace std;
 
@@ -64,12 +68,11 @@ GLint B_HEIGHT = WINDOW_HEIGHT / 15;
 GLFWwindow* appWindow;
 
 double POLY_RENDER_WINDOW_HEIGHT = WINDOW_HEIGHT / 6;
-double BUTTON_RENDER_WINDOW_HEIGHT = 5 * POLY_RENDER_WINDOW_HEIGHT;
 
-float topBoundary = 100;
-float botBoundary = 300;
-float lefBoundary = 50;
-float ritBoundary = WINDOW_WIDTH - 50;
+float topBoundary = POLY_RENDER_WINDOW_HEIGHT;
+float botBoundary = WINDOW_HEIGHT;
+float lefBoundary = 0;
+float ritBoundary = WINDOW_WIDTH;
 
 GLuint renderingProgram;
 GLuint vao[VERTEX_OBJS], vbo[VERTEX_OBJS];
@@ -87,8 +90,7 @@ void printShaderLog(GLuint shader) {
 	int chWrittn = 0;
 	char* log;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-	if (len > 0)
-	{
+	if (len > 0) {
 		log = (char*)malloc(len);
 		glGetShaderInfoLog(shader, len, &chWrittn, log);
 		cout << "Shader Info Log: " << log << endl;
@@ -154,13 +156,11 @@ struct Point2D {
 	GLfloat x;
 	GLfloat y;
 	Point2D() { x = 0; y = 0; }
-	Point2D(const Point2D& pointToCopy)
-	{
+	Point2D(const Point2D& pointToCopy)	{
 		x = pointToCopy.x;
 		y = pointToCopy.y;
 	}
-	Point2D(GLfloat xc, GLfloat yc)
-	{
+	Point2D(GLfloat xc, GLfloat yc)	{
 		x = xc;
 		y = yc;
 	}
@@ -182,8 +182,7 @@ struct Rect2D {
 	}
 };
 
-vector <Rect2D>buttons; //Specifies the buttons.
-ostringstream textOutput;//Global output, sent to the screen by onDisplay()
+string textOutput = "";//Global output, sent to the screen by onDisplay()
 Point2D centroid; //The polygon's centroid.
 vector <Point2D>polygon;//Vertices that define the polygon.
 vector <Point2D>midpoints;//The midpoints between the polygon's vertices.
@@ -191,12 +190,113 @@ vector <Point2D>clipPolygon;
 vector <Point2D>rotatedPolygon;
 
 bool showPolygon;//Switch for button1
+bool animationRunning;//Switch for button3
 GLint inputState;//This represents a FSM to track the input given so far.
 Point2D directionVector; //The direction vector for the polygon to follow.
 Point2D originalDirection; //A "backup" for resetting the animation.
 GLfloat directionSpeed;//The speed at which the polygon moves.
 GLint rotationSpeed;//The speed factor for the polygon's rotation.
 GLfloat theta;//The amount to rotate the polygon; updated by the animation process.
+
+
+void acceptInputs(GLint x, GLint y) {
+	switch (inputState)	{
+	case 1:
+		directionVector = Point2D(x, y);
+		textOutput = "Please select the second point for the direction vector.";
+		inputState = 2;
+		break;
+	case 2:
+		directionVector = Point2D(x - directionVector.x, y - directionVector.y);
+		originalDirection = directionVector;
+		directionSpeed = sqrt(pow(directionVector.x, 2) + pow(directionVector.y, 2));
+		textOutput = "Please select the first point for the rotation speed.";
+		inputState = 3;
+		break;
+	case 3:
+		rotationSpeed = x;
+		textOutput = "Please select the second point for the rotation speed.";
+		inputState = 4;
+		break;
+	case 4:
+		rotationSpeed = abs(x - rotationSpeed);
+		textOutput = "Data input successfully completed.";
+		inputState = 0;
+		break;
+	default://Invalid state, this case shouldn't arise.
+		inputState = 0;
+		break;
+	}
+}
+
+// Mouse click???
+GLint getButtonPushed(int buttonAction) {
+	GLint button = -1;
+	//y = WINDOW_HEIGHT - y;
+	textOutput = "";
+	switch (buttonAction) {
+	case 0:
+		showPolygon = !showPolygon; //Toggle showing the polygon.
+		button = 1;
+		break;
+	case 1:
+		textOutput = "Please select the first point for the direction vector.";
+		button = 2;
+		inputState = 1;//Ready to accept input.
+		directionVector = Point2D();
+		theta = 0;
+		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 10);
+		directionVector = originalDirection;//In case input is not completed before restarting animation.
+		break;
+	case 2:
+		if (directionSpeed == 0 && directionVector.x == originalDirection.x && directionVector.y && originalDirection.y) {
+			textOutput = "Animation Started";
+			inputState = 0;
+			button = 3;
+			animationRunning = true;
+		} else {
+			textOutput = "Please input motion vectors before playing animation";
+		}
+		break;
+	case 3:
+		if (animationRunning) {
+			textOutput = "Animation Stopped";
+			theta = 0;
+			centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 10);
+			directionVector = originalDirection;
+			button = 4;
+			animationRunning = false;
+		} else {
+			textOutput = "No animation playing";
+		}
+		break;
+	}
+
+	return button;
+}
+
+void onMouse(GLFWwindow* window, int button, int action, int mods) {
+	GLint menuButton = 1;
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		if (showPolygon) {
+			GLdouble mouseXpos, mouseYpos;
+			glfwGetCursorPos(window, &mouseXpos, &mouseYpos);
+			acceptInputs(mouseXpos, mouseYpos);
+		}
+	}
+	// Passes GLFW callback parameters to ImGui for compatability
+	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+}
+
+void onKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	switch (key) {
+	case GLFW_KEY_ESCAPE:  //Typed the Escape key, so exit.
+		exit(0);
+		break;
+	default:
+		break;
+	}
+}
 
 void insertPointsIntoVectorBuffer(vector<GLfloat> *vectorBuffer, vector<Point2D> pointVectorInput, bool emptyFirst) {
 	// Insert point values into VBO
@@ -224,26 +324,26 @@ void calcMidpoints(vector<Point2D> p) {
 void initPolygon() {
 	showPolygon = false;
 	inputState = 0;
-	directionVector = Point2D(100, -50);
-	directionSpeed = 10;
+	directionVector = Point2D();
+	directionSpeed = 0;
 	rotationSpeed = 0;
 	theta = 0;
 
 	//Initialize the polygon vertices
-	centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
+	centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 10);
 	GLfloat unit = WINDOW_HEIGHT / 12;
 	polygon.push_back(Point2D(-3 * unit, -3 * unit));
 	polygon.push_back(Point2D(-3 * unit, 3 * unit));
-	polygon.push_back(Point2D(-unit, 3 * unit));
-	polygon.push_back(Point2D(-unit, unit));
-	polygon.push_back(Point2D(unit, unit));
-	polygon.push_back(Point2D(unit, 3 * unit));
 	polygon.push_back(Point2D(3 * unit, 3 * unit));
+	polygon.push_back(Point2D(3 * unit, unit));
+	polygon.push_back(Point2D(1.5 * unit, unit));
+	polygon.push_back(Point2D(1.5 * unit, 2 * unit));
+	polygon.push_back(Point2D(-1.5 * unit, 2 * unit));
+	polygon.push_back(Point2D(-1.5 * unit, -2 * unit));
+	polygon.push_back(Point2D(1.5 * unit, -2 * unit));
+	polygon.push_back(Point2D(1.5 * unit, -unit));
+	polygon.push_back(Point2D(3 * unit, -unit));
 	polygon.push_back(Point2D(3 * unit, -3 * unit));
-	polygon.push_back(Point2D(unit, -3 * unit));
-	polygon.push_back(Point2D(unit, -unit));
-	polygon.push_back(Point2D(-unit, -unit));
-	polygon.push_back(Point2D(-unit, -3 * unit));
 
 	//Initialize the midpoints
 	calcMidpoints(polygon);
@@ -255,45 +355,35 @@ void initPolygon() {
 	insertPointsIntoVectorBuffer(&midpointVertices, midpoints, true);
 }
 
-void drawButton(GLint buttonNum) {
-	if (buttonNum == 1)
-		glColor3f(1, 0, 0);//Red
-	else if (buttonNum == 2)
-		glColor3f(1, 1, 0);//Yellow
-	else if (buttonNum == 3)
-		glColor3f(0, 1, 0);//Green
-	else
-		glColor3f(0, .5, 1);//Light blue
-
-	//Drawing the button
-	glRectf(buttons.at(buttonNum).bottomleft.x, buttons.at(buttonNum).bottomleft.y,
-		buttons.at(buttonNum).topright.x, buttons.at(buttonNum).topright.y);
-
-	//Outputting the button number to the screen
-	glColor3d(0, 0, 0); //Black text
-	glRasterPos2f(buttonNum * WINDOW_WIDTH / 5 - (B_WIDTH / 15), 11 * WINDOW_HEIGHT / 12 - (B_HEIGHT / 5));
-	ostringstream os;
-	os << buttonNum;
-	glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *os.str().c_str());
-}
-
 void drawButtonBar() {
-	glColor3f(.5, .5, .5);//Set to grey
-	glRectf(0.0f, BUTTON_RENDER_WINDOW_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT);//Drawing the bar background
-
-	for (GLint i = 1; i <= 4; i++)
-		drawButton(i);
-
-	glColor3f(0.0f, 0.0f, 0.0f); // Reset the drawing color to be black
-}
-
-void displayText(ostringstream& os) {
-	string output = os.str();
-	glRasterPos2f(WINDOW_WIDTH / 25, BUTTON_RENDER_WINDOW_HEIGHT - 12);//Reset position
-	glColor3f(0.0f, 0.0f, 0.0f); //Black text
-	for (GLint j = 0; j < output.length(); j++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, output[j]);
+	ImGui::SetNextWindowPos(ImVec2(0.0, 0.0));
+	ImGui::SetNextWindowSize(ImVec2(WINDOW_WIDTH, POLY_RENDER_WINDOW_HEIGHT));
+	ImGui::Begin("Bouncing Polygon!");
+	
+	ImGui::SameLine();
+	if (ImGui::Button("Toggle polygon")) {
+		getButtonPushed(0);
 	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Set motion vectors")) {
+		getButtonPushed(1);
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Start animation")) {
+		getButtonPushed(2);
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Stop animation")) {
+		getButtonPushed(3);
+	}
+	
+	ImGui::Separator();
+	ImGui::Text("%s", textOutput.c_str());
+
+	ImGui::End();
 }
 
 // Convert point from "model" to "world"
@@ -426,109 +516,25 @@ Point2D bezierCurve(Point2D A, Point2D B, Point2D C, GLfloat t) {
 	return Point2D(fx, fy);
 }
 
-//Handles keyboard events
-void onKeyboard(unsigned char key, int x, int y) {
-	switch (key)
-	{
-	case 27:  //Typed the Escape key, so exit.
-		exit(0);
-		break;
-	default:
-		break;
-	}
-}
-
-void acceptInputs(GLint x, GLint y) {
-	switch (inputState)
-	{
-	case 1:
-		directionVector = Point2D(x, y);
-		textOutput << "Please select the second point for the direction vector.";
-		inputState = 2;
-		break;
-	case 2:
-		directionVector = Point2D(x - directionVector.x, y - directionVector.y);
-		originalDirection = directionVector;
-		directionSpeed = sqrt(pow(directionVector.x, 2) + pow(directionVector.y, 2));
-		textOutput << "Please select the first point for the rotation speed.";
-		inputState = 3;
-		break;
-	case 3:
-		rotationSpeed = x;
-		textOutput << "Please select the second point for the rotation speed.";
-		inputState = 4;
-		break;
-	case 4:
-		rotationSpeed = abs(x - rotationSpeed);
-		textOutput << "Data input successfully completed.";
-		inputState = 0;
-		break;
-	default://Invalid state, this case shouldn't arise.
-		inputState = 0;
-		break;
-	}
-}
-
-GLint getButtonPushed(GLint x, GLint y) {
-	GLint button = -1;
-	y = WINDOW_HEIGHT - y;
-	textOutput.str("");
-	if ((x >= buttons.at(1).bottomleft.x && x <= buttons.at(1).topright.x)
-		&& (y >= (buttons.at(1).bottomleft.y) && y <= (buttons.at(1).topright.y))) {
-		showPolygon = !showPolygon; //Toggle showing the polygon.
-		button = 1;
-	} else if ((x >= buttons.at(2).bottomleft.x && x <= buttons.at(2).topright.x)
-		&& (y >= (buttons.at(2).bottomleft.y) && y <= (buttons.at(2).topright.y))) {
-		textOutput << "Please select the first point for the direction vector.";
-		button = 2;
-		inputState = 1;//Ready to accept input.
-		directionVector = Point2D();
-		theta = 0;
-		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
-		directionVector = originalDirection;//In case input is not completed before restarting animation.
-		//glutIdleFunc(NULL);//Stop animation while accepting input.
-	} else if ((x >= buttons.at(3).bottomleft.x && x <= buttons.at(3).topright.x)
-		&& (y >= (buttons.at(3).bottomleft.y) && y <= (buttons.at(3).topright.y))) {
-		//glutIdleFunc(onIdle);
-		textOutput << "Animation Started";
-		inputState = 0;
-		button = 3;
-	} else if ((x >= buttons.at(4).bottomleft.x && x <= buttons.at(4).topright.x)
-		&& (y >= (buttons.at(4).bottomleft.y) && y <= (buttons.at(4).topright.y))) {
-		//glutIdleFunc(NULL);
-		textOutput << "Animation Stopped";
-		theta = 0;
-		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 12);
-		directionVector = originalDirection;
-		button = 4;
-	} else if (inputState > 0)
-		acceptInputs(x, y);
-
-	return button;
-}
-
-void onMouse(int button, int state, int x, int y) {
-	GLint menuButton = 1;
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-		menuButton = getButtonPushed(x, y);
-
-	glutPostRedisplay();
-}
-
 void calculatePolygon() {
-	//if (inputState == 0) {
-	theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
-	//newTheta *= rotationSpeed / (rotationDamp * PI);
-		// TODO: Inconsistant behavior? Negation does not work without pulling these calculations apart.
-	float xDelta = directionVector.x / directionSpeed;
-	float yDelta = directionVector.y / directionSpeed;
-	centroid.x += (directionSpeed / speedDamp) * xDelta;
-	centroid.y += (directionSpeed / speedDamp) * yDelta;
-	if (centroid.x <= lefBoundary || centroid.x >= ritBoundary)
-		directionVector.x *= -1;
-	if (centroid.y <= topBoundary || centroid.y >= botBoundary)
-		directionVector.y *= -1;
-	//}
+
+	if (animationRunning) {
+		theta += (1 / speedDamp) / (2 * PI); //Add 1 radian
+		float xDelta = directionVector.x / directionSpeed;
+		float yDelta = directionVector.y / directionSpeed;
+		centroid.x += (directionSpeed / speedDamp) * xDelta;
+		centroid.y += (directionSpeed / speedDamp) * yDelta;
+	}
+
+	GLfloat newTheta = theta;
+	if (inputState == 0) {
+		if (centroid.x <= lefBoundary || centroid.x >= ritBoundary)
+			directionVector.x *= -1;
+		if (centroid.y <= topBoundary || centroid.y >= botBoundary)
+			directionVector.y *= -1;
+	}
+	
+	newTheta *= rotationSpeed / (rotationDamp * PI);
 
 	clipPolygon = vector<Point2D>(polygon);
 
@@ -603,14 +609,6 @@ void displayPolygon(int vaoNum, vector<float>* polygonVertices) {
 }
 
 void init(GLFWwindow* window) {
-	//Set the button vertices
-	buttons.push_back(Rect2D());//Dummy button
-	for (GLint i = 1; i <= 4; i++) {
-		buttons.push_back(Rect2D(
-			Point2D(i * WINDOW_WIDTH / 5 - B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 - B_HEIGHT / 2),
-			Point2D(i * WINDOW_WIDTH / 5 + B_WIDTH / 2, 11 * WINDOW_HEIGHT / 12 + B_HEIGHT / 2)));
-	}
-
 	renderingProgram = createShaderProgram();
 	
 	polygonInit(0, &verticesBezier);
@@ -619,24 +617,31 @@ void init(GLFWwindow* window) {
 	glBindVertexArray(0);
 }
 
-int main(int argc, char** argv) {
+int main(int, char**) {
+	// GLFW initialization
 	if (!glfwInit()) {return -1;}
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 1 - Nicholas Reel", NULL, NULL);
 	glfwMakeContextCurrent(appWindow);
 	if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
-	glfwSwapInterval(1);
+	glfwSwapInterval(1); // vsync enabled
 
-	glutInit(&argc, argv);
-	glutKeyboardFunc(onKeyboard);
-	glutMouseFunc(onMouse);
+	// IMGUI initialization
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsLight();
+
+	ImGui_ImplGlfw_InitForOpenGL(appWindow, true);
+	ImGui_ImplOpenGL3_Init("#version 430");
 
 	// Initialize vertices before they are piped into buffers
 	initPolygon();
-
 	init(appWindow);
-	
+	glfwSetMouseButtonCallback(appWindow, onMouse);
+	glfwSetKeyCallback(appWindow, onKeyboard);
+
 	// Init shaders
 	glUseProgram(renderingProgram);
 	displayShader();
@@ -647,21 +652,36 @@ int main(int argc, char** argv) {
 		glClearColor(1.0, 1.0, 1.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		drawButtonBar();
-		displayText(textOutput);
 
-		displayShader();
+		ImGui::Render();
 
-		displayPolygon(0, &verticesBezier);
-		displayPolygon(1, &vertices);
 
-		calculatePolygon();
+		// Only render if polygon is triggered to show by GUI
+		if (showPolygon) {
+			displayShader();
+
+			displayPolygon(0, &verticesBezier);
+			displayPolygon(1, &vertices);
+
+			calculatePolygon();
+		}
+
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		//display the buffer
 		glfwSwapBuffers(appWindow);
 
 		glfwPollEvents();
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwDestroyWindow(appWindow);
 	glfwTerminate();
