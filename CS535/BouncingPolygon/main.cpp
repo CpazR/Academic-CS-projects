@@ -249,7 +249,7 @@ GLint getButtonPushed(int buttonAction) {
 		directionVector = originalDirection;//In case input is not completed before restarting animation.
 		break;
 	case 2:
-		if (directionSpeed == 0 && directionVector.x == originalDirection.x && directionVector.y && originalDirection.y) {
+		if (directionSpeed != 0 && directionVector.x != 0.0f && directionVector.y != 0.0f) {
 			textOutput = "Animation Started";
 			inputState = 0;
 			button = 3;
