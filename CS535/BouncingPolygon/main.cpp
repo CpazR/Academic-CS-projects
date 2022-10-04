@@ -247,6 +247,7 @@ GLint getButtonPushed(int buttonAction) {
 		theta = 0;
 		centroid = Point2D(WINDOW_WIDTH / 2, 5 * WINDOW_HEIGHT / 10);
 		directionVector = originalDirection;//In case input is not completed before restarting animation.
+		animationRunning = false;
 		break;
 	case 2:
 		if (directionSpeed != 0 && directionVector.x != 0.0f && directionVector.y != 0.0f) {
@@ -423,9 +424,13 @@ Point2D findIntersect(Point2D A, Point2D B) {
 
 	GLfloat interX = 99999, interY = 99999;
 	if (t >= 0 && t <= 1) {
-		// Clamp intersection values to the boundaries
-		interX = max(lefBoundary, min((1 - t) * A.x + t * B.x, ritBoundary));
-		interY = max(topBoundary, min((1 - t) * A.y + t * B.y, botBoundary));
+		// Intersection point would only be caught on a single axis at a time.
+		// Intersection values need to be clapmed to the boundaries
+		interX = (1 - t) * A.x + t * B.x;
+		interY = (1 - t) * A.y + t * B.y;
+		
+		interX = max(lefBoundary, min(interX, ritBoundary));
+		interY = max(topBoundary, min(interY, botBoundary));
 	}
 	return Point2D(interX, interY);
 }
