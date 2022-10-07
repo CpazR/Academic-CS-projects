@@ -2,7 +2,10 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-class Sphere {
+/// <summary>
+/// 
+/// </summary>
+class Polygon {
 	private:
 		float xOrigin;
 		float yOrigin;
@@ -18,16 +21,7 @@ class Sphere {
 		glm::mat4 transformations;
 		void init(int);
 		float toRadians(float degrees);
-
 	public:
-		Sphere();
-		Sphere(int prec);
 		void render();
-		int getNumVertices();
-		int getNumIndices();
-		std::vector<int> getIndices();
-		std::vector<glm::vec3> getVertices();
-		std::vector<glm::vec2> getTexCoords();
-		std::vector<glm::vec3> getNormals();
-		std::vector<glm::vec3> getTangents();
+		void init();
 };

@@ -1,7 +1,10 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+
+#include <GL/glew.h>
 #include <glm/glm.hpp>
+
 #include "Sphere.h"
 using namespace std;
 
@@ -54,6 +57,24 @@ void Sphere::init(int prec) {
 			indices[6 * (i*prec + j) + 5] = (i + 1)*(prec + 1) + j;
 		}
 	}
+
+	// Setup selected VAO and VBO
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+	glGenBuffers(1, &VBO);
+
+	// Bind polygon vector to buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+
+	// Bind position vector in shader
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+}
+
+void Sphere::render() {
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_LINE_LOOP, 0, vertices.size() / 3);
 }
 
 int Sphere::getNumVertices() { return numVertices; }

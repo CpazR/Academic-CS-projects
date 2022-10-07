@@ -160,7 +160,9 @@
     <ClCompile Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imgui_tables.cpp" />
     <ClCompile Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Polygon.cpp" />
     <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +177,8 @@
     <ClInclude Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imstb_rectpack.h" />
     <ClInclude Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imstb_textedit.h" />
     <ClInclude Include="..\OpenGLTemplate_IncludedFiles\include\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Cube.h" />
+    <ClInclude Include="Polygon.h" />
     <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
