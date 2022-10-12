@@ -1,86 +1,71 @@
-#include <cmath>
-#include <vector>
-#include <iostream>
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-
 #include "Sphere.h"
-using namespace std;
 
-Sphere::Sphere() {
-	init(48);
+
+Sphere::Sphere(void)
+{
 }
 
-Sphere::Sphere(int prec) {
-	init(prec);
-}
+Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
+	float PI = 3.14;
+	GLfloat theta = 0;
+	GLfloat phi = 0;
+	GLfloat dTheta = PI / (float)stacks;
+	GLfloat dPhi = 2 * PI / (float)slices;
+	mVertices = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
+	mNormals = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
+	mNumIndices = slices * stacks * 4;
+	mIndices = new GLushort[mNumIndices];
+	mSize = radius;
 
-float Sphere::toRadians(float degrees) { return (degrees * 2.0f * 3.14159f) / 360.0f; }
-
-void Sphere::init(int prec) {
-	numVertices = (prec + 1) * (prec + 1);
-	numIndices = prec * prec * 6;
-	for (int i = 0; i < numVertices; i++) { vertices.push_back(glm::vec3()); }
-	for (int i = 0; i < numVertices; i++) { texCoords.push_back(glm::vec2()); }
-	for (int i = 0; i < numVertices; i++) { normals.push_back(glm::vec3()); }
-	for (int i = 0; i < numVertices; i++) { tangents.push_back(glm::vec3()); }
-	for (int i = 0; i < numIndices; i++) { indices.push_back(0); }
-
-	// calculate triangle vertices
-	for (int i = 0; i <= prec; i++) {
-		for (int j = 0; j <= prec; j++) {
-			float y = (float)cos(toRadians(180.0f - i * 180.0f / prec));
-			float x = -(float)cos(toRadians(j*360.0f / prec))*(float)abs(cos(asin(y)));
-			float z = (float)sin(toRadians(j*360.0f / (float)(prec)))*(float)abs(cos(asin(y)));
-			vertices[i*(prec + 1) + j] = glm::vec3(x, y, z);
-			texCoords[i*(prec + 1) + j] = glm::vec2(((float)j / prec), ((float)i / prec));
-			normals[i*(prec + 1) + j] = glm::vec3(x, y, z);
-
-			// calculate tangent vector
-			if (((x == 0) && (y == 1) && (z == 0)) || ((x == 0) && (y == -1) && (z == 0))) {
-				tangents[i*(prec + 1) + j] = glm::vec3(0.0f, 0.0f, -1.0f);
-			}
-			else {
-				tangents[i*(prec + 1) + j] = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(x, y, z));
-			}
+	// Generate the vertices and normals for the sphere.
+	int index = 0;
+	for (int latitude = 0; latitude <= stacks; latitude++) {
+		phi = 0;
+		for (int longitude = 0; longitude < slices; longitude++) {
+			GLfloat x = sin(theta) * sin(phi);
+			GLfloat y = cos(theta);
+			GLfloat z = sin(theta) * cos(phi);
+			Vector3f n(x, y, z);
+			n.normalize();
+			mVertices[index] = x;
+			mNormals[index++] = n.x;
+			mVertices[index] = y;
+			mNormals[index++] = n.y;
+			mVertices[index] = z;
+			mNormals[index++] = n.z;
+			phi += dPhi;
 		}
-	}
-	// calculate triangle indices
-	for (int i = 0; i<prec; i++) {
-		for (int j = 0; j<prec; j++) {
-			indices[6 * (i*prec + j) + 0] = i*(prec + 1) + j;
-			indices[6 * (i*prec + j) + 1] = i*(prec + 1) + j + 1;
-			indices[6 * (i*prec + j) + 2] = (i + 1)*(prec + 1) + j;
-			indices[6 * (i*prec + j) + 3] = i*(prec + 1) + j + 1;
-			indices[6 * (i*prec + j) + 4] = (i + 1)*(prec + 1) + j + 1;
-			indices[6 * (i*prec + j) + 5] = (i + 1)*(prec + 1) + j;
-		}
+		theta += dTheta;
 	}
 
-	// Setup selected VAO and VBO
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	glGenBuffers(1, &VBO);
-
-	// Bind polygon vector to buffer
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-
-	// Bind position vector in shader
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+	// Generate the face indices for the sphere.
+	index = 0;
+	for (int latitude = 0; latitude < stacks; latitude++) {
+		for (int longitude = 0; longitude < slices; longitude++) {
+			int lastIndex = slices * latitude + longitude;
+			int currentIndex = slices * (latitude + 1) + longitude;
+			mIndices[index++] = lastIndex;
+			mIndices[index++] = currentIndex;
+			mIndices[index++] = currentIndex + 1;
+			mIndices[index++] = lastIndex + 1;
+		}
+	}
 }
 
-void Sphere::render() {
-	glBindVertexArray(VAO);
-	glDrawArrays(GL_LINE_LOOP, 0, vertices.size() / 3);
-}
+void Sphere::render(void) {
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	// Set array pointers
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
+	glNormalPointer(GL_FLOAT, 0, mNormals);
 
-int Sphere::getNumVertices() { return numVertices; }
-int Sphere::getNumIndices() { return numIndices; }
-std::vector<int> Sphere::getIndices() { return indices; }
-std::vector<glm::vec3> Sphere::getVertices() { return vertices; }
-std::vector<glm::vec2> Sphere::getTexCoords() { return texCoords; }
-std::vector<glm::vec3> Sphere::getNormals() { return normals; }
-std::vector<glm::vec3> Sphere::getTangents() { return tangents; }
+	glScalef(mSize, mSize, mSize);
+	glDrawElements(GL_QUADS, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+
+	glPopMatrix();
+}

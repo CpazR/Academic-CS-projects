@@ -1,23 +1,24 @@
 #pragma once
+#include "shape.h"
 
-class Cube {
-	private:
-		float xOrigin;
-		float yOrigin;
-		unsigned int VBO;
-		unsigned int VAO;
-		int numVertices;
-		int numIndices;
-		std::vector<int> indices;
-		std::vector<glm::vec3> vertices;
-		std::vector<glm::vec2> texCoords;
-		std::vector<glm::vec3> normals;
-		std::vector<glm::vec3> tangents;
-		glm::mat4 transformations;
-		void init(int);
-		float toRadians(float degrees);
-	public:
-		Cube(float verticesSize);
-		void render();
-		void init();
+/**
+* This class defines a cube primitive and handles the generation and rendering of it.
+* Megan Worley
+*/
+class Cube :
+	public Shape
+{
+public:
+	Cube(void);
+
+	// Creates a unit cube, where the size will be used as the scale factor during rendering.
+	// Params:
+	//		size - The cube's scale factor.
+	Cube(GLdouble size);
+
+	virtual void render();
+
+private:
+	static const int NUM_VERTICES = 24;
+	GLdouble mSize;
 };

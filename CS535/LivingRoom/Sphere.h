@@ -1,33 +1,14 @@
-#include <cmath>
-#include <vector>
-#include <glm/glm.hpp>
+#pragma once
+#include "shape.h"
+class Sphere :
+	public Shape
+{
+public:
+	Sphere(void);
+	Sphere(GLdouble radius, GLint slices, GLint stacks);
+	void render(void);
 
-class Sphere {
-	private:
-		float xOrigin;
-		float yOrigin;
-		unsigned int VBO;
-		unsigned int VAO;
-		int numVertices;
-		int numIndices;
-		std::vector<int> indices;
-		std::vector<glm::vec3> vertices;
-		std::vector<glm::vec2> texCoords;
-		std::vector<glm::vec3> normals;
-		std::vector<glm::vec3> tangents;
-		glm::mat4 transformations;
-		void init(int);
-		float toRadians(float degrees);
-
-	public:
-		Sphere();
-		Sphere(int prec);
-		void render();
-		int getNumVertices();
-		int getNumIndices();
-		std::vector<int> getIndices();
-		std::vector<glm::vec3> getVertices();
-		std::vector<glm::vec2> getTexCoords();
-		std::vector<glm::vec3> getNormals();
-		std::vector<glm::vec3> getTangents();
+private:
+	int mNumIndices;
+	GLdouble mSize;
 };
