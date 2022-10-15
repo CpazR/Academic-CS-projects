@@ -5,9 +5,7 @@
 * This class defines a cube primitive and handles the generation and rendering of it.
 * Megan Worley
 */
-class Cube :
-	public Shape
-{
+class Cube : public Shape {
 public:
 	Cube(void);
 

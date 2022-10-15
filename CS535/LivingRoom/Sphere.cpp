@@ -50,22 +50,27 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 			mIndices[index++] = lastIndex + 1;
 		}
 	}
+
+	polygonInit();
 }
 
 void Sphere::render(void) {
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	//glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
+
+	Shape::render();
+
 	// Set array pointers
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
-	glNormalPointer(GL_FLOAT, 0, mNormals);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_NORMAL_ARRAY);
+	//glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
+	//glNormalPointer(GL_FLOAT, 0, mNormals);
 
-	glScalef(mSize, mSize, mSize);
-	glDrawElements(GL_QUADS, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
+	//glScalef(mSize, mSize, mSize);
+	//glDrawElements(GL_QUADS, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_NORMAL_ARRAY);
 
-	glPopMatrix();
+	//glPopMatrix();
 }

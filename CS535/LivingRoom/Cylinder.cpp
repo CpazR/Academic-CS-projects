@@ -115,20 +115,25 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 			mIndices[index++] = botRight;
 		}
 	}
+
+	polygonInit();
 }
 
 void Cylinder::render() {
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
-	glNormalPointer(GL_FLOAT, 0, mNormals);
+	//glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
 
-	glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
+	Shape::render();
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_NORMAL_ARRAY);
+	//glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
+	//glNormalPointer(GL_FLOAT, 0, mNormals);
 
-	glPopMatrix();
+	//glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
+
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_NORMAL_ARRAY);
+
+	//glPopMatrix();
 }

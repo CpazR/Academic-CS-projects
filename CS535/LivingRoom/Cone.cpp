@@ -99,21 +99,26 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		mIndices[index++] = botLeft;
 		mIndices[index++] = botRight;
 	}
+
+	polygonInit();
 }
 
 void Cone::render() {
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	//glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
+
+	Shape::render();
+
 	// Set array pointers
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glVertexPointer(3, GL_FLOAT, 0, mVertices);
-	glNormalPointer(GL_FLOAT, 0, mNormals);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_NORMAL_ARRAY);
+	//glVertexPointer(3, GL_FLOAT, 0, mVertices);
+	//glNormalPointer(GL_FLOAT, 0, mNormals);
 
-	glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
+	//glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_NORMAL_ARRAY);
 
-	glPopMatrix();
+	//glPopMatrix();
 }

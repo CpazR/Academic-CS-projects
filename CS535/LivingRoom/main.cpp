@@ -1,3 +1,4 @@
+#include <stack>
 /**
 *
 * This program displays a simple scene of a living room using custom primitive types.
@@ -7,8 +8,13 @@
 using namespace std;
 
 #include <iostream>
-#include <GL/glut.h>
-#include <GL/gl.h>
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "Utils.h"
 #include "Cone.h"
 #include "Cube.h"
 #include "Cylinder.h"
@@ -39,6 +45,8 @@ double EyeY = EYE_Y_DEFAULT;
 const float WINDOW_WIDTH = 800;
 const float WINDOW_HEIGHT = 600;
 const float WINDOW_ASPECT_RATIO = WINDOW_WIDTH / WINDOW_HEIGHT;
+
+stack<glm::mat4> modelViewStack;
 
 void specialKey(int key, int x, int y)
 {
@@ -132,20 +140,37 @@ void onKeyboard(unsigned char key, int x, int y) {//Handles keyboard events
     }
 }
 
+// ------------- Rendering properties ------------ //
+GLuint VAO; // Single array object that all shapes will share. Each will have their own buffer object
+
+// ------------- Rendering shapes ------------ //
+Cube floorCube;
+Cube wallCube;
+Cube sofaCube;
+Cube coffeeTableCube;
+Cube endTableCube;
+Cube chinaCabinetCube;
+Sphere doorKnobSphere;
+Cylinder fanCylinder;
+Sphere fanSphere;
+Cylinder lampCylinder;
+Cone lampCone;
+
 // ------------- Render the floor ------------ //
 GLfloat floor_ambient[] = { 0.4f, 0.2f, 0.0f, 1.0f };
 GLfloat floor_diffuse[] = { 0.4f, 0.3f, 0.2f, 1.0f };
 GLfloat floor_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-void drawFloor() {
+void drawFloor(GLuint mvLoc) {
     glMaterialfv(GL_FRONT, GL_AMBIENT, floor_ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, floor_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, floor_specular);
 
-    glPushMatrix();
-    glScaled(2.0, 0.03, 2.0);
-    Cube cube = Cube(1.0);
-    cube.render();
-    glPopMatrix();
+    // Apply scaling to view and apply
+    modelViewStack.push(modelViewStack.top());
+    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 0.03, 2.0));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr((modelViewStack.top())));
+    floorCube.render();
+    modelViewStack.pop();
 }
 
 // --------------  Render the walls --------------------
@@ -163,14 +188,13 @@ void drawWalls() {
     glPushMatrix();
     glTranslated(0.0, 0.5, -1.0);
     glScaled(2.0, 1.0, 0.03);
-    Cube cube = Cube(1.0);
-    cube.render();
+    wallCube.render();
     glPopMatrix();
     glPushMatrix();
     glTranslated(-1, 0.5, 0);
     glRotated(90, 0, 1, 0);
     glScaled(2.0, 1.0, 0.03);
-    cube.render();
+    wallCube.render();
     glPopMatrix();
 }
 
@@ -189,29 +213,28 @@ void drawSofa() {
     glTranslated(0.2, 0.1, -.75);
     glRotated(90, 0, 1, 0);
     glScaled(0.5, 0.2, 1.2);
-    Cube cube = Cube(1.0);
-    cube.render();
+    sofaCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.2, 0.2, -.95);
     glRotated(90, 1, 0, 0);
     glScaled(1.2, 0.1, .45);
-    cube.render();
+    sofaCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.75, 0.25, -.75);
     glRotated(90, 0, 1, 0);
     glScaled(.35, 0.1, .10);
-    cube.render();
+    sofaCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-.35, 0.25, -.75);
     glRotated(90, 0, 1, 0);
     glScaled(.35, 0.1, .10);
-    cube.render();
+    sofaCube.render();
     glPopMatrix();
 }
 
@@ -229,32 +252,31 @@ void drawCoffeeTable() {
     glTranslated(0.2, 0.25, 0);
     glRotated(90, 0, 1, 0);
     glScaled(0.4, 0.03, 1.);
-    Cube cube = Cube(1.0);
-    cube.render();
+    coffeeTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.25, 0.125, 0.15);
     glScaled(0.06, 0.25, 0.06);
-    cube.render();
+    coffeeTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.65, 0.125, 0.15);
     glScaled(0.06, 0.25, 0.06);
-    cube.render();
+    coffeeTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.25, 0.125, -0.15);
     glScaled(0.06, 0.25, 0.06);
-    cube.render();
+    coffeeTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.65, 0.125, -0.15);
     glScaled(0.06, 0.25, 0.06);
-    cube.render();
+    coffeeTableCube.render();
     glPopMatrix();
 
 
@@ -270,35 +292,32 @@ void drawEndTable() {
     glTranslated(-0.65, 0.20, -0.7);
     glRotated(90, 0, 1, 0);
     glScaled(0.4, 0.03, 0.4);
-    Cube cube = Cube(1.0);
-    cube.render();
+    endTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.48, 0.10, -0.55);
     glScaled(0.03, 0.22, 0.03);
-    cube.render();
+    endTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.48, 0.10, -0.85);
     glScaled(0.03, 0.22, 0.03);
-    cube.render();
+    endTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.82, 0.10, -0.85);
     glScaled(0.03, 0.22, 0.03);
-    cube.render();
+    endTableCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.82, 0.10, -0.55);
     glScaled(0.03, 0.22, 0.03);
-    cube.render();
+    endTableCube.render();
     glPopMatrix();
-
-
 }
 
 void drawChinaCabinet() {
@@ -311,79 +330,77 @@ void drawChinaCabinet() {
     glPushMatrix();
     glTranslated(-.85, .25, 0.5);
     glScaled(0.25, .30, 0.5);
-    Cube cube = Cube(1.0);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
     //daw top half
     glPushMatrix();
     glTranslated(-.87, .55, 0.5);
     glScaled(0.23, .30, 0.45);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
     //Draw top knobs
     glPushMatrix();
     glTranslated(-.75, .55, 0.5);
     glScaled(0.02, 0.02, 0.02);
-    Sphere sphere(1.0, 20, 20);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-.75, .55, .45);
     glScaled(0.02, 0.02, 0.02);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     //Draw bottom knobs
     glPushMatrix();
     glTranslated(-.70, .33, 0.67);
     glScaled(0.02, 0.02, 0.04);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-.70, .33, .34);
     glScaled(0.02, 0.02, 0.04);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-.70, .21, 0.67);
     glScaled(0.02, 0.02, 0.04);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-.70, .21, .34);
     glScaled(0.02, 0.02, 0.04);
-    sphere.render();
+    doorKnobSphere.render();
     glPopMatrix();
 
     //Draw legs
     glPushMatrix();
     glTranslated(-0.75, 0.045, 0.30);
     glScaled(0.03, 0.12, 0.03);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.95, 0.045, 0.30);
     glScaled(0.03, 0.12, 0.03);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.75, 0.045, 0.70);
     glScaled(0.03, 0.12, 0.03);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.95, 0.045, 0.70);
     glScaled(0.03, 0.12, 0.03);
-    cube.render();
+    chinaCabinetCube.render();
     glPopMatrix();
 
 }
@@ -404,23 +421,21 @@ void drawFan() {
     glTranslated(0.8, 0.03, 0.8);
     glScaled(0.08, 0.02, 0.08);
     glRotatef(90, 1, 0, 0);
-    Cylinder cylinder(1.0, 1.0, 20, 10);
-    cylinder.render();
+    fanCylinder.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.8, 0.03, 0.8);
     glScaled(0.02, -0.5, 0.02);
     glRotatef(90, 1, 0, 0);
-    cylinder.render();
+    fanCylinder.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(0.8, 0.5, 0.8);
     glRotatef(25, 0, 1, 0);
     glScaled(0.04, 0.04, 0.04);
-    Sphere sphere(1.0, 20, 20);
-    sphere.render();
+    fanSphere.render();
 
     glPushMatrix();
     float currentAngle = fanAngle;
@@ -429,7 +444,7 @@ void drawFan() {
         glRotated(currentAngle, 0, 0, 1);
         glTranslated(3.0, 0, -.8);
         glScaled(3.5, 0.5, 0.05);
-        sphere.render();
+        fanSphere.render();
         glPopMatrix();
         currentAngle += 360.0 / 3.0;
     }
@@ -456,15 +471,14 @@ void drawLamp() {
     glTranslated(-0.65, 0.25, -0.7);
     glScaled(0.08, 0.02, 0.08);
     glRotatef(90, 1, 0, 0);
-    Cylinder cylinder(1.0, 1.0, 20, 10);
-    cylinder.render();
+    lampCylinder.render();
     glPopMatrix();
 
     glPushMatrix();
     glTranslated(-0.65, 0.50, -0.7);
     glScaled(0.02, 0.25, 0.02);
     glRotatef(90, 1, 0, 0);
-    cylinder.render();
+    lampCylinder.render();
     glPopMatrix();
 
     glMaterialfv(GL_FRONT, GL_AMBIENT, lamp_shade_ambient);
@@ -475,15 +489,14 @@ void drawLamp() {
     glTranslated(-0.65, 0.50, -0.7);
     glScaled(0.18, 0.20, 0.18);
     glRotatef(-90, 1, 0, 0);
-    Cone cone(1.0, 1.0, 5, 10);
-    cone.render();
+    lampCone.render();
     glPopMatrix();
 }
 
 // This method is the main rendering function for the scene.  It is called every frame
 // to allow animation of the fan.
-void displayScene(void)
-{
+void displayScene(GLuint renderingProgram) {
+    // TODO: Move lighting to shader
     // set the light source properties
     GLfloat lightIntensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     GLfloat light_position[] = { 0.0f, 0.8f, 1.0f, 1.0f };
@@ -513,37 +526,92 @@ void displayScene(void)
     glOrtho(-winHt * WINDOW_ASPECT_RATIO * ScaleFactor, winHt * WINDOW_ASPECT_RATIO * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
 
     glMatrixMode(GL_MODELVIEW);      // position and aim the camera
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the screen
 
-    drawFloor();
-    drawWalls();
-    drawSofa();
-    drawCoffeeTable();
-    drawFan();
-    drawChinaCabinet();
-    drawEndTable();
-    drawLamp();
+    glUseProgram(renderingProgram);
+    GLuint mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
+	GLuint projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+    // Build matrices for shader computation
+    glm::mat4 projMatrix = glm::ortho(-winHt * WINDOW_ASPECT_RATIO * ScaleFactor, winHt * WINDOW_ASPECT_RATIO * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
+    
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(EyeX, EyeY, EyeZ), glm::vec3(0.0, 0.3, 0.0), glm::vec3(0.0, 1.0, 0.0));
+    modelViewStack.push(viewMatrix);
+
+    drawFloor(mvLoc);
+    //drawWalls();
+    //drawSofa();
+    //drawCoffeeTable();
+    //drawFan();
+    //drawChinaCabinet();
+    //drawEndTable();
+    //drawLamp();
+
+    modelViewStack.pop(); // For view matrix
 
     glFlush();
-    glutSwapBuffers(); // display the scene just made
-    glutPostRedisplay();
 }
 
-int main(int argc, char** argv) {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow("Isaac Hands Prog. Assignment 2 - Living Room");
-    glutDisplayFunc(displayScene);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);
-    glEnable(GL_NORMALIZE);
+GLuint init(GLFWwindow* appWindow) {
+    GLuint renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
+    int width = WINDOW_WIDTH;
+    int height = WINDOW_HEIGHT;
+    glfwGetFramebufferSize(appWindow, &width, &height);
+
+    floorCube = Cube(1.0);
+    wallCube = Cube(1.0);
+    sofaCube = Cube(1.0);
+    coffeeTableCube = Cube(1.0);
+    endTableCube = Cube(1.0);
+    chinaCabinetCube = Cube(1.0);
+    doorKnobSphere= Sphere(1.0, 20, 20);
+    fanCylinder = Cylinder(1.0, 1.0, 20, 10);
+    fanSphere = Sphere(1.0, 20, 20);
+    lampCylinder = Cylinder(1.0, 1.0, 20, 10);
+    lampCone = Cone(1.0, 1.0, 5, 10);
+
+    return renderingProgram;
+}
+
+int main(int, char**) {
+    // GLFW initialization
+    if (!glfwInit()) { return -1; }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 2 - Nicholas Reel", NULL, NULL);
+    glfwMakeContextCurrent(appWindow);
+    if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
+    glfwSwapInterval(1); // vsync enabled
+
+    GLuint shaderProgram = init(appWindow);
+
+    // Lighting information
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHT0);
+    //glEnable(GL_LIGHT1);
+    //glEnable(GL_NORMALIZE);
     glClearColor(0.05f, 0.05f, 0.2f, 0.0f);  // background is light gray
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    glutKeyboardFunc(onKeyboard);
-    glutSpecialFunc(specialKey);
-    glutMainLoop();
-    return (0);
+   
+    //glutKeyboardFunc(onKeyboard);
+    //glutSpecialFunc(specialKey);
+
+    glUseProgram(shaderProgram);
+
+    while (!glfwWindowShouldClose(appWindow)) {
+        // Set refresh buffers
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        displayScene(shaderProgram);
+
+        //display the buffer
+        glfwSwapBuffers(appWindow);
+
+        glfwPollEvents();
+    }
+    
+    glfwDestroyWindow(appWindow);
+    glfwTerminate();
+    exit(EXIT_SUCCESS);
 }
