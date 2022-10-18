@@ -6,17 +6,15 @@
 * Megan Worley
 */
 class Cube : public Shape {
-public:
-	Cube(void);
+	public:
+		Cube(void);
 
-	// Creates a unit cube, where the size will be used as the scale factor during rendering.
-	// Params:
-	//		size - The cube's scale factor.
-	Cube(GLdouble size);
+		// Creates a unit cube, where the size will be used as the scale factor during rendering.
+		// Params:
+		//		size - The cube's scale factor.
+		Cube(GLdouble size);
 
-	virtual void render();
-
-private:
-	static const int NUM_VERTICES = 24;
-	GLdouble mSize;
+	private:
+		static const int NUM_VERTICES = 24;
+		GLdouble mSize;
 };

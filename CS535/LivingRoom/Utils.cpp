@@ -77,8 +77,7 @@ void Utils::printShaderLog(GLuint shader)
 	int chWrittn = 0;
 	char* log;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-	if (len > 0)
-	{
+	if (len > 0) {
 		log = (char*)malloc(len);
 		glGetShaderInfoLog(shader, len, &chWrittn, log);
 		cout << "Shader Info Log: " << log << endl;
@@ -114,6 +113,8 @@ GLuint Utils::prepareShader(int shaderTYPE, const char* shaderPath)
 		if (shaderTYPE == GL_COMPUTE_SHADER) cout << "Compute ";
 		cout << "shader compilation error for shader: '" << shaderPath << "'." << endl;
 		printShaderLog(shaderRef);
+	} else {
+		cout << "Shader compilation successful" << endl;
 	}
 
 

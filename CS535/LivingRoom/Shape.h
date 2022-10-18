@@ -11,6 +11,9 @@
 class Shape {
 	public:
 		Shape(void);
+		GLfloat* getMVertices();
+		GLuint getVao();
+		GLuint getVbo();
 		virtual void render();
 
 	protected:

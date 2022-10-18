@@ -1,4 +1,3 @@
-#include <stack>
 /**
 *
 * This program displays a simple scene of a living room using custom primitive types.
@@ -8,6 +7,7 @@
 using namespace std;
 
 #include <iostream>
+#include <stack>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -142,6 +142,7 @@ void onKeyboard(unsigned char key, int x, int y) {//Handles keyboard events
 
 // ------------- Rendering properties ------------ //
 GLuint VAO; // Single array object that all shapes will share. Each will have their own buffer object
+GLint modelViewLoc, projLoc;
 
 // ------------- Rendering shapes ------------ //
 Cube floorCube;
@@ -160,17 +161,19 @@ Cone lampCone;
 GLfloat floor_ambient[] = { 0.4f, 0.2f, 0.0f, 1.0f };
 GLfloat floor_diffuse[] = { 0.4f, 0.3f, 0.2f, 1.0f };
 GLfloat floor_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-void drawFloor(GLuint mvLoc) {
+void drawFloor(GLint mvLoc) {
     glMaterialfv(GL_FRONT, GL_AMBIENT, floor_ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, floor_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, floor_specular);
 
     // Apply scaling to view and apply
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 0.03, 2.0));
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr((modelViewStack.top())));
+    glm::mat4 modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(20.0, 20.0, 20.0));
+    glm::mat4 mvMatrix = modelMatrix * modelViewStack.top();
+    //modelViewStack.push(modelViewStack.top());
+    //modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 0.03, 2.0));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMatrix));
     floorCube.render();
-    modelViewStack.pop();
+    //modelViewStack.pop();
 }
 
 // --------------  Render the walls --------------------
@@ -498,46 +501,38 @@ void drawLamp() {
 void displayScene(GLuint renderingProgram) {
     // TODO: Move lighting to shader
     // set the light source properties
-    GLfloat lightIntensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    GLfloat light_position[] = { 0.0f, 0.8f, 1.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightIntensity);
-    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
+    //GLfloat lightIntensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    //GLfloat light_position[] = { 0.0f, 0.8f, 1.0f, 1.0f };
+    //glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, lightIntensity);
+    //glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5);
 
-    GLfloat ceilingIntensity[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-    GLfloat ceiling_light_position[] = { 0.0f, 6.0f, 0.0f, 0.0f };
-    glLightfv(GL_LIGHT1, GL_POSITION, ceiling_light_position);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, ceilingIntensity);
+    //GLfloat ceilingIntensity[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+    //GLfloat ceiling_light_position[] = { 0.0f, 6.0f, 0.0f, 0.0f };
+    //glLightfv(GL_LIGHT1, GL_POSITION, ceiling_light_position);
+    //glLightfv(GL_LIGHT1, GL_DIFFUSE, ceilingIntensity);
 
-    glMatrixMode(GL_MODELVIEW);      // position and aim the camera
+    //glMatrixMode(GL_MODELVIEW);      // position and aim the camera
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
 
-    glLoadIdentity();
-    gluLookAt(EyeX, EyeY, EyeZ, 0.0, 0.3, 0.0, 0.0, 1.0, 0.0);
-
-    glShadeModel(GL_SMOOTH);
-
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    double winHt = 1.0;  //half-height of the window
-    glOrtho(-winHt * WINDOW_ASPECT_RATIO * ScaleFactor, winHt * WINDOW_ASPECT_RATIO * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
-
-    glMatrixMode(GL_MODELVIEW);      // position and aim the camera
+    //glShadeModel(GL_SMOOTH);
 
     glUseProgram(renderingProgram);
-    GLuint mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
-	GLuint projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+    modelViewLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
+	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+
     // Build matrices for shader computation
+    double winHt = 1.0;  //half-height of the window
     glm::mat4 projMatrix = glm::ortho(-winHt * WINDOW_ASPECT_RATIO * ScaleFactor, winHt * WINDOW_ASPECT_RATIO * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
-    
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(EyeX, EyeY, EyeZ), glm::vec3(0.0, 0.3, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
+    gluLookAt(EyeX, EyeY, EyeZ, 0.0, 0.3, 0.0, 0.0, 1.0, 0.0);
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(EyeX, EyeY, EyeZ), glm::vec3(0.0, 0.5, 0.0), glm::vec3(0.0, 1.0, 0.0));
     modelViewStack.push(viewMatrix);
 
-    drawFloor(mvLoc);
+    drawFloor(modelViewLoc);
     //drawWalls();
     //drawSofa();
     //drawCoffeeTable();
@@ -547,8 +542,6 @@ void displayScene(GLuint renderingProgram) {
     //drawLamp();
 
     modelViewStack.pop(); // For view matrix
-
-    glFlush();
 }
 
 GLuint init(GLFWwindow* appWindow) {
@@ -558,16 +551,16 @@ GLuint init(GLFWwindow* appWindow) {
     glfwGetFramebufferSize(appWindow, &width, &height);
 
     floorCube = Cube(1.0);
-    wallCube = Cube(1.0);
-    sofaCube = Cube(1.0);
-    coffeeTableCube = Cube(1.0);
-    endTableCube = Cube(1.0);
-    chinaCabinetCube = Cube(1.0);
-    doorKnobSphere= Sphere(1.0, 20, 20);
-    fanCylinder = Cylinder(1.0, 1.0, 20, 10);
-    fanSphere = Sphere(1.0, 20, 20);
-    lampCylinder = Cylinder(1.0, 1.0, 20, 10);
-    lampCone = Cone(1.0, 1.0, 5, 10);
+    //wallCube = Cube(1.0);
+    //sofaCube = Cube(1.0);
+    //coffeeTableCube = Cube(1.0);
+    //endTableCube = Cube(1.0);
+    //chinaCabinetCube = Cube(1.0);
+    //doorKnobSphere= Sphere(1.0, 20, 20);
+    //fanCylinder = Cylinder(1.0, 1.0, 20, 10);
+    //fanSphere = Sphere(1.0, 20, 20);
+    //lampCylinder = Cylinder(1.0, 1.0, 20, 10);
+    //lampCone = Cone(1.0, 1.0, 5, 10);
 
     return renderingProgram;
 }
@@ -600,7 +593,7 @@ int main(int, char**) {
     while (!glfwWindowShouldClose(appWindow)) {
         // Set refresh buffers
         glClear(GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0, 0.0, 0.0, 1.0);
+        glClearColor(0.05f, 0.05f, 0.2f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         displayScene(shaderProgram);

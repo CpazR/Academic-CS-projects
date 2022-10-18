@@ -98,22 +98,3 @@ Cube::Cube(GLdouble size) {
 
 	polygonInit();
 }
-
-void Cube::render(void) {
-	//glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-
-	Shape::render();
-
-	// Set array pointers
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
-	//glNormalPointer(GL_FLOAT, 0, mNormals);
-
-	// Scale to the given size, draw and restore previous scaling
-	//glScalef(mSize, mSize, mSize);
-	//glDrawElements(GL_QUADS, NUM_VERTICES, GL_UNSIGNED_SHORT, mIndices);
-
-	//glPopMatrix();
-}
