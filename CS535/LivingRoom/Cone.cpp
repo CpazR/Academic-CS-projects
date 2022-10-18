@@ -100,14 +100,14 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		mIndices[index++] = botRight;
 	}
 
-	polygonInit();
+	polygonInit(mNumIndices);
 }
 
 void Cone::render() {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render();
+	Shape::render(mNumIndices);
 
 	// Set array pointers
 	//glEnableClientState(GL_VERTEX_ARRAY);

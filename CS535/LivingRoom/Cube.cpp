@@ -96,5 +96,9 @@ Cube::Cube(GLdouble size) {
 
 	mSize = size;
 
-	polygonInit();
+	polygonInit(NUM_VERTICES);
+}
+
+void Cube::render() {
+	Shape::render(NUM_VERTICES);
 }

@@ -13,6 +13,7 @@ class Cube : public Shape {
 		// Params:
 		//		size - The cube's scale factor.
 		Cube(GLdouble size);
+		virtual void render();
 
 	private:
 		static const int NUM_VERTICES = 24;

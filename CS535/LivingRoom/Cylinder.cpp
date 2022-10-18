@@ -116,14 +116,14 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		}
 	}
 
-	polygonInit();
+	polygonInit(mNumIndices);
 }
 
 void Cylinder::render() {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render();
+	Shape::render(mNumIndices);
 
 	//glEnableClientState(GL_VERTEX_ARRAY);
 	//glEnableClientState(GL_NORMAL_ARRAY);

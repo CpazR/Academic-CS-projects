@@ -14,14 +14,14 @@ class Shape {
 		GLfloat* getMVertices();
 		GLuint getVao();
 		GLuint getVbo();
-		virtual void render();
 
 	protected:
-		void polygonInit();
+		void polygonInit(int verticesCount);
 		GLfloat* mVertices;
 		GLushort* mIndices;
 		GLfloat* mNormals;
 		static const int NUM_COORDS = 3;
 		GLuint vao; // Reference to existing vao
 		GLuint vbo; // Each shape has its own vbo
+		virtual void render(int verticesCount);
 };

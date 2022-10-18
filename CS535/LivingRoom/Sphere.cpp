@@ -51,14 +51,14 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 		}
 	}
 
-	polygonInit();
+	polygonInit(mNumIndices);
 }
 
 void Sphere::render(void) {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render();
+	Shape::render(mNumIndices);
 
 	// Set array pointers
 	//glEnableClientState(GL_VERTEX_ARRAY);
