@@ -11,17 +11,15 @@
 class Shape {
 	public:
 		Shape(void);
-		GLfloat* getMVertices();
-		GLuint getVao();
+		std::vector <GLfloat> getMVertices();
 		GLuint getVbo();
 
 	protected:
-		void polygonInit(int verticesCount);
-		GLfloat* mVertices;
-		GLushort* mIndices;
-		GLfloat* mNormals;
+		void polygonInit();
+		std::vector<GLfloat> mVertices;
+		std::vector <GLushort> mIndices;
+		std::vector <GLfloat> mNormals;
 		static const int NUM_COORDS = 3;
-		GLuint vao; // Reference to existing vao
 		GLuint vbo; // Each shape has its own vbo
-		virtual void render(int verticesCount);
+		virtual void render();
 };

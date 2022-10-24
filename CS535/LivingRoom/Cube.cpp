@@ -6,36 +6,18 @@ Cube::Cube(void) {
 
 Cube::Cube(GLdouble size) {
 	GLfloat vertices[] = {
-		// Front face
-		-0.5f, 0.5f, 0.5f,
-		-0.5f, -0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f,
-		0.5f, 0.5f, 0.5f,
-		// Right face
-		0.5f, 0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f, 0.5f, -0.5f,
-		// Back face
-		0.5f, 0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, 0.5f, -0.5f,
-		// Left face
-		-0.5f, 0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, 0.5f, 0.5f,
-		// Top face
-		-0.5f, 0.5f, -0.5f,
-		-0.5f, 0.5f, 0.5f,
-		0.5f, 0.5f, 0.5f,
-		0.5f, 0.5f, -0.5f,
-		// Bottom face
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f, -0.5f,
-		0.5f, -0.5f, 0.5f,
+		-0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,	0.5f,  0.5f, -0.5f,	-0.5f,  0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,	0.5f, -0.5f,  0.5f,	0.5f,  0.5f, -0.5f,
+		0.5f, -0.5f,  0.5f,	0.5f,  0.5f,  0.5f,	0.5f,  0.5f, -0.5f,
+		0.5f, -0.5f,  0.5f,	-0.5f, -0.5f,  0.5f, 0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f, -0.5f,  0.5f,  0.5f, 0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f, -0.5f, -0.5f,  0.5f, -0.5f, -0.5f,  0.5f,  0.5f,
+		-0.5f, -0.5f,  0.5f,  0.5f, -0.5f,  0.5f,  0.5f, -0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f,  0.5f,
+		-0.5f,  0.5f, -0.5f, 0.5f,  0.5f, -0.5f, 0.5f,  0.5f,  0.5f,
+		0.5f,  0.5f,  0.5f, -0.5f,  0.5f,  0.5f, -0.5f,  0.5f, -0.5f
 	};
 
 	GLfloat normals[] = {
@@ -81,9 +63,9 @@ Cube::Cube(GLdouble size) {
 	};
 
 	// Copy the vertices, normals, and indices to the tables.
-	mVertices = new GLfloat[NUM_VERTICES * NUM_COORDS];
-	mNormals = new GLfloat[NUM_VERTICES * NUM_COORDS];
-	mIndices = new GLushort[NUM_VERTICES];
+	mVertices = std::vector<GLfloat>(NUM_VERTICES * NUM_COORDS);
+	mNormals = std::vector<GLfloat>(NUM_VERTICES * NUM_COORDS);
+	mIndices = std::vector<GLushort>(NUM_VERTICES);
 	for (int i = 0; i < NUM_VERTICES * NUM_COORDS; i += 3) {
 		mVertices[i] = vertices[i];
 		mVertices[i + 1] = vertices[i + 1];
@@ -96,9 +78,9 @@ Cube::Cube(GLdouble size) {
 
 	mSize = size;
 
-	polygonInit(NUM_VERTICES);
+	polygonInit();
 }
 
 void Cube::render() {
-	Shape::render(NUM_VERTICES);
+	Shape::render();
 }

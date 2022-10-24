@@ -13,9 +13,9 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	mNumIndices = (slices * stacks) * 6 + slices * 6;
 	int numVertices = slices * (stacks + 1) + slices * 2 + 2; // Center section + 2 bases + 2 centers of each base
 	// Calculate the vertices of the sides of the cylinder.
-	mVertices = new GLfloat[numVertices * NUM_COORDS];
-	mNormals = new GLfloat[numVertices * NUM_COORDS];
-	mIndices = new GLushort[mNumIndices];
+	//mVertices = new GLfloat[numVertices * NUM_COORDS];
+	//mNormals = new GLfloat[numVertices * NUM_COORDS];
+	//mIndices = new GLushort[mNumIndices];
 	int index = 0;
 	float epsilon = 0.2f;
 	GLfloat z = 0;
@@ -116,14 +116,14 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		}
 	}
 
-	polygonInit(mNumIndices);
+	polygonInit();
 }
 
 void Cylinder::render() {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render(mNumIndices);
+	Shape::render();
 
 	//glEnableClientState(GL_VERTEX_ARRAY);
 	//glEnableClientState(GL_NORMAL_ARRAY);

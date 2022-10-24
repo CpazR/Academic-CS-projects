@@ -16,6 +16,6 @@ class Cube : public Shape {
 		virtual void render();
 
 	private:
-		static const int NUM_VERTICES = 24;
+		static const int NUM_VERTICES = 36;
 		GLdouble mSize;
 };

@@ -2,38 +2,34 @@
 #include <vector>
 #include "Shape.h"
 
+#include "Cube.h"
+
 Shape::Shape(void) {
 }
 
-void Shape::polygonInit(int verticesCount) {
-	// Setup selected VAO and VBO
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+void Shape::polygonInit() {
+	// Setup selected VBO
 	glGenBuffers(1, &vbo);
 
 	// Bind polygon vector to buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, verticesCount, &mVertices, GL_STATIC_DRAW);
-	//glVertexAttribPointer(0, NUM_COORDS, GL_FLOAT, GL_FALSE, NUM_COORDS * sizeof(GLfloat), NULL);
+	glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(GLfloat), mVertices.data(), GL_STATIC_DRAW);
+}
+
+void Shape::render() {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, NUM_COORDS, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(0);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void Shape::render(int verticesCount) {
-	glBindVertexArray(vao);
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthFunc(GL_LEQUAL);
-	glDrawArrays(GL_TRIANGLES, 0, verticesCount);
-}
-
-GLfloat* Shape::getMVertices() {
+std::vector <GLfloat> Shape::getMVertices() {
 	return mVertices;
 }
 
 GLuint Shape::getVbo() {
 	return vbo;
-}
-
-GLuint Shape::getVao() {
-	return vao;
 }

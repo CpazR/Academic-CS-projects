@@ -11,10 +11,10 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 	GLfloat phi = 0;
 	GLfloat dTheta = PI / (float)stacks;
 	GLfloat dPhi = 2 * PI / (float)slices;
-	mVertices = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
-	mNormals = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
 	mNumIndices = slices * stacks * 4;
-	mIndices = new GLushort[mNumIndices];
+	//mVertices = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
+	//mNormals = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
+	//mIndices = new GLushort[mNumIndices];
 	mSize = radius;
 
 	// Generate the vertices and normals for the sphere.
@@ -51,14 +51,14 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 		}
 	}
 
-	polygonInit(mNumIndices);
+	polygonInit();
 }
 
 void Sphere::render(void) {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render(mNumIndices);
+	Shape::render();
 
 	// Set array pointers
 	//glEnableClientState(GL_VERTEX_ARRAY);

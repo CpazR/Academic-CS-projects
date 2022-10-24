@@ -13,9 +13,9 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	float radiusStep = base / (float)stacks;
 	int numVertices = slices * (stacks + 1) * 3 + slices * 3 + 3;
 	mNumIndices = slices * stacks * 6 + slices * 3; // triangles on the sides + triangles on the base
-	mVertices = new GLfloat[numVertices];
-	mNormals = new GLfloat[numVertices];
-	mIndices = new GLushort[mNumIndices];
+	//mVertices = new GLfloat[numVertices];
+	//mNormals = new GLfloat[numVertices];
+	//mIndices = new GLushort[mNumIndices];
 	float epsilon = 0.2;
 	float z = 0;
 	int index = 0;
@@ -100,14 +100,14 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		mIndices[index++] = botRight;
 	}
 
-	polygonInit(mNumIndices);
+	polygonInit();
 }
 
 void Cone::render() {
 	//glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 
-	Shape::render(mNumIndices);
+	Shape::render();
 
 	// Set array pointers
 	//glEnableClientState(GL_VERTEX_ARRAY);
