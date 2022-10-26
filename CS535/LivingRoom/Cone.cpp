@@ -13,10 +13,11 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	float radiusStep = base / (float)stacks;
 	int numVertices = slices * (stacks + 1) * 3 + slices * 3 + 3;
 	mNumIndices = slices * stacks * 6 + slices * 3; // triangles on the sides + triangles on the base
-	//mVertices = new GLfloat[numVertices];
-	//mNormals = new GLfloat[numVertices];
-	//mIndices = new GLushort[mNumIndices];
-	float epsilon = 0.2;
+	// Calculate the vertices of the sides of the cylinder.
+	std::vector<glm::vec3> mTempVertices = std::vector<glm::vec3>(numVertices);
+	mNormals = std::vector<glm::vec3>(numVertices);
+	mIndices = std::vector <GLushort>(mNumIndices);
+	float epsilon = 0.2f;
 	float z = 0;
 	int index = 0;
 
@@ -29,43 +30,31 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 			// Calculate the normals of the vertex.
 			Vector3f n(x * height / base, y * height / base, base / height);
 			n.normalize();
-			// Populate the arrays.
-			mVertices[index] = x;
-			mNormals[index++] = n.x;
-			mVertices[index] = y;
-			mNormals[index++] = n.y;
-			mVertices[index] = z;
-			mNormals[index++] = n.z;
+			// Populate the vectors
+			mTempVertices[index] = glm::vec3(x, y, z);
+			mNormals[index++] = glm::vec3(n.x, n.y, n.z);
 		}
 		z += slopeStep;
 		base -= radiusStep;
 	}
 
 	// Add the vertices and normals for the base.
-	int segmentLength = slices * NUM_COORDS;
-	for (int i = 0; i < segmentLength; i += 3) {
-		GLfloat x = mVertices[i];
-		GLfloat y = mVertices[i + 1];
-		GLfloat z = mVertices[i + 2];
-		mVertices[index] = x;
-		mNormals[index++] = 0;
-		mVertices[index] = y;
-		mNormals[index++] = 0;
-		mVertices[index] = z;
-		mNormals[index++] = -1.0f;
+	int segmentLength = slices;
+	for (int i = 0; i < segmentLength; i++) {
+		glm::vec3 vertex = mTempVertices[i];
+		GLfloat x = vertex.x;
+		GLfloat y = vertex.y;
+		GLfloat z = vertex.z;
+		mTempVertices[index] = glm::vec3(x, y, z);
+		mNormals[index++] = glm::vec3(0, 0, -1);
 	}
 	// Center point of base.
-	mVertices[index] = 0;
-	mNormals[index++] = 0;
-	mVertices[index] = 0;
-	mNormals[index++] = 0;
-	mVertices[index] = 0;
-	mNormals[index++] = -1;
+	mTempVertices[index] = glm::vec3(0, 0, 0);
+	mNormals[index++] = glm::vec3(0, 0, -1);
 
 	// Calculate the indices for the triangles that make up the sides.
 	index = 0;
 	for (int rows = 0; rows < stacks; rows++) {
-		float currentZ = mVertices[rows * slices * 3 + 2];
 		for (int i = 0; i < slices; i++) {
 			int botLeft = rows * slices + i;
 			int topLeft = (rows + 1) * slices + i;
@@ -87,8 +76,8 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	}
 
 	// Calculate the triangle faces for the base.
-	int centerIndex = slices * stacks + slices;
-	int baseIndex = slices * stacks + 1;
+	int baseIndex = slices * (stacks + 1);
+	int centerIndex = slices * (stacks + 2);
 	for (int i = 0; i < slices; i++) {
 		int botLeft = baseIndex + i;
 		int botRight = botLeft + 1;
@@ -98,6 +87,10 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		mIndices[index++] = centerIndex;
 		mIndices[index++] = botLeft;
 		mIndices[index++] = botRight;
+	}
+
+	for (int i = 0; i < mNumIndices; i++) {
+		mVertices.push_back(mTempVertices[mIndices[i]]);
 	}
 
 	polygonInit();

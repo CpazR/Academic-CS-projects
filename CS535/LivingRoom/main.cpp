@@ -507,6 +507,7 @@ void drawLamp(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.25, -0.7));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.08, 0.02, 0.08));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     lampCylinder.render();
     modelViewStack.pop();
 
@@ -514,6 +515,7 @@ void drawLamp(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.50, -0.7));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.25, 0.02));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     lampCylinder.render();
     modelViewStack.pop();
 
@@ -525,6 +527,7 @@ void drawLamp(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.50, -0.7));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.18, 0.20, 0.18));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     lampCone.render();
     modelViewStack.pop();
 }
@@ -549,8 +552,8 @@ void displayScene(GLuint renderingProgram) {
 
 	//modelViewStack.push(modelViewStack.top());
  //   modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0, 1.0, 0.0));
-    /*glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));*/
- //   doorKnobSphere.render();
+ //   glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
+ //   lampCone.render();
  //   modelViewStack.pop();
 
     drawFloor(modelViewLoc);
@@ -560,7 +563,7 @@ void displayScene(GLuint renderingProgram) {
     drawFan(modelViewLoc);
     drawChinaCabinet(modelViewLoc);
     drawEndTable(modelViewLoc);
-    //drawLamp(modelViewLoc);
+    drawLamp(modelViewLoc);
 
     modelViewStack.pop(); // For view matrix
 }
@@ -586,10 +589,10 @@ GLuint init(GLFWwindow* appWindow) {
     endTableCube = Cube(1.0);
     chinaCabinetCube = Cube(1.0);
     doorKnobSphere = Sphere(1.0, 20, 20);
-    //fanCylinder = Cylinder(1.0, 1.0, 20, 10);
+    fanCylinder = Cylinder(1.0, 1.0, 20, 10);
     fanSphere = Sphere(1.0, 20, 20);
-    //lampCylinder = Cylinder(1.0, 1.0, 20, 10);
-    //lampCone = Cone(1.0, 1.0, 5, 10);
+    lampCylinder = Cylinder(1.0, 1.0, 20, 10);
+    lampCone = Cone(1.0, 1.0, 10, 10);
 
     return renderingProgram;
 }

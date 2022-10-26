@@ -39,7 +39,7 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 	for (int latitude = 0; latitude < stacks; latitude++) {
 		for (int longitude = 0; longitude < slices; longitude++) {
 
-			int lastIndex =    (latitude) * slices + longitude;
+			int lastIndex =    (latitude)     * slices + longitude;
 			int currentIndex = (latitude + 1) * slices + longitude;
 
 			// First triangle

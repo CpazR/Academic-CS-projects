@@ -18,11 +18,10 @@ void Shape::render() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer(0, NUM_COORDS, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray(0);
-	//glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glCullFace(GL_CULL_FACE);
 	int vertNum = mVertices.size();
 	glDrawArrays(GL_TRIANGLES, 0, vertNum);
 }
