@@ -453,6 +453,7 @@ void drawFan(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.03, 0.8));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.08, 0.02, 0.08));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     fanCylinder.render();
     modelViewStack.pop();
 
@@ -460,6 +461,7 @@ void drawFan(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.03, 0.8));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, -0.5, 0.02));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     fanCylinder.render();
     modelViewStack.pop();
 
@@ -467,6 +469,7 @@ void drawFan(GLint mvLoc) {
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.5, 0.8));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(25.0f), glm::vec3(0, 1, 0));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.04, 0.04, 0.04));
+    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
     fanSphere.render();
 
     modelViewStack.push(modelViewStack.top());
@@ -476,6 +479,7 @@ void drawFan(GLint mvLoc) {
         modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(currentAngle), glm::vec3(0, 0, 1));
         modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0, -.8));
         modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(3.5, 0.5, 0.05));
+        glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));
         fanSphere.render();
         modelViewStack.pop();
         currentAngle += 360.0 / 3.0;
@@ -543,12 +547,18 @@ void displayScene(GLuint renderingProgram) {
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
 
+	//modelViewStack.push(modelViewStack.top());
+ //   modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0, 1.0, 0.0));
+    /*glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewStack.top()));*/
+ //   doorKnobSphere.render();
+ //   modelViewStack.pop();
+
     drawFloor(modelViewLoc);
     drawWalls(modelViewLoc);
     drawSofa(modelViewLoc);
     drawCoffeeTable(modelViewLoc);
-    //drawFan(modelViewLoc);
-    //drawChinaCabinet(modelViewLoc);
+    drawFan(modelViewLoc);
+    drawChinaCabinet(modelViewLoc);
     drawEndTable(modelViewLoc);
     //drawLamp(modelViewLoc);
 
@@ -575,9 +585,9 @@ GLuint init(GLFWwindow* appWindow) {
     coffeeTableCube = Cube(1.0);
     endTableCube = Cube(1.0);
     chinaCabinetCube = Cube(1.0);
-    //doorKnobSphere= Sphere(1.0, 20, 20);
+    doorKnobSphere = Sphere(1.0, 20, 20);
     //fanCylinder = Cylinder(1.0, 1.0, 20, 10);
-    //fanSphere = Sphere(1.0, 20, 20);
+    fanSphere = Sphere(1.0, 20, 20);
     //lampCylinder = Cylinder(1.0, 1.0, 20, 10);
     //lampCone = Cone(1.0, 1.0, 5, 10);
 

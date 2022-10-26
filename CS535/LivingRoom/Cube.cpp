@@ -1,5 +1,5 @@
 #include "Cube.h"
-
+#include <glm/gtc/matrix_transform.hpp>
 
 Cube::Cube(void) {
 }
@@ -63,16 +63,10 @@ Cube::Cube(GLdouble size) {
 	};
 
 	// Copy the vertices, normals, and indices to the tables.
-	mVertices = std::vector<GLfloat>(NUM_VERTICES * NUM_COORDS);
-	mNormals = std::vector<GLfloat>(NUM_VERTICES * NUM_COORDS);
 	mIndices = std::vector<GLushort>(NUM_VERTICES);
 	for (int i = 0; i < NUM_VERTICES * NUM_COORDS; i += 3) {
-		mVertices[i] = vertices[i];
-		mVertices[i + 1] = vertices[i + 1];
-		mVertices[i + 2] = vertices[i + 2];
-		mNormals[i] = normals[i];
-		mNormals[i + 1] = normals[i + 1];
-		mNormals[i + 2] = normals[i + 2];
+		mVertices.push_back(glm::vec3(vertices[i], vertices[i + 1], vertices[i + 2]));
+		mNormals.push_back(glm::vec3(normals[i], normals[i + 1], normals[i + 2]));
 		mIndices[i / 3] = indices[i / 3];
 	}
 

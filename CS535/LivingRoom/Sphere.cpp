@@ -11,15 +11,15 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 	GLfloat phi = 0;
 	GLfloat dTheta = PI / (float)stacks;
 	GLfloat dPhi = 2 * PI / (float)slices;
-	mNumIndices = slices * stacks * 4;
-	//mVertices = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
-	//mNormals = new GLfloat[slices * (stacks + 1) * NUM_COORDS];
-	//mIndices = new GLushort[mNumIndices];
+	mNumIndices = slices * stacks * 6;
+	std::vector<glm::vec3> mTempVertices = std::vector<glm::vec3>(slices * (stacks + 1) * NUM_COORDS);
+	mNormals = std::vector<glm::vec3>(slices * (stacks + 1) * NUM_COORDS);
+	mIndices = std::vector <GLushort>(mNumIndices);
 	mSize = radius;
 
 	// Generate the vertices and normals for the sphere.
 	int index = 0;
-	for (int latitude = 0; latitude <= stacks; latitude++) {
+	for (int latitude = 0; latitude < stacks; latitude++) {
 		phi = 0;
 		for (int longitude = 0; longitude < slices; longitude++) {
 			GLfloat x = sin(theta) * sin(phi);
@@ -27,12 +27,8 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 			GLfloat z = sin(theta) * cos(phi);
 			Vector3f n(x, y, z);
 			n.normalize();
-			mVertices[index] = x;
-			mNormals[index++] = n.x;
-			mVertices[index] = y;
-			mNormals[index++] = n.y;
-			mVertices[index] = z;
-			mNormals[index++] = n.z;
+			mTempVertices[index] = glm::vec3(x, y, z);
+			mNormals[index++] = glm::vec3(n.x, n.y, n.z);
 			phi += dPhi;
 		}
 		theta += dTheta;
@@ -42,35 +38,28 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 	index = 0;
 	for (int latitude = 0; latitude < stacks; latitude++) {
 		for (int longitude = 0; longitude < slices; longitude++) {
-			int lastIndex = slices * latitude + longitude;
-			int currentIndex = slices * (latitude + 1) + longitude;
+
+			int lastIndex =    (latitude) * slices + longitude;
+			int currentIndex = (latitude + 1) * slices + longitude;
+
+			// First triangle
 			mIndices[index++] = lastIndex;
-			mIndices[index++] = currentIndex;
-			mIndices[index++] = currentIndex + 1;
 			mIndices[index++] = lastIndex + 1;
+			mIndices[index++] = currentIndex;
+			// Second triangle
+			mIndices[index++] = lastIndex + 1;
+			mIndices[index++] = currentIndex + 1;
+			mIndices[index++] = currentIndex;
 		}
+	}
+
+	for (int i = 0; i < mNumIndices; i++) {
+		mVertices.push_back(mTempVertices[mIndices[i]]);
 	}
 
 	polygonInit();
 }
 
 void Sphere::render(void) {
-	//glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-
 	Shape::render();
-
-	// Set array pointers
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glVertexPointer(NUM_COORDS, GL_FLOAT, 0, mVertices);
-	//glNormalPointer(GL_FLOAT, 0, mNormals);
-
-	//glScalef(mSize, mSize, mSize);
-	//glDrawElements(GL_QUADS, mNumIndices, GL_UNSIGNED_SHORT, mIndices);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_NORMAL_ARRAY);
-
-	//glPopMatrix();
 }

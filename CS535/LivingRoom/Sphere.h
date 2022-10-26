@@ -11,4 +11,5 @@ public:
 private:
 	int mNumIndices;
 	GLdouble mSize;
+	float toRadians(float degrees);
 };

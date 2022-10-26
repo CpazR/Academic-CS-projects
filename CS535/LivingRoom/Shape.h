@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 #include <vector>
 #include "Vector3f.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 /**
 * Defines a parent class for the primitives.
@@ -11,14 +12,14 @@
 class Shape {
 	public:
 		Shape(void);
-		std::vector <GLfloat> getMVertices();
+		std::vector <glm::vec3> getMVertices();
 		GLuint getVbo();
 
 	protected:
 		void polygonInit();
-		std::vector<GLfloat> mVertices;
-		std::vector <GLushort> mIndices;
-		std::vector <GLfloat> mNormals;
+		std::vector<glm::vec3> mVertices;
+		std::vector<GLushort> mIndices;
+		std::vector<glm::vec3> mNormals;
 		static const int NUM_COORDS = 3;
 		GLuint vbo; // Each shape has its own vbo
 		virtual void render();
