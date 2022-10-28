@@ -13,7 +13,7 @@ class Shape {
 	public:
 		Shape(void);
 		std::vector <glm::vec3> getMVertices();
-		GLuint getVbo();
+		GLuint* getVbo();
 
 	protected:
 		void polygonInit();
@@ -21,6 +21,6 @@ class Shape {
 		std::vector<GLushort> mIndices;
 		std::vector<glm::vec3> mNormals;
 		static const int NUM_COORDS = 3;
-		GLuint vbo; // Each shape has its own vbo
+		GLuint vbo[3]; // Each shape has its own vbo
 		virtual void render();
 };
