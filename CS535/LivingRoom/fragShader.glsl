@@ -1,3 +1,7 @@
+///
+/// Phong method for shading
+///
+
 #version 430
 
 in vec3 varyingNormal;
@@ -30,24 +34,23 @@ uniform mat4 proj_matrix;
 uniform mat4 norm_matrix;
 
 void main(void) {
-	// normalize the light, normal, and view vectors:
-	vec3 L = normalize(varyingLightDir);
-	vec3 N = normalize(varyingNormal);
-	vec3 V = normalize(-varyingVertPos);
+	// Normalize input vectors:
+	vec3 lightNormal = normalize(varyingLightDir);
+	vec3 surfaceNormal = normalize(varyingNormal);
+	vec3 viewNormal = normalize(-varyingVertPos);
 	
-	// compute light reflection vector, with respect N:
-	vec3 R = normalize(reflect(-L, N));
+	// Calculate the reflection with respect to the surface:
+	vec3 reflectionNormal = normalize(reflect(-lightNormal, surfaceNormal));
 	
-	// get the angle between the light and surface normal:
-	float cosTheta = dot(L, N);
+	// Calcualte angles between normals:
+	float cosTheta = dot(lightNormal, surfaceNormal);
+	float cosPhi = dot(viewNormal, reflectionNormal);
 	
-	// angle between the view vector and reflected light:
-	float cosPhi = dot(V, R);
 
 	// compute ADS contributions (per pixel):
 	vec3 ambient = ((globalAmbient * material.ambient) + (light.ambient * material.ambient)).xyz;
 	vec3 diffuse = light.diffuse.xyz * material.diffuse.xyz * max(cosTheta, 0.0);
 	vec3 specular = light.specular.xyz * material.specular.xyz * pow(max(cosPhi, 0.0), material.shininess);
 	
-	fragColor = vec4((ambient + diffuse + specular), 1.0);
+	fragColor = vec4(ambient + diffuse + specular, 1.0);
 }

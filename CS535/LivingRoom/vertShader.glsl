@@ -1,3 +1,7 @@
+///
+/// Phong method for shading
+///
+
 #version 430
 
 layout (location = 0) in vec3 vertPosition;
@@ -30,9 +34,11 @@ uniform mat4 proj_matrix;
 uniform mat4 norm_matrix;
 
 void main(void) {
+	// Calcualte light and material outputs for fragment shader
 	varyingVertPos = (mv_matrix * vec4(vertPosition, 1.0)).xyz;
 	varyingLightDir = light.position - varyingVertPos;
 	varyingNormal = (norm_matrix * vec4(vertNormal, 1.0)).xyz;
 
+	// Calcualte position from matrices
 	gl_Position = proj_matrix * mv_matrix * vec4(vertPosition, 1.0);
 }
