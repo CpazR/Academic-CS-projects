@@ -20,7 +20,7 @@ using namespace std;
 #include "Cylinder.h"
 #include "Sphere.h"
 
-const int FAN_FIN_COUNT = 5;
+const int FAN_FIN_COUNT = 4;
 double ScaleFactor = 1.7;
 double FanSpeed = 2;
 
@@ -47,96 +47,73 @@ const float WINDOW_WIDTH = 800;
 const float WINDOW_HEIGHT = 600;
 float aspectRatio;
 
-void specialKey(int key, int x, int y)
-{
-    int mod = glutGetModifiers();
+void keyboardListener(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     switch (key) {
-    case GLUT_KEY_LEFT:
-        if (mod == GLUT_ACTIVE_SHIFT) {
+    case GLFW_KEY_LEFT:
+        if (mods == GLFW_MOD_SHIFT) {
             EyeX = EYE_X_DEFAULT;
-        }
-        else {
+        } else {
             EyeX -= EYE_STEP;
             if (EyeX < EYE_X_MIN)
                 EyeX = EYE_X_MIN;
         }
         break;
-    case GLUT_KEY_RIGHT:
-        if (mod == GLUT_ACTIVE_SHIFT) {
+    case GLFW_KEY_RIGHT:
+        if (mods == GLFW_MOD_SHIFT) {
             EyeX = EYE_X_DEFAULT;
-        }
-        else {
+        } else {
             EyeX += EYE_STEP;
             if (EyeX > EYE_X_MAX)
                 EyeX = EYE_X_MAX;
         }
         break;
-    case GLUT_KEY_UP:
-        if (mod == GLUT_ACTIVE_SHIFT) {
+    case GLFW_KEY_UP:
+        if (mods == GLFW_MOD_SHIFT) {
             EyeY = EYE_Y_DEFAULT;
-        }
-        else {
+        } else {
             EyeY -= EYE_STEP;
             if (EyeY < EYE_Y_MIN)
                 EyeY = EYE_Y_MIN;
         }
         break;
-    case GLUT_KEY_DOWN:
-        if (mod == GLUT_ACTIVE_SHIFT) {
+    case GLFW_KEY_DOWN:
+        if (mods == GLFW_MOD_SHIFT) {
             EyeY = EYE_Y_DEFAULT;
-        }
-        else {
+        } else {
             EyeY += EYE_STEP;
 
             if (EyeY > EYE_Y_MAX)
                 EyeY = EYE_Y_MAX;
         }
         break;
-    default:
-        break;
-    }
-
-}
-
-void onKeyboard(unsigned char key, int x, int y) {//Handles keyboard events
-
-    switch (key) {
-    case 27:  //Typed the Escape key, so exit.
+    case GLFW_KEY_ESCAPE:
         exit(0);
         break;
-    case 83:
-        ScaleFactor += 0.1;
-        if (ScaleFactor > 2.0)
-            ScaleFactor = 2.0;
+    case GLFW_KEY_MINUS:
+        FanSpeed -= 1.0;
+        if (FanSpeed < 1.0)
+            FanSpeed = 1.0;
         break;
-    case 115:
+    case GLFW_KEY_EQUAL:
+        FanSpeed += 1.0;
+        if (FanSpeed > 100.0)
+            FanSpeed = 100.0;
+        break;
+    case GLFW_KEY_D:
         ScaleFactor -= 0.1;
         if (ScaleFactor < 0.5)
             ScaleFactor = 0.5;
         break;
-    case '+':
-    case '=':
-    {
-        FanSpeed += 1.0;
-        if (FanSpeed > 100.0)
-            FanSpeed = 100.0;
-
+    case GLFW_KEY_S:
+        ScaleFactor += 0.1;
+        if (ScaleFactor > 2.0)
+            ScaleFactor = 2.0;
         break;
-    }
-
-    case '-':
-    case '_':
-    {
-        FanSpeed -= 1.0;
-        if (FanSpeed < 1.0)
-            FanSpeed = 1.0;
-
-        break;
-    }
     default:
         break;
     }
+
 }
 
 // ------------- Rendering properties ------------ //
@@ -146,6 +123,7 @@ GLuint globalAmbLoc, ambLoc, diffLoc, specLoc, posLoc, mambLoc, mdiffLoc, mspecL
 glm::mat4 viewMatrix, projMatrix, normMatrix;
 stack<glm::mat4> modelViewStack;
 glm::vec3 lightPos;
+glm::vec3 lightPosition = glm::vec3(-5.0f, 3.0f, -5.0f);
 
 // white light
 float globalAmbient[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
@@ -174,8 +152,7 @@ void setMeshUniforms(glm::mat4 modelViewMat) {
 }
 
 void displayLights(GLuint renderingProgram, glm::mat4 viewMatrix) {
-    // TODO: Change light position (inner vec3) later?
-    lightPos = glm::vec3(viewMatrix * glm::vec4(glm::vec3(0.0f, 10.0f, 0.0f), 1.0));
+    lightPos = glm::vec3(viewMatrix * glm::vec4(lightPosition, 1.0f));
 
     // get the locations of the light and material fields in the shader
     globalAmbLoc = glGetUniformLocation(renderingProgram, "globalAmbient");
@@ -356,6 +333,7 @@ void drawEndTable() {
 }
 
 void drawChinaCabinet() {
+
     //draw bottom half
     modelViewStack.push(modelViewStack.top());
     modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.85, .25, 0.5));
@@ -451,38 +429,50 @@ GLfloat fan_ambient[] = { 1.0f, 0.2f, 0.0f, 0.0f };
 GLfloat fan_diffuse[] = { 1.0f, 0.2f, 0.0f, 0.0f };
 GLfloat fan_specular[] = { 1.0f, 0.2f, 0.0f, 0.0f };
 GLfloat fan_shininess = 50.0f;
+
 float fanAngle = 0.0;
 const float ANGLE_STEP = 2 * 3.14 / 10;
-void drawFan() {
+void drawFan(GLuint renderingProgram) {
+    // Initial position
+    glm::vec3 fanPosition = glm::vec3(-0.85, 0.03, -0.1);
+
+    setMeshMaterial(renderingProgram, fan_ambient, fan_diffuse, fan_specular, fan_shininess);
+
+    // Base
     modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.03, 0.8));
+    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.08, 0.02, 0.08));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
     setMeshUniforms(modelViewStack.top());
     cylinder.render();
     modelViewStack.pop();
 
+    // Connecting rod
     modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.03, 0.8));
+    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, -0.5, 0.02));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
     setMeshUniforms(modelViewStack.top());
     cylinder.render();
     modelViewStack.pop();
 
+    // Sphere connecting fins
     modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.8, 0.5, 0.8));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(25.0f), glm::vec3(0, 1, 0));
+    fanPosition.y += 0.45f;
+    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
+    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(96.0f), glm::vec3(0, 1, 0));
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.04, 0.04, 0.04));
     setMeshUniforms(modelViewStack.top());
     sphere.render();
 
+    // Fins
+    setMeshMaterial(renderingProgram, Utils::silverAmbient(), Utils::silverDiffuse(), Utils::silverSpecular(), 100.0f);
     modelViewStack.push(modelViewStack.top());
     float currentAngle = fanAngle;
     for (int i = 0; i < FAN_FIN_COUNT; i++) {
         modelViewStack.push(modelViewStack.top());
         modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(currentAngle), glm::vec3(0, 0, 1));
-        modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0, -.8));
+        modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0, +.8));
         modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(3.5, 0.5, 0.05));
         setMeshUniforms(modelViewStack.top());
         sphere.render();
@@ -525,7 +515,8 @@ void drawLamp(GLuint renderingProgram) {
 
     setMeshMaterial(renderingProgram, lamp_shade_ambient, lamp_shade_diffuse, lamp_shade_specular, lamp_shade_shininess);
     modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.50, -0.7));
+    lightPosition = glm::vec3(-0.65, 0.50, -0.7);
+    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), lightPosition);
     modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.18, 0.20, 0.18));
     modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
     setMeshUniforms(modelViewStack.top());
@@ -547,19 +538,12 @@ void displayScene(GLuint renderingProgram) {
     normLoc = glGetUniformLocation(renderingProgram, "norm_matrix");
 
     // Build matrices for shader computation
-    viewMatrix = glm::lookAt(glm::vec3(4, 2, 4), glm::vec3(0.0, 0.3, 0.0), glm::vec3(0.0, 1.0, 0.0));
+    viewMatrix = glm::lookAt(glm::vec3(EyeX, EyeY, EyeZ), glm::vec3(0.0, 0.3, 0.0), glm::vec3(0.0, 1.0, 0.0));
     modelViewStack.push(viewMatrix);
 
     displayLights(renderingProgram, viewMatrix);
 
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
-
- //   setMeshMaterial(renderingProgram, floor_ambient, floor_diffuse, floor_specular, 1.0f);
-	//modelViewStack.push(modelViewStack.top());
-	//modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0, 1.0, 0.0));
-	//setMeshUniforms(modelViewStack.top());
-	//cube.render();
-	//modelViewStack.pop();
 
     setMeshMaterial(renderingProgram, floor_ambient, floor_diffuse, floor_specular, 0.0f);
     drawFloor();
@@ -573,8 +557,8 @@ void displayScene(GLuint renderingProgram) {
 	setMeshMaterial(renderingProgram, table_ambient, table_diffuse, table_specular, table_shininess);
     drawCoffeeTable();
 
-	setMeshMaterial(renderingProgram, fan_ambient, fan_diffuse, fan_specular, fan_shininess);
-    drawFan();
+    // Uses multiple materials
+    drawFan(renderingProgram);
 
     setMeshMaterial(renderingProgram, table_ambient, table_diffuse, table_specular, table_shininess);
     drawChinaCabinet();
@@ -634,9 +618,8 @@ int main(int, char**) {
 
     glClearColor(0.05f, 0.05f, 0.2f, 0.0f);  // background is light gray
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-   
-    //glutKeyboardFunc(onKeyboard);
-    //glutSpecialFunc(specialKey);
+
+    glfwSetKeyCallback(appWindow, keyboardListener);
 
     glUseProgram(shaderProgram);
 

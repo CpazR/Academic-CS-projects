@@ -34,9 +34,6 @@ void Shape::render() {
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glDrawArrays(GL_TRIANGLES, 0, mVertices.size());
-
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[2]);
-	//glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_SHORT, 0);
 }
 
 std::vector <glm::vec3> Shape::getMVertices() {

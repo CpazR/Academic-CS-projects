@@ -18,8 +18,8 @@ class Shape {
 	protected:
 		void polygonInit();
 		std::vector<glm::vec3> mVertices;
-		std::vector<GLushort> mIndices;
 		std::vector<glm::vec3> mNormals;
+		std::vector<GLushort> mIndices;
 		static const int NUM_COORDS = 3;
 		GLuint vbo[3]; // Each shape has its own vbo
 		virtual void render();

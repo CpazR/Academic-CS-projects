@@ -14,7 +14,7 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	int numVertices = slices * (stacks + 1) + slices * 2 + 2; // Center section + 2 bases + 2 centers of each base
 	// Calculate the vertices of the sides of the cylinder.
 	std::vector<glm::vec3> mTempVertices = std::vector<glm::vec3>(numVertices);
-	mNormals = std::vector<glm::vec3>(numVertices);
+	std::vector<glm::vec3> mTempNormals = std::vector<glm::vec3>(numVertices);
 	mIndices = std::vector <GLushort>(mNumIndices);
 	int index = 0;
 	float epsilon = 0.2f;
@@ -27,7 +27,7 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 			Vector3f n(x, y, 0);
 			n.normalize();
 			mTempVertices[index] = glm::vec3(x, y, z);
-			mNormals[index++] = glm::vec3(n.x, n.y, n.z);
+			mTempNormals[index++] = glm::vec3(n.x, n.y, n.z);
 		}
 		z += slopeStep;
 	}
@@ -45,17 +45,17 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 			z = vertex.z;
 			mTempVertices[index] = glm::vec3(x, y, z);
 			if (cap == 0) {
-				mNormals[index++] = glm::vec3(0.0, 0.0, -1.0f);
+				mTempNormals[index++] = glm::vec3(0.0, 0.0, -1.0f);
 			} else {
-				mNormals[index++] = glm::vec3(0.0, 0.0, 1.0f);
+				mTempNormals[index++] = glm::vec3(0.0, 0.0, 1.0f);
 			}
 		}
 		// Center of cap
 		mTempVertices[index] = glm::vec3(0, 0, z);
 		if (cap == 0) {
-			mNormals[index++] = glm::vec3(0.0, 0.0, -1.0f);
+			mTempNormals[index++] = glm::vec3(0.0, 0.0, -1.0f);
 		} else {
-			mNormals[index++] = glm::vec3(0.0, 0.0, 1.0f);
+			mTempNormals[index++] = glm::vec3(0.0, 0.0, 1.0f);
 		}
 	}
 
@@ -105,6 +105,7 @@ Cylinder::Cylinder(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 
 	for (int i = 0; i < mNumIndices; i++) {
 		mVertices.push_back(mTempVertices[mIndices[i]]);
+		mNormals.push_back(mTempVertices[mIndices[i]]);
 	}
 
 	polygonInit();

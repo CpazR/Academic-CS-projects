@@ -15,7 +15,7 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 	mNumIndices = slices * stacks * 6 + slices * 3; // triangles on the sides + triangles on the base
 	// Calculate the vertices of the sides of the cylinder.
 	std::vector<glm::vec3> mTempVertices = std::vector<glm::vec3>(numVertices);
-	mNormals = std::vector<glm::vec3>(numVertices);
+	std::vector<glm::vec3> mTempNormals= std::vector<glm::vec3>(numVertices);
 	mIndices = std::vector <GLushort>(mNumIndices);
 	float epsilon = 0.2f;
 	float z = 0;
@@ -32,7 +32,7 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 			n.normalize();
 			// Populate the vectors
 			mTempVertices[index] = glm::vec3(x, y, z);
-			mNormals[index++] = glm::vec3(n.x, n.y, n.z);
+			mTempNormals[index++] = glm::vec3(n.x, n.y, n.z);
 		}
 		z += slopeStep;
 		base -= radiusStep;
@@ -46,11 +46,11 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 		GLfloat y = vertex.y;
 		GLfloat z = vertex.z;
 		mTempVertices[index] = glm::vec3(x, y, z);
-		mNormals[index++] = glm::vec3(0, 0, -1);
+		mTempNormals[index++] = glm::vec3(0, 0, -1);
 	}
 	// Center point of base.
 	mTempVertices[index] = glm::vec3(0, 0, 0);
-	mNormals[index++] = glm::vec3(0, 0, -1);
+	mTempNormals[index++] = glm::vec3(0, 0, -1);
 
 	// Calculate the indices for the triangles that make up the sides.
 	index = 0;
@@ -91,6 +91,7 @@ Cone::Cone(GLdouble base, GLdouble height, GLint slices, GLint stacks) {
 
 	for (int i = 0; i < mNumIndices; i++) {
 		mVertices.push_back(mTempVertices[mIndices[i]]);
+		mNormals.push_back(mTempVertices[mIndices[i]]);
 	}
 
 	polygonInit();

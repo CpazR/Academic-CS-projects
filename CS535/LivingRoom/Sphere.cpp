@@ -13,7 +13,7 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 	GLfloat dPhi = 2 * PI / (float)slices;
 	mNumIndices = slices * stacks * 6;
 	std::vector<glm::vec3> mTempVertices = std::vector<glm::vec3>(slices * (stacks + 1) * NUM_COORDS);
-	mNormals = std::vector<glm::vec3>(slices * (stacks + 1) * NUM_COORDS);
+	std::vector<glm::vec3> mTempNormals= std::vector<glm::vec3>(slices * (stacks + 1) * NUM_COORDS);
 	mIndices = std::vector <GLushort>(mNumIndices);
 	mSize = radius;
 
@@ -28,7 +28,7 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 			Vector3f n(x, y, z);
 			n.normalize();
 			mTempVertices[index] = glm::vec3(x, y, z);
-			mNormals[index++] = glm::vec3(n.x, n.y, n.z);
+			mTempNormals[index++] = glm::vec3(n.x, n.y, n.z);
 			phi += dPhi;
 		}
 		theta += dTheta;
@@ -55,6 +55,7 @@ Sphere::Sphere(GLdouble radius, GLint slices, GLint stacks) {
 
 	for (int i = 0; i < mNumIndices; i++) {
 		mVertices.push_back(mTempVertices[mIndices[i]]);
+		mNormals.push_back(mTempVertices[mIndices[i]]);
 	}
 
 	polygonInit();
