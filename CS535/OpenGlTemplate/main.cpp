@@ -9,6 +9,8 @@
 
 #include<iostream>
 
+#include "Utils.h"
+
 int main() {
 
 	if (!glfwInit()) {
@@ -23,6 +25,8 @@ int main() {
 	if (!window) {
 		std::cerr << "Window initialization failed! Check configuration.";
 	}
+
+	GLuint shaderProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(1.0, 0.0, 0.0, 1.0);

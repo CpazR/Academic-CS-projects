@@ -604,7 +604,7 @@ int main(int, char**) {
     if (!glfwInit()) { return -1; }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Program 2 - Nicholas Reel", NULL, NULL);
+    GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "CS535 - PA2 - N. Reel", NULL, NULL);
     glfwMakeContextCurrent(appWindow);
     if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
     glfwSwapInterval(1); // vsync enabled
