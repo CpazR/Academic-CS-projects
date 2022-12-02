@@ -1,7 +1,6 @@
 /**
 *
-* This program displays a simple scene of a living room using custom primitive types.
-* Isaac Hands
+* Refactored project 2 to work with 
 *
 **/
 using namespace std;
@@ -15,588 +14,106 @@ using namespace std;
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Utils.h"
-#include "Cone.h"
-#include "Cube.h"
-#include "Cylinder.h"
-#include "Sphere.h"
 
-const int FAN_FIN_COUNT = 4;
-double ScaleFactor = 1.7;
-double FanSpeed = 2;
-
-const double EYE_STEP = 0.5;
-const double EYE_RANGE = 20;
-
-const double EYE_X_DEFAULT = 4;
-const double EYE_X_MIN = EYE_X_DEFAULT - EYE_RANGE;
-const double EYE_X_MAX = EYE_X_DEFAULT + EYE_RANGE;
-
-const double EYE_Z_DEFAULT = 4;
-const double EYE_Z_MIN = EYE_Z_DEFAULT - EYE_RANGE;
-const double EYE_Z_MAX = EYE_Z_DEFAULT + EYE_RANGE;
-
-const double EYE_Y_DEFAULT = 2;
-const double EYE_Y_MIN = EYE_Y_DEFAULT - EYE_RANGE;
-const double EYE_Y_MAX = EYE_Y_DEFAULT + EYE_RANGE;
-
-double EyeX = EYE_X_DEFAULT;
-double EyeZ = EYE_Z_DEFAULT;
-double EyeY = EYE_Y_DEFAULT;
-
-const float WINDOW_WIDTH = 800;
-const float WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 float aspectRatio;
 
-void keyboardListener(GLFWwindow* window, int key, int scancode, int action, int mods) {
+int workGroupsX = WINDOW_WIDTH;
+int workGroupsY = WINDOW_HEIGHT;
+int workGroupsZ = 1;
 
-    switch (key) {
-    case GLFW_KEY_LEFT:
-        if (mods == GLFW_MOD_SHIFT) {
-            EyeX = EYE_X_DEFAULT;
-        } else {
-            EyeX -= EYE_STEP;
-            if (EyeX < EYE_X_MIN)
-                EyeX = EYE_X_MIN;
-        }
-        break;
-    case GLFW_KEY_RIGHT:
-        if (mods == GLFW_MOD_SHIFT) {
-            EyeX = EYE_X_DEFAULT;
-        } else {
-            EyeX += EYE_STEP;
-            if (EyeX > EYE_X_MAX)
-                EyeX = EYE_X_MAX;
-        }
-        break;
-    case GLFW_KEY_UP:
-        if (mods == GLFW_MOD_SHIFT) {
-            EyeY = EYE_Y_DEFAULT;
-        } else {
-            EyeY -= EYE_STEP;
-            if (EyeY < EYE_Y_MIN)
-                EyeY = EYE_Y_MIN;
-        }
-        break;
-    case GLFW_KEY_DOWN:
-        if (mods == GLFW_MOD_SHIFT) {
-            EyeY = EYE_Y_DEFAULT;
-        } else {
-            EyeY += EYE_STEP;
-
-            if (EyeY > EYE_Y_MAX)
-                EyeY = EYE_Y_MAX;
-        }
-        break;
-    case GLFW_KEY_ESCAPE:
-        exit(0);
-        break;
-    case GLFW_KEY_MINUS:
-        FanSpeed -= 1.0;
-        if (FanSpeed < 1.0)
-            FanSpeed = 1.0;
-        break;
-    case GLFW_KEY_EQUAL:
-        FanSpeed += 1.0;
-        if (FanSpeed > 100.0)
-            FanSpeed = 100.0;
-        break;
-    case GLFW_KEY_D:
-        ScaleFactor -= 0.1;
-        if (ScaleFactor < 0.5)
-            ScaleFactor = 0.5;
-        break;
-    case GLFW_KEY_S:
-        ScaleFactor += 0.1;
-        if (ScaleFactor > 2.0)
-            ScaleFactor = 2.0;
-        break;
-    default:
-        break;
-    }
-
-}
 
 // ------------- Rendering properties ------------ //
-GLuint VAO; // Single array object that all shapes will share. Each will have their own buffer object
-GLint modelViewLoc, projLoc, normLoc;
-GLuint globalAmbLoc, ambLoc, diffLoc, specLoc, posLoc, mambLoc, mdiffLoc, mspecLoc, mshiLoc;
-glm::mat4 viewMatrix, projMatrix, normMatrix;
-stack<glm::mat4> modelViewStack;
-glm::vec3 lightPos;
-glm::vec3 lightPosition = glm::vec3(-5.0f, 3.0f, -5.0f);
+GLuint VAO;
+GLuint VBO[2];
 
-// white light
-float globalAmbient[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
-float lightAmbient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-float lightDiffuse[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-float lightSpecular[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLuint raytraceComputeShader, screenQuadShader;
+GLuint displayRenderTextureId;
+unsigned char* displayRenderTexture;
 
-// ------------- Rendering shapes ------------ //
-Cube cube;
-Sphere sphere;
-Cylinder cylinder;
-Cone cone;
+// This method is the main rendering function for the scene. It calls the ray tracing compute shader.
+void displayScene() {
+    glUseProgram(raytraceComputeShader);
 
-void setMeshMaterial(GLuint renderingProgram, float* matAmb, float* matDif, float* matSpe, float matShi) {
-    glProgramUniform4fv(renderingProgram, mambLoc, 1, matAmb);
-    glProgramUniform4fv(renderingProgram, mdiffLoc, 1, matDif);
-    glProgramUniform4fv(renderingProgram, mspecLoc, 1, matSpe);
-    glProgramUniform1f(renderingProgram, mshiLoc, matShi);
+    // Bind the screen_texture_id texture to an image unit as the compute shader's output
+    glBindImageTexture(0, displayRenderTextureId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
+
+    glActiveTexture(GL_TEXTURE0);
+
+    glDispatchCompute(workGroupsX, workGroupsY, workGroupsZ);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+    // Screen has been rendered by compute shader and inserted into texture, draw using buffer
+    glUseProgram(screenQuadShader);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, displayRenderTextureId);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(1);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void setMeshUniforms(glm::mat4 modelViewMat) {
-    glUniformMatrix4fv(modelViewLoc, 1, GL_FALSE, glm::value_ptr(modelViewMat));
+void init() {
+    Utils::displayComputeShaderLimits();
 
-    glm::mat4 inverseTriNormMat = glm::transpose(glm::inverse(modelViewMat));
-    glUniformMatrix4fv(normLoc, 1, GL_FALSE, glm::value_ptr(inverseTriNormMat));
-}
+    // Allocate memory for rendered screen texture
+    displayRenderTexture = (unsigned char*)malloc(sizeof(unsigned char) * 4 * WINDOW_WIDTH * WINDOW_HEIGHT);
+    memset(displayRenderTexture, 0, sizeof(char) * 4 * WINDOW_WIDTH * WINDOW_HEIGHT);
 
-void displayLights(GLuint renderingProgram, glm::mat4 viewMatrix) {
-    lightPos = glm::vec3(viewMatrix * glm::vec4(lightPosition, 1.0f));
-
-    // get the locations of the light and material fields in the shader
-    globalAmbLoc = glGetUniformLocation(renderingProgram, "globalAmbient");
-    ambLoc = glGetUniformLocation(renderingProgram, "light.ambient");
-    diffLoc = glGetUniformLocation(renderingProgram, "light.diffuse");
-    specLoc = glGetUniformLocation(renderingProgram, "light.specular");
-    posLoc = glGetUniformLocation(renderingProgram, "light.position");
-    mambLoc = glGetUniformLocation(renderingProgram, "material.ambient");
-    mdiffLoc = glGetUniformLocation(renderingProgram, "material.diffuse");
-    mspecLoc = glGetUniformLocation(renderingProgram, "material.specular");
-    mshiLoc = glGetUniformLocation(renderingProgram, "material.shininess");
-
-    //  set the uniform light and material values in the shader
-    glProgramUniform4fv(renderingProgram, globalAmbLoc, 1, globalAmbient);
-    glProgramUniform4fv(renderingProgram, ambLoc, 1, lightAmbient);
-    glProgramUniform4fv(renderingProgram, diffLoc, 1, lightDiffuse);
-    glProgramUniform4fv(renderingProgram, specLoc, 1, lightSpecular);
-    glProgramUniform3fv(renderingProgram, posLoc, 1, glm::value_ptr(lightPos));
-}
-
-// ------------- Render the floor ------------ //
-GLfloat floor_ambient[] = { 0.4f, 0.2f, 0.0f, 1.0f };
-GLfloat floor_diffuse[] = { 0.4f, 0.3f, 0.2f, 1.0f };
-GLfloat floor_specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-void drawFloor() {
-
-    // Apply scaling to view and apply
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 0.03, 2.0));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-}
-
-// --------------  Render the walls --------------------
-GLfloat walls_ambient[] = { 0.3f, 0.3f, 0.2f, 1.0f };
-GLfloat walls_diffuse[] = { 0.3f, 0.3f, 0.4f, 1.0f };
-GLfloat walls_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat walls_shininess = 20.0f;
-void drawWalls() {
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5, -1.0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 1.0, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-1.0, 0.5, 0));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(2.0, 1.0, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-}
-
-// ---------------- Render the sofa --------- //
-GLfloat sofa_ambient[] = { 0.2f, 0.075f, 0.0f, 1.0f };
-GLfloat sofa_diffuse[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-GLfloat sofa_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat sofa_shininess = 20.0f;
-void drawSofa() {
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.2, 0.1, -.75));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.5, 0.2, 1.2));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.2, 0.2, -.95));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(1.2, 0.1, .45));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.75, 0.25, -.75));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(.35, 0.1, .10));
-    setMeshUniforms(modelViewStack.top());
-
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.35, 0.25, -.75));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(.35, 0.1, .10));
-    setMeshUniforms(modelViewStack.top());
-
-    cube.render();
-    modelViewStack.pop();
-}
-
-GLfloat table_ambient[] = { 1.0f, 0.5f, 0.0f, 0.0f };
-GLfloat table_diffuse[] = { 1.0f, 0.5f, 0.0f, 0.0f };
-GLfloat table_specular[] = { 1.0f, 0.5f, 0.0f, 0.0f };
-GLfloat table_shininess = 10.0f;
-void drawCoffeeTable() {
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.2, 0.25, 0));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.4, 0.03, 1.));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.25, 0.125, 0.15));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.06, 0.25, 0.06));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.65, 0.125, 0.15));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.06, 0.25, 0.06));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.25, 0.125, -0.15));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.06, 0.25, 0.06));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.65, 0.125, -0.15));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.06, 0.25, 0.06));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-
-}
-
-void drawEndTable() {
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.20, -0.7));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.4, 0.03, 0.4));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.48, 0.10, -0.55));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.22, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.48, 0.10, -0.85));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.22, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.82, 0.10, -0.85));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.22, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.82, 0.10, -0.55));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.22, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-}
-
-void drawChinaCabinet() {
-
-    //draw bottom half
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.85, .25, 0.5));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.25, .30, 0.5));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    //daw top half
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.87, .55, 0.5));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.23, .30, 0.45));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    //Draw top knobs
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.75, .55, 0.5));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.02));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.75, .55, .45));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.02));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    //Draw bottom knobs
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.70, .33, 0.67));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.04));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.70, .33, .34));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.04));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.70, .21, 0.67));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.04));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-.70, .21, .34));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.02, 0.04));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-    modelViewStack.pop();
-
-    //Draw legs
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.75, 0.045, 0.30));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.12, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.95, 0.045, 0.30));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.12, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.75, 0.045, 0.70));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.12, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.95, 0.045, 0.70));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.03, 0.12, 0.03));
-    setMeshUniforms(modelViewStack.top());
-    cube.render();
-    modelViewStack.pop();
-
-}
-
-GLfloat fan_ambient[] = { 1.0f, 0.2f, 0.0f, 0.0f };
-GLfloat fan_diffuse[] = { 1.0f, 0.2f, 0.0f, 0.0f };
-GLfloat fan_specular[] = { 1.0f, 0.2f, 0.0f, 0.0f };
-GLfloat fan_shininess = 50.0f;
-
-float fanAngle = 0.0;
-const float ANGLE_STEP = 2 * 3.14 / 10;
-void drawFan(GLuint renderingProgram) {
-    // Initial position
-    glm::vec3 fanPosition = glm::vec3(-0.85, 0.03, -0.1);
-
-    setMeshMaterial(renderingProgram, fan_ambient, fan_diffuse, fan_specular, fan_shininess);
-
-    // Base
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.08, 0.02, 0.08));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
-    setMeshUniforms(modelViewStack.top());
-    cylinder.render();
-    modelViewStack.pop();
-
-    // Connecting rod
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, -0.5, 0.02));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
-    setMeshUniforms(modelViewStack.top());
-    cylinder.render();
-    modelViewStack.pop();
-
-    // Sphere connecting fins
-    modelViewStack.push(modelViewStack.top());
-    fanPosition.y += 0.45f;
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), fanPosition);
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(96.0f), glm::vec3(0, 1, 0));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.04, 0.04, 0.04));
-    setMeshUniforms(modelViewStack.top());
-    sphere.render();
-
-    // Fins
-    setMeshMaterial(renderingProgram, Utils::silverAmbient(), Utils::silverDiffuse(), Utils::silverSpecular(), 100.0f);
-    modelViewStack.push(modelViewStack.top());
-    float currentAngle = fanAngle;
-    for (int i = 0; i < FAN_FIN_COUNT; i++) {
-        modelViewStack.push(modelViewStack.top());
-        modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(currentAngle), glm::vec3(0, 0, 1));
-        modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0, +.8));
-        modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(3.5, 0.5, 0.05));
-        setMeshUniforms(modelViewStack.top());
-        sphere.render();
-        modelViewStack.pop();
-        currentAngle += 360.0 / (float)FAN_FIN_COUNT;
+    // Set default pixel values
+    for (int i = 0; i < WINDOW_HEIGHT; i++) {
+        for (int j = 0; j < WINDOW_WIDTH; j++) {
+            // Iterate through texture and manually set its RGBA values
+            int pixelNum = i * WINDOW_WIDTH * 4 * j * 4;
+            displayRenderTexture[pixelNum + 0] = 250;
+            displayRenderTexture[pixelNum + 1] = 128;
+            displayRenderTexture[pixelNum + 2] = 255;
+            displayRenderTexture[pixelNum + 3] = 255;
+        }
     }
-    modelViewStack.pop();
-    modelViewStack.pop();
 
-    // Change sign to change direction
-    fanAngle += ANGLE_STEP * FanSpeed;
-}
+    // Create texture for OpenGL to process in buffers
+    glGenTextures(1, &displayRenderTextureId);
+    glBindTexture(GL_TEXTURE_2D, displayRenderTextureId);
 
-GLfloat lamp_base_ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-GLfloat lamp_base_diffuse[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-GLfloat lamp_base_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat lamp_base_shininess = 100.0f;
-GLfloat lamp_shade_ambient[] = { 0.2f, 0.2f, 0.0f, 1.0f };
-GLfloat lamp_shade_diffuse[] = { 1.0f, 1.0f, 0.6f, 1.0f };
-GLfloat lamp_shade_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat lamp_shade_shininess = 50.0f;
-void drawLamp(GLuint renderingProgram) {
-    setMeshMaterial(renderingProgram, lamp_base_ambient, lamp_base_diffuse, lamp_base_specular, lamp_base_shininess);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, displayRenderTexture);
 
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.25, -0.7));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.08, 0.02, 0.08));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
-    setMeshUniforms(modelViewStack.top());
-    cylinder.render();
-    modelViewStack.pop();
+    // Creating Fullscreen Quad Vertices and texture coordinates
+    const float windowQuadVerts[] =
+    { -1.0f, 1.0f, 0.3f,  -1.0f,-1.0f, 0.3f,  1.0f, -1.0f, 0.3f,
+        1.0f, -1.0f, 0.3f,  1.0f,  1.0f, 0.3f,  -1.0f,  1.0f, 0.3f
+    };
+    const float windowQuadUVs[] =
+    { 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f
+    };
 
-    modelViewStack.push(modelViewStack.top());
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(-0.65, 0.50, -0.7));
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.02, 0.25, 0.02));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
-    setMeshUniforms(modelViewStack.top());
-    cylinder.render();
-    modelViewStack.pop();
-
-    setMeshMaterial(renderingProgram, lamp_shade_ambient, lamp_shade_diffuse, lamp_shade_specular, lamp_shade_shininess);
-    modelViewStack.push(modelViewStack.top());
-    lightPosition = glm::vec3(-0.65, 0.50, -0.7);
-    modelViewStack.top() *= glm::translate(glm::mat4(1.0f), lightPosition);
-    modelViewStack.top() *= glm::scale(glm::mat4(1.0f), glm::vec3(0.18, 0.20, 0.18));
-    modelViewStack.top() *= glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    setMeshUniforms(modelViewStack.top());
-    cone.render();
-    modelViewStack.pop();
-}
-
-// This method is the main rendering function for the scene.  It is called every frame
-// to allow animation of the fan.
-void displayScene(GLuint renderingProgram) {
-    // Set refresh buffers
-    glClearColor(0.05f, 0.05f, 0.2f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(renderingProgram);
-
-    modelViewLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
-	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
-    normLoc = glGetUniformLocation(renderingProgram, "norm_matrix");
-
-    // Build matrices for shader computation
-    viewMatrix = glm::lookAt(glm::vec3(EyeX, EyeY, EyeZ), glm::vec3(0.0, 0.3, 0.0), glm::vec3(0.0, 1.0, 0.0));
-    modelViewStack.push(viewMatrix);
-
-    displayLights(renderingProgram, viewMatrix);
-
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMatrix));
-
-    setMeshMaterial(renderingProgram, floor_ambient, floor_diffuse, floor_specular, 0.0f);
-    drawFloor();
-
-	setMeshMaterial(renderingProgram, walls_ambient, walls_diffuse, walls_specular, walls_shininess);
-    drawWalls();
-
-	setMeshMaterial(renderingProgram, sofa_ambient, sofa_diffuse, sofa_specular, sofa_shininess);
-    drawSofa();
-
-	setMeshMaterial(renderingProgram, table_ambient, table_diffuse, table_specular, table_shininess);
-    drawCoffeeTable();
-
-    // Uses multiple materials
-    drawFan(renderingProgram);
-
-    setMeshMaterial(renderingProgram, table_ambient, table_diffuse, table_specular, table_shininess);
-    drawChinaCabinet();
-
-    setMeshMaterial(renderingProgram, table_ambient, table_diffuse, table_specular, table_shininess);
-    drawEndTable();
-
-    // Uses multiple materials
-    drawLamp(renderingProgram);
-
-    modelViewStack.pop(); // For view matrix
-}
-
-GLuint init(GLFWwindow* appWindow) {
-    GLuint renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    int width = WINDOW_WIDTH;
-    int height = WINDOW_HEIGHT;
-    glfwGetFramebufferSize(appWindow, &width, &height);
-
-    aspectRatio = width / height;
-    double winHt = 1.0;  //half-height of the window
-    projMatrix = glm::ortho(-winHt * aspectRatio * ScaleFactor, winHt * aspectRatio * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
-
+    // Bind vertices and texture UVs to buffers
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
+    glGenBuffers(2, VBO);
 
-    cube = Cube(1.0);
-    sphere = Sphere(1.0, 20, 20);
-    cylinder = Cylinder(1.0, 1.0, 20, 10);
-    cone = Cone(1.0, 1.0, 10, 10);
+    // For vertices
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(windowQuadVerts), windowQuadVerts, GL_STATIC_DRAW);
+    // For texture UVs
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]); 
+    glBufferData(GL_ARRAY_BUFFER, sizeof(windowQuadUVs), windowQuadUVs, GL_STATIC_DRAW);
 
-    return renderingProgram;
+    raytraceComputeShader = Utils::createShaderProgram("raytraceComputeShader.glsl");
+    screenQuadShader = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 }
 
 void windowSizeCallback(GLFWwindow* win, int newWidth, int newHeight) {
-    aspectRatio = newWidth / newHeight;
-    double winHt = 1.0;  //half-height of the window
-    projMatrix = glm::ortho(-winHt * aspectRatio * ScaleFactor, winHt * aspectRatio * ScaleFactor, -winHt * ScaleFactor, winHt * ScaleFactor, 0.1, 100.0);
+    glViewport(0, 0, newWidth, newHeight);
 }
 
 int main(int, char**) {
@@ -614,17 +131,12 @@ int main(int, char**) {
 
     glfwSetWindowSizeCallback(appWindow, windowSizeCallback);
 
-    GLuint shaderProgram = init(appWindow);
+    init();
 
-    glClearColor(0.05f, 0.05f, 0.2f, 0.0f);  // background is light gray
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    glfwSetKeyCallback(appWindow, keyboardListener);
-
-    glUseProgram(shaderProgram);
+    glUseProgram(raytraceComputeShader);
 
     while (!glfwWindowShouldClose(appWindow)) {
-        displayScene(shaderProgram);
+        displayScene();
         glfwSwapBuffers(appWindow);
         glfwPollEvents();
     }
