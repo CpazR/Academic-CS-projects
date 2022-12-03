@@ -82,7 +82,7 @@ Object[] objects = {
 	// Ceiling light builb
 	{
 		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(0.0, 7.0, 0.0),
-		true, true, false, vec3(1.0, 1.0, 1.0), 0.05, 10, 1.5,
+		true, true, false, vec3(0.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
 	// Corner table
@@ -105,7 +105,7 @@ Object[] objects = {
 	// Corner lamp light builb
 	{
 		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-5.3, 3.5, -5.2),
-		true, true, false, vec3(1.0, 1.0, 1.0), 0.05, 2, 1.5,
+		true, true, false, vec3(0.0), 0.05, 2, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
 	// Glass ball base
@@ -117,7 +117,7 @@ Object[] objects = {
 	// Glass ball
 	{
 		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-0.3, 2.0, -0.7),
-		true, false, true, vec3(1.0, 1.0, 1.0), 1, 0, 0,
+		true, false, false, vec3(1.0, 1.0, 1.0), 1, 0, 0,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
 };
@@ -129,8 +129,8 @@ vec3 pointLight_position = world_origin + vec3(0.0, 6.4, 0.0);
 
 // ---------------------------------------------------------------------------------------
 
-struct Ray
-{	vec3 start;	// origin of the ray
+struct Ray {
+	vec3 start;	// origin of the ray
 	vec3 dir;	// normalized direction of the ray
 };
 
@@ -142,8 +142,8 @@ vec4 pointLight_ambient = vec4(0.0, 0.0, 0.0, 1.0);
 vec4 pointLight_diffuse = vec4(0.7, 0.7, 0.7, 1.0);
 vec4 pointLight_specular = vec4(1.0, 1.0, 1.0, 1.0);
 
-struct Collision
-{	float t;	// value at which this collision occurs for a ray
+struct Collision {
+	float t;	// value at which this collision occurs for a ray
 	vec3 p;		// The world position of the collision
 	vec3 n;		// the normal of the collision
 	bool inside;	// whether the ray started inside the object and collided while exiting
@@ -154,8 +154,8 @@ struct Collision
 
 // -------------- RECURSIVE SECTION
 
-struct Stack_Element
-{	int type;	// The type of ray ( 1 = reflected, 2 = refracted )
+struct Stack_Element {
+	int type;	// The type of ray ( 1 = reflected, 2 = refracted )
 	int depth;	// The depth of the recursive raytrace
 	int phase;	// Keeps track of what phase each recursive call is at (each call is broken down into five phases)
 	vec3 phong_color;		// Contains the Phong ADS model color
@@ -180,31 +180,31 @@ Stack_Element popped_stack_element;	// Holds the last popped element from the st
 
 // --------------- END RECURSIVE SECTION
 
-mat4 buildTranslate(float x, float y, float z)
-{	return mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0);
+mat4 buildTranslate(float x, float y, float z) {
+	return mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0);
 }
-mat4 buildRotateX(float rad)
-{	return mat4(1.0,0.0,0.0,0.0,0.0,cos(rad),sin(rad),0.0,0.0,-sin(rad),cos(rad),0.0,0.0,0.0,0.0,1.0);
+mat4 buildRotateX(float rad) {
+	return mat4(1.0,0.0,0.0,0.0,0.0,cos(rad),sin(rad),0.0,0.0,-sin(rad),cos(rad),0.0,0.0,0.0,0.0,1.0);
 }
-mat4 buildRotateY(float rad)
-{	return mat4(cos(rad),0.0,-sin(rad),0.0,0.0,1.0,0.0,0.0,sin(rad),0.0,cos(rad),0.0,0.0,0.0,0.0,1.0);
+mat4 buildRotateY(float rad) {
+	return mat4(cos(rad),0.0,-sin(rad),0.0,0.0,1.0,0.0,0.0,sin(rad),0.0,cos(rad),0.0,0.0,0.0,0.0,1.0);
 }
-mat4 buildRotateZ(float rad)
-{	return mat4(cos(rad),sin(rad),0.0,0.0,-sin(rad),cos(rad),0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
+mat4 buildRotateZ(float rad) {
+	return mat4(cos(rad),sin(rad),0.0,0.0,-sin(rad),cos(rad),0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0);
 }
 
 // -------------------------------------------------------------
 // This function generates a procedural checkerboard texture
 // tileScale specifies the number of squares along the longest axis
 // -------------------------------------------------------------
-vec3 checkerboard(vec2 tc)
-{	float tileScale = 24.0;
+vec3 checkerboard(vec2 tc) {
+	float tileScale = 24.0;
 	float tile = mod(floor(tc.x * tileScale) + floor(tc.y * tileScale), 2.0);
 	return tile * vec3(1,1,1);
 }
 
-vec3 getTextureColor(int index, vec2 tc)
-{	// must be customized for this scene
+vec3 getTextureColor(int index, vec2 tc) {
+	// must be customized for this scene
 	if (index==1) return (checkerboard(tc)).xyz;
 	else if (index==3) return (checkerboard(tc)).xyz;
 	else return vec3(1,.7,.7);
@@ -213,8 +213,8 @@ vec3 getTextureColor(int index, vec2 tc)
 //------------------------------------------------------------------------------
 // Checks if Ray r intersects the Plane
 //------------------------------------------------------------------------------
-Collision intersect_plane_object(Ray r, Object o)
-{	// Compute the planes's local-space to world-space transform matrices, and their inverse
+Collision intersect_plane_object(Ray r, Object o) {
+	// Compute the planes's local-space to world-space transform matrices, and their inverse
 	mat4 local_to_worldT = buildTranslate((o.position).x, (o.position).y, (o.position).z);
 	mat4 local_to_worldR =
 		buildRotateY(DEG_TO_RAD*o.rot.y) * buildRotateX(DEG_TO_RAD*o.rot.x) * buildRotateZ(DEG_TO_RAD*o.rot.z);
@@ -239,8 +239,8 @@ Collision intersect_plane_object(Ray r, Object o)
 	vec3 intersectPoint = ray_start + c.t * ray_dir;
 	
 	// If the ray didn't intersect the plane object, return a negative t value
-	if ((abs(intersectPoint.x) > (((o.mins).x)/2.0)) || (abs(intersectPoint.z) > (((o.mins).z)/2.0)))
-	{	c.t = -1.0;
+	if ((abs(intersectPoint.x) > (((o.mins).x)/2.0)) || (abs(intersectPoint.z) > (((o.mins).z)/2.0))) {
+		c.t = -1.0;
 		return c;
 	}
 
@@ -264,8 +264,8 @@ Collision intersect_plane_object(Ray r, Object o)
 // This implementation is based on the following algorithm:
 // http://web.cse.ohio-state.edu/~shen.94/681/Site/Slides_files/basic_algo.pdf
 //------------------------------------------------------------------------------
-Collision intersect_box_object(Ray r, Object o)
-{	// Compute the box's local-space to world-space transform matrices, and their inverse
+Collision intersect_box_object(Ray r, Object o) {
+	// Compute the box's local-space to world-space transform matrices, and their inverse
 	mat4 local_to_worldT = buildTranslate((o.position).x, (o.position).y, (o.position).z);
 	mat4 local_to_worldR =
 		buildRotateY(DEG_TO_RAD*o.rot.y) * buildRotateX(DEG_TO_RAD*o.rot.x) * buildRotateZ(DEG_TO_RAD*o.rot.z);
@@ -294,8 +294,8 @@ Collision intersect_box_object(Ray r, Object o)
 	// The ray intersects the box if and only if t_near < t_far, and if t_far > 0.0
 	
 	// If the ray didn't intersect the box, return a negative t value
-	if(t_near >= t_far || t_far <= 0.0)
-	{	c.t = -1.0;
+	if(t_near >= t_far || t_far <= 0.0)	{
+		c.t = -1.0;
 		return c;
 	}
 
@@ -303,8 +303,8 @@ Collision intersect_box_object(Ray r, Object o)
 	vec3 plane_intersect_distances = t_minDist;
 
 	// if t_near < 0, then the ray started inside the box and left the box
-	if( t_near < 0.0)
-	{	c.t = t_far;
+	if( t_near < 0.0) {
+		c.t = t_far;
 		intersect_distance = t_far;
 		plane_intersect_distances = t_maxDist;
 		c.inside = true;
@@ -355,8 +355,8 @@ Collision intersect_box_object(Ray r, Object o)
 // Essentially the same as box_object computation, but with different texture coordinates
 // should be combined.
 //------------------------------------------------------------------------------
-Collision intersect_room_box_object(Ray r)
-{	// Calculate the box's world mins and maxs:
+Collision intersect_room_box_object(Ray r) {
+	// Calculate the box's world mins and maxs:
 	vec3 t_min = (objects[0].mins - r.start) / r.dir;
 	vec3 t_max = (objects[0].maxs - r.start) / r.dir;
 	vec3 t1 = min(t_min, t_max);
@@ -373,8 +373,8 @@ Collision intersect_room_box_object(Ray r)
 	// The ray intersects the box if and only if t_near < t_far, and if t_far > 0.0
 	
 	// If the ray didn't intersect the box, return a negative t value
-	if(t_near >= t_far || t_far <= 0.0)
-	{	c.t = -1.0;
+	if(t_near >= t_far || t_far <= 0.0) {
+		c.t = -1.0;
 		return c;
 	}
 
@@ -382,8 +382,8 @@ Collision intersect_room_box_object(Ray r)
 	vec3 boundary = t1;
 
 	// if t_near < 0, then the ray started inside the box and left the box
-	if( t_near < 0.0)
-	{	c.t = t_far;
+	if( t_near < 0.0) {
+		c.t = t_far;
 		intersection = t_far;
 		boundary = t2;
 		c.inside = true;
@@ -445,8 +445,8 @@ Collision intersect_room_box_object(Ray r)
 // This implementation is based on the following algorithm:
 // http://web.cse.ohio-state.edu/~shen.94/681/Site/Slides_files/basic_algo.pdf
 //------------------------------------------------------------------------------
-Collision intersect_sphere_object(Ray r, Object o)
-{	float qa = dot(r.dir, r.dir);
+Collision intersect_sphere_object(Ray r, Object o) {
+	float qa = dot(r.dir, r.dir);
 	float qb = dot(2*r.dir, r.start-o.position);
 	float qc = dot(r.start-o.position, r.start-o.position) - o.radius*o.radius;
 
@@ -456,8 +456,9 @@ Collision intersect_sphere_object(Ray r, Object o)
 	Collision c;
 	c.inside = false;
 
-	if(qd < 0.0)	// no solution in this case
-	{	c.t = -1.0;
+	// no solution in this case
+	if(qd < 0.0) {
+		c.t = -1.0;
 		return c;
 	}
 
@@ -469,21 +470,24 @@ Collision intersect_sphere_object(Ray r, Object o)
 
 	c.t = t_near;
 
-	if(t_far < 0.0)		// sphere is behind the ray, no intersection
-	{	c.t = -1.0;
+	// sphere is behind the ray, no intersection
+	if(t_far < 0.0)	{
+		c.t = -1.0;
 		return c;
 	}
 
-	if(t_near < 0.0)	// the ray started inside the sphere
-	{	c.t = t_far;
+	// the ray started inside the sphere
+	if(t_near < 0.0) {
+		c.t = t_far;
 		c.inside = true;
 	}
 
 	c.p = r.start + c.t * r.dir;	// world position of the collision
 	c.n = normalize(c.p - o.position);	// use the world position to compute the surface normal
 
-	if(c.inside)	// if collision is leaving the sphere, flip the normal
-	{	c.n *= -1.0;
+	// if collision is leaving the sphere, flip the normal
+	if(c.inside) {
+		c.n *= -1.0;
 	}
 	
 	// compute texture coordinates based on normal
@@ -499,37 +503,38 @@ Collision intersect_sphere_object(Ray r, Object o)
 // object_index == 0 if collision with room box
 // object_index > 0 if collision with another object
 //------------------------------------------------------------------------------
-Collision get_closest_collision(Ray r)
-{	float closest = FLT_MAX; // initialize to a very large number
+Collision get_closest_collision(Ray r) {
+	float closest = FLT_MAX; // initialize to a very large number
 	Collision closest_collision;
 	closest_collision.object_index = -1;
 	
-	for (int i=0; i<numObjects; i++)
-	{	Collision c;
+	for (int i=0; i<numObjects; i++){
+		Collision c;
 		
-		if (objects[i].type == 0)
-		{	c = intersect_room_box_object(r);
+		if (objects[i].type == 0) {
+			c = intersect_room_box_object(r);
 			if (c.t <= 0) continue;
 		}
-		else if (objects[i].type == 1)
-		{	c = intersect_sphere_object(r, objects[i]);
+		else if (objects[i].type == 1) {
+			c = intersect_sphere_object(r, objects[i]);
 			if (c.t <= 0) continue;
 		}
-		else if (objects[i].type == 2)
-		{	c = intersect_box_object(r, objects[i]);
+		else if (objects[i].type == 2) {
+			c = intersect_box_object(r, objects[i]);
 			if (c.t <= 0) continue;
 		}
-		else if (objects[i].type == 3)
-		{	c = intersect_plane_object(r, objects[i]);
+		else if (objects[i].type == 3) {
+			c = intersect_plane_object(r, objects[i]);
 			if (c.t <= 0) continue;
 		}
 		else continue;
 		
-		if (c.t < closest)
-		{	closest = c.t;
+		if (c.t < closest) {
+			closest = c.t;
 			closest_collision = c;
 			closest_collision.object_index = i;
-	}	}
+		}
+	}
 	return closest_collision;	
 }
 
@@ -537,8 +542,8 @@ Collision get_closest_collision(Ray r)
 // Computes the Ambient Diffuse Specular (ADS) Phong lighting for an
 // incident Ray r at the surface of the object.  Returns the color.
 //------------------------------------------------------------------------------
-vec3 ads_phong_lighting(Ray r, Collision c)
-{	// add the contribution from the ambient and positional lights
+vec3 ads_phong_lighting(Ray r, Collision c) {
+	// add the contribution from the ambient and positional lights
 	vec4 ambient = worldAmb_ambient + pointLight_ambient * objects[c.object_index].ambient;
 	
 	// initialize diffuse and specular contributions
@@ -555,13 +560,13 @@ vec3 ads_phong_lighting(Ray r, Collision c)
 	Collision c_shadow = get_closest_collision(light_ray);
 
 	// If the ray hit an object and if the hit occurred between the surface and the light
-	if((c_shadow.object_index != -1) && c_shadow.t < length(pointLight_position - c.p))
-	{	in_shadow = true;
+	if((c_shadow.object_index != -1) && c_shadow.t < length(pointLight_position - c.p))	{
+		in_shadow = true;
 	}
 
 	// If this surface is in shadow, don't add diffuse and specular components
-	if (in_shadow == false)	// comment out this line to disable shadows
-	{	// Computing the light's reflection on the surface
+	if (in_shadow == false)	{
+		// Computing the light's reflection on the surface
 		vec3 light_dir = normalize(pointLight_position - c.p);
 		vec3 light_ref = normalize(reflect(-light_dir, c.n));
 		float cos_theta = dot(light_dir, c.n);
@@ -581,8 +586,8 @@ vec3 ads_phong_lighting(Ray r, Collision c)
 //------------------------------------------------------------------------------
 // Schedules a new raytrace by adding it to the top of the stack
 //------------------------------------------------------------------------------
-void push(Ray r, int depth, int type)
-{	if(stack_pointer >= stack_size-1)  return;
+void push(Ray r, int depth, int type) {
+	if(stack_pointer >= stack_size-1)  return;
 
 	Stack_Element element;
 	element = null_stack_element;
@@ -598,8 +603,8 @@ void push(Ray r, int depth, int type)
 //------------------------------------------------------------------------------
 // Removes the topmost stack element
 //------------------------------------------------------------------------------
-Stack_Element pop()
-{	// Store the element we're removing in top_stack_element
+Stack_Element pop() {
+	// Store the element we're removing in top_stack_element
 	Stack_Element top_stack_element = stack[stack_pointer];
 	
 	// Erase the element from the stack
@@ -612,12 +617,11 @@ Stack_Element pop()
 // This function processes the stack element at a given index
 // This function is guaranteed to be ran on the topmost stack element
 //------------------------------------------------------------------------------
-void process_stack_element(int index)
-{
+void process_stack_element(int index) {
 	// If there is a popped_stack_element that just ran, it holds one of our values
 	// Store it and delete it
-	if(popped_stack_element != null_stack_element)
-	{	if(popped_stack_element.type == RAY_TYPE_REFLECTION)
+	if(popped_stack_element != null_stack_element) {
+		if(popped_stack_element.type == RAY_TYPE_REFLECTION)
 			stack[index].reflected_color = popped_stack_element.final_color;
 		else if(popped_stack_element.type == RAY_TYPE_REFRACTION)
 			stack[index].refracted_color = popped_stack_element.final_color;
@@ -628,8 +632,8 @@ void process_stack_element(int index)
 	Collision c = stack[index].collision;
 
 	// Iterate through the raytrace phases (explained below)
-	switch (stack[index].phase)
-	{	//=================================================
+	switch (stack[index].phase) {
+		//=================================================
 		// PHASE 1 - Raytrace Collision Detection
 		//=================================================
 		case 1:
@@ -648,24 +652,25 @@ void process_stack_element(int index)
 		//=================================================
 		case 3:
 			// Only make recursive raytrace passes if we're not at max depth
-			if(stack[index].depth < max_depth)
-			{	if (objects[c.object_index].isReflective)
-				{	Ray reflected_ray;
+			if(stack[index].depth < max_depth) {
+				if (objects[c.object_index].isReflective) {
+					Ray reflected_ray;
 					reflected_ray.start = c.p + c.n * 0.001;
 					reflected_ray.dir = reflect(r.dir, c.n);
 				
 					// Add a raytrace for that ray to the stack
 					push(reflected_ray, stack[index].depth+1, RAY_TYPE_REFLECTION);
-			}	}
+				}
+			}
 			break;
 		//=================================================
 		// PHASE 4 - Refraction Transparency Pass Computation
 		//=================================================
 		case 4:
 			// Only make recursive raytrace passes if we're not at max depth
-			if(stack[index].depth < max_depth)
-			{	if (objects[c.object_index].isTransparent)
-				{	Ray refracted_ray;
+			if(stack[index].depth < max_depth) {
+				if (objects[c.object_index].isTransparent) {
+					Ray refracted_ray;
 					refracted_ray.start = c.p - c.n * 0.001;
 					float refraction_ratio = 1.0 / objects[c.object_index].IOR;
 					if (c.inside) refraction_ratio = 1.0 / refraction_ratio;
@@ -673,7 +678,8 @@ void process_stack_element(int index)
 			
 					// Add a raytrace for that ray to the stack
 					push(refracted_ray, stack[index].depth+1, RAY_TYPE_REFRACTION);
-			}	}
+				}
+			}
 			break;
 		//=================================================
 		// PHASE 5 - Mixing to produce the final color
@@ -709,7 +715,10 @@ void process_stack_element(int index)
 		//=================================================
 		// If all five phases completed, pop stack and terminate recursion
 		//=================================================
-		case 6: { popped_stack_element = pop(); return; }
+		case 6:{
+			popped_stack_element = pop();
+			return;
+		}
 	}
 	stack[index].phase++;
 	return;	// Only process one phase per process_stack_element() invocation
@@ -718,13 +727,13 @@ void process_stack_element(int index)
 //------------------------------------------------------------------------------
 // This function emulates recursive calls to raytrace for any desired depth
 //------------------------------------------------------------------------------
-vec3 raytrace(Ray r)
-{	// Add a raytrace to the stack
+vec3 raytrace(Ray r) {
+	// Add a raytrace to the stack
 	push(r, 0, RAY_TYPE_REFLECTION);
 
 	// Process the stack until it's empty
-	while (stack_pointer >= 0)
-	{	int element_index = stack_pointer;	// Peek at the topmost stack element
+	while (stack_pointer >= 0) {
+		int element_index = stack_pointer;	// Peek at the topmost stack element
 		process_stack_element(element_index);	// Process this stack element
 	}
 
@@ -733,8 +742,8 @@ vec3 raytrace(Ray r)
 }
 // ==========  END RECURSIVE SECTION ==================
 
-void main()
-{	int width = int(gl_NumWorkGroups.x);
+void main() {
+	int width = int(gl_NumWorkGroups.x);
 	int height = int(gl_NumWorkGroups.y);
 	ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
 
