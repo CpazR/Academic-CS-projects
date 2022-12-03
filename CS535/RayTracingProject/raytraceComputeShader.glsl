@@ -27,13 +27,22 @@ struct Object {
 	float     shininess;       // shininess
 };
 
-vec3 world_origin = vec3(0, -2.5, 0);
+vec3 world_origin = vec3(0, -3, -1);
+
+const float mirrorFrameSize = 5.0;
+const float tableWindowSize = 2.5;
+const float glassTableSize = 2.0;
+const float glassTableLegSize = .2;
+const float fanFinSize = .1;
 
 // Rough recreation of room from project 2 with new furnature.
 Object[] objects = {
+	/// ---
+	/// Main room
+	/// ---
 	// Room walls
 	{
-		2, 0.0, vec3(-20, -20, -20), vec3( 20, 20, 20), vec3(0.0, 45.0, 0.0), world_origin + vec3(0),
+		2, 0.0, vec3(-10, -10, -10), vec3( 10, 10, 10), vec3(0.0, 45.0, 0.0), world_origin + vec3(0),
 		true, false, true, vec3(0.25, 0.25, 0.25), 0, 0, 0,
 		vec4(0.2, 0.2, 0.2, 1.0), vec4(0.9, 0.9, 0.9, 1.0), vec4(1,1,1,1), 20.0
 	},
@@ -43,113 +52,200 @@ Object[] objects = {
 		true, false, true, vec3(.50, .25, .0), 0.0, 0.0, 0.0,
 		vec4(0.3, 0.3, 0.2, 1.0), vec4(0.3, 0.3, 0.4, 1.0), vec4(0.0, 0.0, 0.0, 1.0), 50.0
 	},
-	// Glass table
+	// Rug under table
 	{
-		2, 0.0, vec3(-2.0, 0.0, -2.0), vec3(2.0, 0.5, 2.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 1.0, 0.0),
-		true, true, true, vec3(1.0, 1.0, 1.0), 0.8, 0.8, 1.5,
+		3, 0.0, vec3(5.5, 0, 5.5), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.01, 0.0),
+		true, false, true, vec3(.25, .75, .50), 0.0, 0.0, 0.0,
+		vec4(0.3, 0.3, 0.2, 1.0), vec4(0.3, 0.3, 0.4, 1.0), vec4(0.0, 0.0, 0.0, 1.0), 50.0
+	},
+
+	/// ---
+	/// Table
+	/// ---
+	// Glass body
+	{
+		2, 0.0, vec3(-glassTableSize, 0.0, -glassTableSize), vec3(glassTableSize, 0.5, glassTableSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 1.0, 0.0),
+		true, true, true, vec3(.75, .25, .0), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
-	// Glass table leg 1/4
+	// Leg 1/4
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, -2.0),
+		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, -2.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Glass table leg 2/4
+	// Leg 2/4
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 2.0),
+		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 2.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Glass table leg 3/4
+	// Leg 3/4
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(-2.0, 0.0, 0.0),
+		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(-2.0, 0.0, 0.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Glass table leg 4/4
+	// Leg 4/4
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, 0.0),
+		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, 0.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Ceiling light fixture
+
+	/// ---
+	/// Ceiling lights
+	/// ---
+	// Fixture #1
 	{
-		2, 0.0, vec3(-1.0, 0.0, -1.0), vec3(1.0, 0.4, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 7.0, 0.0),
+		2, 0.0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
 		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Ceiling light builb
+	// Fixture pole #1
 	{
-		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(0.0, 7.0, 0.0),
+		2, 0.0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
+		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
+	},
+	// Builb #1
+	{
+		1, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
 		true, true, false, vec3(0.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
-	// Corner table
+	// Fixture #2
 	{
-		2, 0.0, vec3(-1.0, -0.2, -1.0), vec3(1.0, 0, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(-5.0, 2.0, -5.0),
-		true, false, true, vec3(.75, .40, .0), 0.8, 0.8, 1.5,
-		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+		2, 0.0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
+	// Fixture pole #2
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 2, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(-5.0, 0.0, -5.0),
-		true, false, true, vec3(.60, .30, .0), 0.8, 0.8, 1.5,
-		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+		2, 0.0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
-	// Corner lamp
+	// Builb #2
 	{
-		2, 0.0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 1, 0.15), vec3(0.0, 0.0, 0.0), world_origin + vec3(-5.3, 2.0, -5.2),
-		true, false, true, vec3(.25, .40, .50), 0.8, 0.8, 1.5,
-		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
-	},
-	// Corner lamp light builb
-	{
-		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-5.3, 3.5, -5.2),
-		true, true, false, vec3(0.0), 0.05, 2, 1.5,
+		1, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		true, true, false, vec3(0.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
-	// Glass ball base
+
+	/// ---
+	/// Corner table
+	/// ---
 	{
-		2, 0, vec3(-.4, 0, -.4), vec3(.4, .5, .4), vec3(0.0, 67.0, 0.0), world_origin + vec3(-0.3, 1, -0.7),
-		true, false, true, vec3(1.0, 1.0, 1.0), 0, 0, 0,
+		2, 0.0, vec3(-1.0, -0.2, -1.0), vec3(1.0, 0, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.0, 2.0, -5.0),
+		true, false, true, vec3(.75, .40, .0), 0.0, 0.0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
-	// Glass ball
 	{
-		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-0.3, 2.0, -0.7),
-		true, false, false, vec3(1.0, 1.0, 1.0), 1, 0, 0,
-		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
+		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 2, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.0, 0.0, -5.0),
+		true, false, true, vec3(.60, .30, .0), 0.0, 0.0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+
+	/// ---
+	/// Table fan
+	/// ---
+	{
+		2, 0.0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 1.3, 0.15), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.3, 2.0, -5.2),
+		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	{
+		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(5.3, 3.5, -5.2),
+		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Fan fin 1/4
+	{
+		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Fan fin 2/4
+	{
+		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(90 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Fan fin 3/4
+	{
+		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(180 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Fan fin 3/4
+	{
+		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(270 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+
+	/// ---
+	/// Mirror
+	/// ---
+	{
+		2, 0.0,  vec3(-mirrorFrameSize, 0.0, -mirrorFrameSize), vec3(mirrorFrameSize, 0.25, mirrorFrameSize), vec3(90.0, 45.0, .0), world_origin + vec3(-5.0, 4.0, -6.0),
+		true, false, true, vec3(.5, .5, .5), 1, 0.0, 0,
+		vec4(1, 1, 1, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+
+	/// ---
+	/// Window displaying table
+	/// ---
+	{
+		2, 0.0,  vec3(-tableWindowSize, 0.0, -tableWindowSize), vec3(tableWindowSize, 0.25, tableWindowSize), vec3(90.0, -45.0, .0), world_origin + vec3(3.0, 3.0, -2.0),
+		false, true, true, vec3(.5, .5, .5), 0, 1.0, 1.5,
+		vec4(1, 1, 1, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 };
-int numObjects = 15;
-float camera_pos = 6.0;
+int numObjects = 24;
+float camera_pos = 7.0;
 const int max_depth = 4;
 const int stack_size = 100;
-vec3 pointLight_position = world_origin + vec3(0.0, 6.4, 0.0);
 
 // ---------------------------------------------------------------------------------------
-
-struct Ray {
-	vec3 start;	// origin of the ray
-	vec3 dir;	// normalized direction of the ray
-};
 
 const float PI = 3.14159265358;
 const float DEG_TO_RAD = PI / 180.0;
 
-vec4 worldAmb_ambient = vec4(0.3, 0.3, 0.3, 1.0);
-vec4 pointLight_ambient = vec4(0.0, 0.0, 0.0, 1.0);
-vec4 pointLight_diffuse = vec4(0.7, 0.7, 0.7, 1.0);
-vec4 pointLight_specular = vec4(1.0, 1.0, 1.0, 1.0);
+vec4 worldAmb_ambient = vec4(0.25, 0.25, 0.25, 1.0);
+// Point lights in scene
+const int LIGHTS_COUNT = 2;
+vec3 pointLight_position[LIGHTS_COUNT] = {
+	world_origin + vec3(-1, 6.4, 0.0),
+	world_origin + vec3(1, 6.4, 0.0),
+};
+vec4 pointLight_ambient[LIGHTS_COUNT] = {
+	vec4(0.0, 0.0, 0.0, 1.0),
+	vec4(0.0, 0.0, 0.0, 1.0),
+};
+vec4 pointLight_diffuse[LIGHTS_COUNT] = {
+	vec4(.2, .2, .2, 1.0),
+	vec4(.2, .2, .2, 1.0),
+};
+vec4 pointLight_specular[LIGHTS_COUNT] = {
+	vec4(.5, .5, .5, 1.0),
+	vec4(.2, .2, .2, 1.0),
+};
+
+struct Ray {
+	vec3 start;
+	vec3 dir;
+};
 
 struct Collision {
-	float t;	// value at which this collision occurs for a ray
-	vec3 p;		// The world position of the collision
-	vec3 n;		// the normal of the collision
-	bool inside;	// whether the ray started inside the object and collided while exiting
-	int object_index;	// The index of the object this collision hit
-	vec2 tc;	// texture coordinates
-	int face_index; // which box face (for room box)
+	float t;
+	vec3 p;
+	vec3 n;
+	bool inside;
+	int object_index;
+	vec2 tc;
+	int face_index;
 };
 
 // -------------- RECURSIVE SECTION
@@ -508,7 +604,7 @@ Collision get_closest_collision(Ray r) {
 	Collision closest_collision;
 	closest_collision.object_index = -1;
 	
-	for (int i=0; i<numObjects; i++){
+	for(int i=0; i<numObjects; i++) {
 		Collision c;
 		
 		if (objects[i].type == 0) {
@@ -542,38 +638,38 @@ Collision get_closest_collision(Ray r) {
 // Computes the Ambient Diffuse Specular (ADS) Phong lighting for an
 // incident Ray r at the surface of the object.  Returns the color.
 //------------------------------------------------------------------------------
-vec3 ads_phong_lighting(Ray r, Collision c) {
+vec3 ads_phong_lighting(Ray r, Collision c, int lightIndex) {
 	// add the contribution from the ambient and positional lights
-	vec4 ambient = worldAmb_ambient + pointLight_ambient * objects[c.object_index].ambient;
+	vec4 ambient = worldAmb_ambient + pointLight_ambient[lightIndex] * objects[c.object_index].ambient;
 	
 	// initialize diffuse and specular contributions
 	vec4 diffuse = vec4(0.0);
 	vec4 specular = vec4(0.0);
-
+	
 	// Check to see if any object is casting a shadow on this surface
 	Ray light_ray;
 	light_ray.start = c.p + c.n * 0.01;
-	light_ray.dir = normalize(pointLight_position - c.p);
+	light_ray.dir = normalize(pointLight_position[lightIndex] - c.p);
 	bool in_shadow = false;
 
 	// Cast the ray against the scene
 	Collision c_shadow = get_closest_collision(light_ray);
 
 	// If the ray hit an object and if the hit occurred between the surface and the light
-	if((c_shadow.object_index != -1) && c_shadow.t < length(pointLight_position - c.p))	{
+	if((c_shadow.object_index != -1) && c_shadow.t < length(pointLight_position[lightIndex] - c.p))	{
 		in_shadow = true;
 	}
 
 	// If this surface is in shadow, don't add diffuse and specular components
 	if (in_shadow == false)	{
 		// Computing the light's reflection on the surface
-		vec3 light_dir = normalize(pointLight_position - c.p);
+		vec3 light_dir = normalize(pointLight_position[lightIndex] - c.p);
 		vec3 light_ref = normalize(reflect(-light_dir, c.n));
 		float cos_theta = dot(light_dir, c.n);
 		float cos_phi = dot(normalize(-r.dir), light_ref);
 
-		diffuse = pointLight_diffuse * objects[c.object_index].diffuse * max(cos_theta, 0.0);
-		specular = pointLight_specular
+		diffuse = pointLight_diffuse[lightIndex] * objects[c.object_index].diffuse * max(cos_theta, 0.0);
+		specular = pointLight_specular[lightIndex]
 			* objects[c.object_index].specular
 			* pow(max(cos_phi, 0.0), objects[c.object_index].shininess);
 	}
@@ -645,7 +741,10 @@ void process_stack_element(int index) {
 		// PHASE 2 - Phong ADS Lighting Computation
 		//=================================================
 		case 2:
-			stack[index].phong_color = ads_phong_lighting(r, c);
+			stack[index].phong_color = vec3(0);
+			for (int li = 0; li < LIGHTS_COUNT; li++) {
+				stack[index].phong_color += ads_phong_lighting(r, c, li);
+			}
 			break;
 		//=================================================
 		// PHASE 3 - Reflection Bounce Pass Computation
