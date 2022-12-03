@@ -5,7 +5,6 @@
 
 layout (local_size_x = 1) in;
 layout (binding = 0, rgba8) uniform image2D output_texture;
-layout (binding = 1) uniform sampler2D sampMarble;
 
 // Based on compute shader object struct from example programs
 struct Object {
@@ -17,6 +16,7 @@ struct Object {
 	vec3      position;        // location of center of object
 	bool      isReflective;    // is object reflective?
 	bool      isTransparent;   // is object transparent?
+	bool      useColor;		   // not all objects need to utilize the color property, make it toggleable
 	vec3      color;           // color of object
 	float     reflectivity;    // reflection intensity
 	float     refractivity;    // transparency intensity
@@ -34,88 +34,94 @@ Object[] objects = {
 	// Room walls
 	{
 		2, 0.0, vec3(-20, -20, -20), vec3( 20, 20, 20), vec3(0.0, 45.0, 0.0), world_origin + vec3(0),
-		true, false, vec3(0.25, 0.25, 0.25), 0, 0, 0,
+		true, false, true, vec3(0.25, 0.25, 0.25), 0, 0, 0,
 		vec4(0.2, 0.2, 0.2, 1.0), vec4(0.9, 0.9, 0.9, 1.0), vec4(1,1,1,1), 20.0
 	},
 	// floor
 	{
 		3, 0.0, vec3(20, 0, 20), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 0.0),
-		false, false, vec3(.50, .25, .0), 0.0, 0.0, 0.0,
+		true, false, true, vec3(.50, .25, .0), 0.0, 0.0, 0.0,
 		vec4(0.3, 0.3, 0.2, 1.0), vec4(0.3, 0.3, 0.4, 1.0), vec4(0.0, 0.0, 0.0, 1.0), 50.0
 	},
 	// Glass table
 	{
 		2, 0.0, vec3(-2.0, 0.0, -2.0), vec3(2.0, 0.5, 2.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 1.0, 0.0),
-		true, true, vec3(1.0, 1.0, 1.0), 0.8, 0.8, 1.5,
+		true, true, true, vec3(1.0, 1.0, 1.0), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Glass table leg 1/4
 	{
 		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, -2.0),
-		false, false, vec3(.75, .25, .0), 0, 0, 0,
+		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Glass table leg 2/4
 	{
 		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 2.0),
-		false, false, vec3(.75, .25, .0), 0, 0, 0,
+		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Glass table leg 3/4
 	{
 		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(-2.0, 0.0, 0.0),
-		false, false, vec3(.75, .25, .0), 0, 0, 0,
+		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Glass table leg 4/4
 	{
 		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 1.0, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, 0.0),
-		false, false, vec3(.75, .25, .0), 0, 0, 0,
+		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Ceiling light fixture
 	{
 		2, 0.0, vec3(-1.0, 0.0, -1.0), vec3(1.0, 0.4, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 7.0, 0.0),
-		false, false, vec3(0.4, 0.4, 0.4), 0, 0, 0,
+		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Ceiling light builb
 	{
 		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(0.0, 7.0, 0.0),
-		true, true, vec3(1.0, 1.0, 1.0), 0.05, 10, 1.5,
+		true, true, false, vec3(1.0, 1.0, 1.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
 	// Corner table
 	{
 		2, 0.0, vec3(-1.0, -0.2, -1.0), vec3(1.0, 0, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(-5.0, 2.0, -5.0),
-		false, false, vec3(.75, .40, .0), 0.8, 0.8, 1.5,
+		true, false, true, vec3(.75, .40, .0), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	{
 		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 2, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(-5.0, 0.0, -5.0),
-		false, false, vec3(.60, .30, .0), 0.8, 0.8, 1.5,
+		true, false, true, vec3(.60, .30, .0), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Corner lamp
 	{
 		2, 0.0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 1, 0.15), vec3(0.0, 0.0, 0.0), world_origin + vec3(-5.3, 2.0, -5.2),
-		false, false, vec3(.25, .40, .50), 0.8, 0.8, 1.5,
+		true, false, true, vec3(.25, .40, .50), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Corner lamp light builb
 	{
 		1, 0.5, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-5.3, 3.5, -5.2),
-		true, true, vec3(1.0, 1.0, 1.0), 0.05, 2, 1.5,
+		true, true, false, vec3(1.0, 1.0, 1.0), 0.05, 2, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
+	},
+	// Glass ball base
+	{
+		2, 0, vec3(-.4, 0, -.4), vec3(.4, .5, .4), vec3(0.0, 67.0, 0.0), world_origin + vec3(-0.3, 1, -0.7),
+		true, false, true, vec3(1.0, 1.0, 1.0), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Glass ball
 	{
-		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-4.4, 2.5, -5.8),
-		true, false, vec3(1.0, 1.0, 1.0), 1, 0, 0,
+		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-0.3, 2.0, -0.7),
+		true, false, true, vec3(1.0, 1.0, 1.0), 1, 0, 0,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
-	}
+	},
 };
-int numObjects = 14;
+int numObjects = 15;
 float camera_pos = 6.0;
 const int max_depth = 4;
 const int stack_size = 100;
@@ -132,7 +138,7 @@ const float PI = 3.14159265358;
 const float DEG_TO_RAD = PI / 180.0;
 
 vec4 worldAmb_ambient = vec4(0.3, 0.3, 0.3, 1.0);
-vec4 pointLight_ambient = vec4(0.4, 0.4, 0.4, 1.0);
+vec4 pointLight_ambient = vec4(0.0, 0.0, 0.0, 1.0);
 vec4 pointLight_diffuse = vec4(0.7, 0.7, 0.7, 1.0);
 vec4 pointLight_specular = vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -200,7 +206,7 @@ vec3 checkerboard(vec2 tc)
 vec3 getTextureColor(int index, vec2 tc)
 {	// must be customized for this scene
 	if (index==1) return (checkerboard(tc)).xyz;
-	else if (index==3) return texture(sampMarble, tc).xyz;
+	else if (index==3) return (checkerboard(tc)).xyz;
 	else return vec3(1,.7,.7);
 }
 
@@ -677,7 +683,8 @@ void process_stack_element(int index)
 			if (c.object_index > 0) {				
 				// next, get object color if applicable
 				vec3 objColor = vec3(0.0);
-				objColor = objects[c.object_index].color;
+				if (objects[c.object_index].useColor)
+					objColor = objects[c.object_index].color;
 				
 				// then get reflected and refractive colors, if applicable
 				vec3 reflected_color = stack[index].reflected_color;
@@ -695,7 +702,8 @@ void process_stack_element(int index)
 				vec3 lightFactor = vec3(1.0);
 				if (objects[c.object_index].isReflective)
 					lightFactor = stack[index].phong_color;
-				stack[index].final_color = lightFactor * objects[c.object_index].color;
+				if (objects[c.object_index].useColor)
+					stack[index].final_color = lightFactor * objects[c.object_index].color;
 			}
 			break;
 		//=================================================
