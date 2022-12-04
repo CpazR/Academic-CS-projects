@@ -3,12 +3,16 @@
 #define FLT_MAX 3.402823466e+38
 #define FLT_MIN 1.175494351e-38
 
+#define SHAPE_SPHERE 0
+#define SHAPE_BOX 1
+#define SHAPE_PLANE 2
+
 layout (local_size_x = 1) in;
 layout (binding = 0, rgba8) uniform image2D output_texture;
 
 // Based on compute shader object struct from example programs
 struct Object {
-	int       type;            // 1=sphere, 2=box, 3=plane
+	int       type;            // See macros above for types of shapes
 	float     radius;          // if object is a sphere, determine radius
 	vec3      mins;            // if object is a box, inner bounds of volume
 	vec3      maxs;            // if object is a box, outer bounds of volume
@@ -34,6 +38,7 @@ const float tableWindowSize = 2.5;
 const float glassTableSize = 2.0;
 const float glassTableLegSize = .2;
 const float fanFinSize = .1;
+const float fanFinLength = 2.5;
 
 // Rough recreation of room from project 2 with new furnature.
 Object[] objects = {
@@ -42,19 +47,19 @@ Object[] objects = {
 	/// ---
 	// Room walls
 	{
-		2, 0.0, vec3(-10, -10, -10), vec3( 10, 10, 10), vec3(0.0, 45.0, 0.0), world_origin + vec3(0),
+		SHAPE_BOX, 0, vec3(-10, -10, -10), vec3( 10, 10, 10), vec3(0.0, 45.0, 0.0), world_origin + vec3(0),
 		true, false, true, vec3(0.25, 0.25, 0.25), 0, 0, 0,
 		vec4(0.2, 0.2, 0.2, 1.0), vec4(0.9, 0.9, 0.9, 1.0), vec4(1,1,1,1), 20.0
 	},
 	// floor
 	{
-		3, 0.0, vec3(20, 0, 20), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 0.0),
+		SHAPE_PLANE, 0, vec3(20, 0, 20), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 0.0),
 		true, false, true, vec3(.50, .25, .0), 0.0, 0.0, 0.0,
 		vec4(0.3, 0.3, 0.2, 1.0), vec4(0.3, 0.3, 0.4, 1.0), vec4(0.0, 0.0, 0.0, 1.0), 50.0
 	},
 	// Rug under table
 	{
-		3, 0.0, vec3(5.5, 0, 5.5), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.01, 0.0),
+		SHAPE_PLANE, 0, vec3(5.5, 0, 5.5), vec3(0), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.01, 0.0),
 		true, false, true, vec3(.25, .75, .50), 0.0, 0.0, 0.0,
 		vec4(0.3, 0.3, 0.2, 1.0), vec4(0.3, 0.3, 0.4, 1.0), vec4(0.0, 0.0, 0.0, 1.0), 50.0
 	},
@@ -64,31 +69,31 @@ Object[] objects = {
 	/// ---
 	// Glass body
 	{
-		2, 0.0, vec3(-glassTableSize, 0.0, -glassTableSize), vec3(glassTableSize, 0.5, glassTableSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 1.0, 0.0),
+		SHAPE_BOX, 0, vec3(-glassTableSize, 0.0, -glassTableSize), vec3(glassTableSize, 0.5, glassTableSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 1.0, 0.0),
 		true, true, true, vec3(.75, .25, .0), 0.8, 0.8, 1.5,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Leg 1/4
 	{
-		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, -2.0),
+		SHAPE_BOX, 0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, -2.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Leg 2/4
 	{
-		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 2.0),
+		SHAPE_BOX, 0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(0.0, 0.0, 2.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Leg 3/4
 	{
-		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(-2.0, 0.0, 0.0),
+		SHAPE_BOX, 0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(-2.0, 0.0, 0.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Leg 4/4
 	{
-		2, 0.0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, 0.0),
+		SHAPE_BOX, 0, vec3(-glassTableLegSize, 0.0, -glassTableLegSize), vec3(glassTableLegSize, 1.0, glassTableLegSize), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, 0.0),
 		true, false, true, vec3(.75, .25, .0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
@@ -98,37 +103,37 @@ Object[] objects = {
 	/// ---
 	// Fixture #1
 	{
-		2, 0.0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
+		SHAPE_BOX, 0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
 		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Fixture pole #1
 	{
-		2, 0.0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
+		SHAPE_BOX, 0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
 		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Builb #1
 	{
-		1, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
+		SHAPE_SPHERE, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(-1, 7.0, 0.0),
 		true, true, false, vec3(0.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
 	// Fixture #2
 	{
-		2, 0.0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		SHAPE_BOX, 0, vec3(-.7, 0.0, -.7), vec3(.7, 0.4, .7), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
 		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Fixture pole #2
 	{
-		2, 0.0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		SHAPE_BOX, 0, vec3(-.1, 0.0, -.1), vec3(.1, 5.0, .1), vec3(0.0, 45.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
 		true, false, true, vec3(0.4, 0.4, 0.4), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 50.0
 	},
 	// Builb #2
 	{
-		1, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
+		SHAPE_SPHERE, 0.3, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(1, 7.0, 0.0),
 		true, true, false, vec3(0.0), 0.05, 10, 1.5,
 		vec4(1, 1, 1, 1), vec4(1,1,1,1), vec4(1,1,1,1), 100.0
 	},
@@ -137,12 +142,12 @@ Object[] objects = {
 	/// Corner table
 	/// ---
 	{
-		2, 0.0, vec3(-1.0, -0.2, -1.0), vec3(1.0, 0, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.0, 2.0, -5.0),
+		SHAPE_BOX, 0, vec3(-1.0, -0.2, -1.0), vec3(1.0, 0, 1.0), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 2.0, -8.0),
 		true, false, true, vec3(.75, .40, .0), 0.0, 0.0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	{
-		2, 0.0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 2, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.0, 0.0, -5.0),
+		SHAPE_BOX, 0, vec3(-0.2, 0.0, -0.2), vec3(0.2, 2, 0.2), vec3(0.0, 45.0, 0.0), world_origin + vec3(2.0, 0.0, -8.0),
 		true, false, true, vec3(.60, .30, .0), 0.0, 0.0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
@@ -151,36 +156,48 @@ Object[] objects = {
 	/// Table fan
 	/// ---
 	{
-		2, 0.0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 1.3, 0.15), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.3, 2.0, -5.2),
+		SHAPE_BOX, 0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 3.3, 0.15), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.3, 0, -5.2),
 		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	{
-		1, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(5.3, 3.5, -5.2),
+		SHAPE_SPHERE, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), world_origin + vec3(5.3, 3.5, -5.2),
+		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Base
+	{
+		SHAPE_BOX, 0, vec3(-0.3, 0.0, -0.3), vec3(0.3, .3, 0.3), vec3(0.0, 45.0, 0.0), world_origin + vec3(5.3, 0, -5.2),
+		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
+	},
+	// Fin hinge
+	{
+		SHAPE_BOX, 0, vec3(-fanFinSize, 0, -fanFinSize), vec3(fanFinSize, .5, fanFinSize), vec3(0.0, 45.0, 90.0), world_origin + vec3(5.3, 3.5, -5.2),
 		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fan fin 1/4
 	{
-		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		SHAPE_BOX, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, fanFinLength, fanFinSize), vec3(45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
 		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fan fin 2/4
 	{
-		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(90 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		SHAPE_BOX, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, fanFinLength, fanFinSize), vec3(90 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
 		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fan fin 3/4
 	{
-		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(180 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		SHAPE_BOX, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, fanFinLength, fanFinSize), vec3(180 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
 		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fan fin 3/4
 	{
-		2, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, 1.2, fanFinSize), vec3(270 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
+		SHAPE_BOX, 0.0, vec3(-fanFinSize, 0.0, -fanFinSize), vec3(fanFinSize, fanFinLength, fanFinSize), vec3(270 + 45.0, 40.0, 2.0), world_origin + vec3(5.1, 3.5, -5),
 		true, false, true, vec3(0.5, 0.5, 0.5), 1, 0, 1.440,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
@@ -189,7 +206,7 @@ Object[] objects = {
 	/// Mirror
 	/// ---
 	{
-		2, 0.0,  vec3(-mirrorFrameSize, 0.0, -mirrorFrameSize), vec3(mirrorFrameSize, 0.25, mirrorFrameSize), vec3(90.0, 45.0, .0), world_origin + vec3(-5.0, 4.0, -6.0),
+		SHAPE_BOX, 0.0,  vec3(-mirrorFrameSize, 0.0, -mirrorFrameSize), vec3(mirrorFrameSize, 0.25, mirrorFrameSize), vec3(90.0, 45.0, .0), world_origin + vec3(-5.0, 4.0, -6.0),
 		true, false, true, vec3(.5, .5, .5), 1, 0.0, 0,
 		vec4(1, 1, 1, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
@@ -198,12 +215,12 @@ Object[] objects = {
 	/// Window displaying table
 	/// ---
 	{
-		2, 0.0,  vec3(-tableWindowSize, 0.0, -tableWindowSize), vec3(tableWindowSize, 0.25, tableWindowSize), vec3(90.0, -45.0, .0), world_origin + vec3(3.0, 3.0, -2.0),
+		SHAPE_BOX, 0.0,  vec3(-tableWindowSize, 0.0, -tableWindowSize), vec3(tableWindowSize, 0.25, tableWindowSize), vec3(90.0, -45.0, .0), world_origin + vec3(3.0, 3.0, -2.0),
 		false, true, true, vec3(.5, .5, .5), 0, 1.0, 1.5,
 		vec4(1, 1, 1, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 };
-int numObjects = 24;
+int numObjects = 26;
 float camera_pos = 7.0;
 const int max_depth = 4;
 const int stack_size = 100;
@@ -607,23 +624,16 @@ Collision get_closest_collision(Ray r) {
 	for(int i=0; i<numObjects; i++) {
 		Collision c;
 		
-		if (objects[i].type == 0) {
-			c = intersect_room_box_object(r);
+		if (objects[i].type == SHAPE_SPHERE) {
+			c = intersectSphereObject(r, objects[i]);
 			if (c.t <= 0) continue;
-		}
-		else if (objects[i].type == 1) {
-			c = intersect_sphere_object(r, objects[i]);
+		} else if (objects[i].type == SHAPE_BOX) {
+			c = intersectBoxObject(r, objects[i]);
 			if (c.t <= 0) continue;
-		}
-		else if (objects[i].type == 2) {
-			c = intersect_box_object(r, objects[i]);
+		} else if (objects[i].type == SHAPE_PLANE) {
+			c = intersectPlaneObject(r, objects[i]);
 			if (c.t <= 0) continue;
-		}
-		else if (objects[i].type == 3) {
-			c = intersect_plane_object(r, objects[i]);
-			if (c.t <= 0) continue;
-		}
-		else continue;
+		} else continue;
 		
 		if (c.t < closest) {
 			closest = c.t;

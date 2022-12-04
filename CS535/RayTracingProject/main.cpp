@@ -2,6 +2,8 @@
 *
 * Refactored project 2 to work with compute shader
 *
+* Changes based on example projects.
+*
 **/
 using namespace std;
 
@@ -13,8 +15,8 @@ using namespace std;
 
 #include "Utils.h"
 
-const int WINDOW_WIDTH = 1920;
-const int WINDOW_HEIGHT = 1080;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 float aspectRatio;
 
 int workGroupsX = WINDOW_WIDTH;
@@ -54,8 +56,8 @@ void init() {
         for (int j = 0; j < WINDOW_WIDTH; j++) {
             // Iterate through texture and manually set its RGBA values
             int pixelNum = i * WINDOW_WIDTH * 4 + j * 4;
-            displayRenderTexture[pixelNum + 0] = 250;
-            displayRenderTexture[pixelNum + 1] = 128;
+            displayRenderTexture[pixelNum + 0] = 0;
+            displayRenderTexture[pixelNum + 1] = 255;
             displayRenderTexture[pixelNum + 2] = 255;
             displayRenderTexture[pixelNum + 3] = 255;
         }
@@ -79,7 +81,7 @@ void init() {
     // For texture UVs
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]); 
     glBufferData(GL_ARRAY_BUFFER, sizeof(windowQuadUVs), windowQuadUVs, GL_STATIC_DRAW);
-
+    // Initialize shader programs
     raytraceComputeShader = Utils::createShaderProgram("raytraceComputeShader.glsl");
     screenQuadShader = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
 }
