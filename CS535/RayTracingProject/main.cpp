@@ -84,20 +84,15 @@ void init() {
     // Initialize shader programs
     raytraceComputeShader = Utils::createShaderProgram("raytraceComputeShader.glsl");
     screenQuadShader = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-}
 
-// This method is the main rendering function for the scene. It calls the ray tracing compute shader.
-void displayScene() {
+    /// Render scene and insert into texture
     glUseProgram(raytraceComputeShader);
 
     // Compute shader will output render to displayRenderTexture
     glBindImageTexture(0, displayRenderTextureId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA8);
 
-    if (!isAnimation) {
-        glDispatchCompute(workGroupsX, workGroupsY, workGroupsZ);
-        glMemoryBarrier(GL_ALL_BARRIER_BITS);
-        isAnimation = true;
-    }
+    glDispatchCompute(workGroupsX, workGroupsY, workGroupsZ);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     // Screen has been rendered by compute shader and inserted into texture, draw using buffer
     glUseProgram(screenQuadShader);
@@ -112,7 +107,10 @@ void displayScene() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
     glEnableVertexAttribArray(1);
+}
 
+void displayScene() {
+    // Render texture to screen
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -134,8 +132,6 @@ int main(int, char**) {
 
     glfwSetWindowSizeCallback(appWindow, windowSizeCallback);
     init();
-
-    //glUseProgram(raytraceComputeShader);
 
     while (!glfwWindowShouldClose(appWindow)) {
         displayScene();
