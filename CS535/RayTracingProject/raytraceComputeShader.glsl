@@ -10,7 +10,7 @@
 #define j -1
 
 layout (local_size_x = 1) in;
-layout (binding = 0, rgba8) uniform image2D output_texture;
+layout (binding = 0, rgba8) uniform image2D renderTextureOutput;
 
 
 struct Ray {
@@ -39,25 +39,32 @@ struct StackElement {
 	Collision collision;
 };
 
+struct PointLight {
+	vec3 position;
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+};
+
 // Based on compute shader object struct from example programs
 struct Object {
-	int       type;            // See macros above for types of shapes
-	float     radius;          // if object is a sphere, determine radius
-	vec3      mins;            // if object is a box, inner bounds of volume
-	vec3      maxs;            // if object is a box, outer bounds of volume
-	vec3      rot;             // if a box or plane
-	vec3      position;        // location of center of object
-	bool      isReflective;    // is object reflective?
-	bool      isTransparent;   // is object transparent?
-	bool      useColor;		   // not all objects need to utilize the color property, make it toggleable
-	vec3      color;           // color of object
-	float     reflectivity;    // reflection intensity
-	float     refractivity;    // transparency intensity
-	float     IOR;             // index of refraction (transparent material representing)
-	vec4      ambient;         // ambient
-	vec4      diffuse;         // diffuse
-	vec4      specular;        // specular
-	float     shininess;       // shininess
+	int type;
+	float radius;
+	vec3 mins; // if object is a box, inner bounds of volume
+	vec3 maxs; // if object is a box, outer bounds of volume
+	vec3 rotation;
+	vec3 position;
+	bool isReflective;
+	bool isTransparent;
+	bool useColor;
+	vec3 color;
+	float reflectionIntensity;
+	float refractionIntensity;
+	float indexOfRefraction; // index of refraction (transparent material representing)
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+	float shininess;
 };
 
 // ---------------------------------------------------------------------------------------
@@ -266,21 +273,20 @@ const float DEG_TO_RAD = PI / 180.0;
 vec4 worldAmbientIntensity = vec4(0.25, 0.25, 0.25, 1.0);
 // Point lights in scene
 const int LIGHTS_COUNT = 2;
-vec3 pointLightPosition[LIGHTS_COUNT] = {
-	worldOrigin + vec3(-1, 6.4, 0.0),
-	worldOrigin + vec3(1, 6.4, 0.0),
-};
-vec4 pointLightAmbient[LIGHTS_COUNT] = {
-	vec4(0.0, 0.0, 0.0, 1.0),
-	vec4(0.0, 0.0, 0.0, 1.0),
-};
-vec4 pointLight_diffuse[LIGHTS_COUNT] = {
-	vec4(.2, .2, .2, 1.0),
-	vec4(.2, .2, .2, 1.0),
-};
-vec4 pointLightSpecular[LIGHTS_COUNT] = {
-	vec4(.5, .5, .5, 1.0),
-	vec4(.2, .2, .2, 1.0),
+
+PointLight lights[LIGHTS_COUNT] = {
+	{
+		worldOrigin + vec3(-1, 6.4, 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0),
+		vec4(.2, .2, .2, 1.0),
+		vec4(.5, .5, .5, 1.0),
+	},
+	{
+		worldOrigin + vec3(1, 6.4, 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0),
+		vec4(.2, .2, .2, 1.0),
+		vec4(.2, .2, .2, 1.0),
+	}
 };
 
 const int RAY_TYPE_REFLECTION = 1;
@@ -315,9 +321,9 @@ mat4 buildRotateZ(float rad) {
 Collision intersectPlaneObject(Ray intersectRay, Object intersectingObject) {
 	// Calculate the planes's local-space to world-space transform matrices, and their inverse
 	mat4 worldTransformation = buildTranslate((intersectingObject.position).x, (intersectingObject.position).y, (intersectingObject.position).z);
-	mat4 worldRotation = buildRotateY(DEG_TO_RAD * intersectingObject.rot.y)
-		* buildRotateX(DEG_TO_RAD * intersectingObject.rot.x)
-		* buildRotateZ(DEG_TO_RAD * intersectingObject.rot.z);
+	mat4 worldRotation = buildRotateY(DEG_TO_RAD * intersectingObject.rotation.y)
+		* buildRotateX(DEG_TO_RAD * intersectingObject.rotation.x)
+		* buildRotateZ(DEG_TO_RAD * intersectingObject.rotation.z);
 
 	mat4 worldRotatedTransformation = worldTransformation * worldRotation;
 	mat4 worldRotatedTransformationInverse = inverse(worldRotatedTransformation);
@@ -360,9 +366,9 @@ Collision intersectPlaneObject(Ray intersectRay, Object intersectingObject) {
 Collision intersectBoxObject(Ray intersectRay, Object intersectingObject) {
 	// Calculate the box's local-space to world-space transform matrices, and their inverse
 	mat4 worldTransformation = buildTranslate((intersectingObject.position).x, (intersectingObject.position).y, (intersectingObject.position).z);
-	mat4 worldRotation = buildRotateY(DEG_TO_RAD*intersectingObject.rot.y)
-		* buildRotateX(DEG_TO_RAD*intersectingObject.rot.x)
-		* buildRotateZ(DEG_TO_RAD*intersectingObject.rot.z);
+	mat4 worldRotation = buildRotateY(DEG_TO_RAD*intersectingObject.rotation.y)
+		* buildRotateX(DEG_TO_RAD*intersectingObject.rotation.x)
+		* buildRotateZ(DEG_TO_RAD*intersectingObject.rotation.z);
 
 	mat4 worldRotatedTransformation = worldTransformation * worldRotation;
 	mat4 worldRotatedTransformationInverse = inverse(worldRotatedTransformation);
@@ -508,9 +514,9 @@ Collision getNearestCollision(Ray intersectRay) {
 }
 
 // Computes the ADS lighting using the phone method for an intersectRay at the surface of the object by returning the color pixel of the intersection point
-vec3 adsPhoneLighting(Ray intersectRay, Collision intersectionCollision, int lightIndex) {
+vec3 adsPhoneLighting(Ray intersectRay, Collision intersectionCollision, PointLight light) {
 	// Add the contribution from the ambient and positional lights
-	vec4 ambient = worldAmbientIntensity + pointLightAmbient[lightIndex] * objects[intersectionCollision.objectIndex].ambient;
+	vec4 ambient = worldAmbientIntensity + light.ambient * objects[intersectionCollision.objectIndex].ambient;
 	
 	// Initialize diffuse and specular contributions
 	vec4 diffuse = vec4(0.0);
@@ -519,7 +525,7 @@ vec3 adsPhoneLighting(Ray intersectRay, Collision intersectionCollision, int lig
 	// Check to see if any object is casting a shadow on this surface
 	Ray phongLightRay;
 	phongLightRay.start = intersectionCollision.position + intersectionCollision.normal * 0.01;
-	phongLightRay.dir = normalize(pointLightPosition[lightIndex] - intersectionCollision.position);
+	phongLightRay.dir = normalize(light.position - intersectionCollision.position);
 	bool in_shadow = false;
 
 	// Cast the ray against the scene
@@ -527,20 +533,20 @@ vec3 adsPhoneLighting(Ray intersectRay, Collision intersectionCollision, int lig
 
 	// If the ray hit an object and if the hit occurred between the surface and the light
 	if ((shadowCollision.objectIndex != -1)
-		&& shadowCollision.rayIntersectionPoint < length(pointLightPosition[lightIndex] - intersectionCollision.position))	{
+		&& shadowCollision.rayIntersectionPoint < length(light.position  - intersectionCollision.position))	{
 		in_shadow = true;
 	}
 
 	// If this surface is in shadow, don'rayIntersectionPoint add diffuse and specular components
 	if (in_shadow == false)	{
 		// Calculate the light's reflection on the surface
-		vec3 light_dir = normalize(pointLightPosition[lightIndex] - intersectionCollision.position);
+		vec3 light_dir = normalize(light.position  - intersectionCollision.position);
 		vec3 light_ref = normalize(reflect(-light_dir, intersectionCollision.normal));
 		float cos_theta = dot(light_dir, intersectionCollision.normal);
 		float cos_phi = dot(normalize(-intersectRay.dir), light_ref);
 
-		diffuse = pointLight_diffuse[lightIndex] * objects[intersectionCollision.objectIndex].diffuse * max(cos_theta, 0.0);
-		specular = pointLightSpecular[lightIndex]
+		diffuse = light.diffuse * objects[intersectionCollision.objectIndex].diffuse * max(cos_theta, 0.0);
+		specular = light.specular
 			* objects[intersectionCollision.objectIndex].specular
 			* pow(max(cos_phi, 0.0), objects[intersectionCollision.objectIndex].shininess);
 	}
@@ -568,22 +574,19 @@ void push(Ray intersectRay, int depth, int type) {
 	stack[stackPointer] = element;
 }
 
-// Removes the topmost stack element
+// Removes and returns the topmost stack element
 StackElement pop() {
-	// Store the element we're removing in top_stack_element
-	StackElement top_stack_element = stack[stackPointer];
+	StackElement topElement = stack[stackPointer];
 	
 	// Erase the element from the stack
 	stack[stackPointer] = emptyStackElement;
 	stackPointer--;
-	return top_stack_element;
+	return topElement;
 }
 
-// This function processes the stack element at a given index
-// This function is guaranteed to be ran on the topmost stack element
+// Given an index in the stack, process the raytrace element
 void processStackElement(int index) {
-	// If there is a poppedStackElement that just ran, it holds one of our values
-	// Store it and delete it
+	// A stack element was previously proccessed. Add reflection or refraction color, depending on ray type.
 	if (poppedStackElement != emptyStackElement) {
 		if (poppedStackElement.type == RAY_TYPE_REFLECTION) {
 			stack[index].colorReflect = poppedStackElement.colorCalcualted;
@@ -596,25 +599,22 @@ void processStackElement(int index) {
 	Ray intersectRay = stack[index].ray;
 	Collision intersectionCollision = stack[index].collision;
 
-	// Iterate through the raytrace phases (explained below)
+	// Stages of ray tracing
 	switch (stack[index].phase) {
-		// PHASE 1 - Raytrace Collision Detection
-		case 1:
+		case 1: // Initial raytrace collision detection
 			intersectionCollision = getNearestCollision(intersectRay);
 			if (intersectionCollision.objectIndex != -1) {
 				stack[index].collision = intersectionCollision;
 			}
 			break;
-		// PHASE 2 - Phong ADS Lighting Computation
-		case 2:
-			// Calculate addative lighting for each light source
+		case 2: // Calculate addative lighting for each light source using ADS phong method
 			stack[index].colorPhong = vec3(0);
 			for (int li = 0; li < LIGHTS_COUNT; li++) {
-				stack[index].colorPhong += adsPhoneLighting(intersectRay, intersectionCollision, li);
+				PointLight currentLight = lights[li];
+				stack[index].colorPhong += adsPhoneLighting(intersectRay, intersectionCollision, currentLight);
 			}
 			break;
-		// PHASE 3 - Reflection Bounce Pass Computation
-		case 3:
+		case 3: // Calculate reflections
 			// Only make recursive raytrace passes if we're not at max depth
 			if (stack[index].depth < maxDepth) {
 				if (objects[intersectionCollision.objectIndex].isReflective) {
@@ -627,14 +627,13 @@ void processStackElement(int index) {
 				}
 			}
 			break;
-		// PHASE 4 - Refraction Transparency Pass Computation
-		case 4:
+		case 4: // Calculate refractions
 			// Only make recursive raytrace passes if we're not at max depth
 			if (stack[index].depth < maxDepth) {
 				if (objects[intersectionCollision.objectIndex].isTransparent) {
 					Ray refracted_ray;
 					refracted_ray.start = intersectionCollision.position - intersectionCollision.normal * 0.001;
-					float refraction_ratio = 1.0 / objects[intersectionCollision.objectIndex].IOR;
+					float refraction_ratio = 1.0 / objects[intersectionCollision.objectIndex].indexOfRefraction;
 					if (intersectionCollision.inside) {
 						refraction_ratio = 1.0 / refraction_ratio;
 					}
@@ -645,10 +644,8 @@ void processStackElement(int index) {
 				}
 			}
 			break;
-		// PHASE 5 - Mixing to produce the final color
-		case 5:
-			// if it is not a room box
-			if (intersectionCollision.objectIndex > 0) {				
+		case 5: // Mix to produce the final pixel color
+			if (intersectionCollision.objectIndex > 0) {
 				// next, get object color if applicable
 				vec3 objColor = vec3(0.0);
 				if (objects[intersectionCollision.objectIndex].useColor)
@@ -660,11 +657,11 @@ void processStackElement(int index) {
 
 				if (stack[index].depth < maxDepth) {
 					if (objects[intersectionCollision.objectIndex].isReflective) {
-						objColor = mix(objColor, colorReflect, objects[intersectionCollision.objectIndex].reflectivity);
+						objColor = mix(objColor, colorReflect, objects[intersectionCollision.objectIndex].reflectionIntensity);
 					}
 
 					if (objects[intersectionCollision.objectIndex].isTransparent) {
-						objColor = mix(objColor, colorRefract, objects[intersectionCollision.objectIndex].refractivity);
+						objColor = mix(objColor, colorRefract, objects[intersectionCollision.objectIndex].refractionIntensity);
 					}
 				}
 
@@ -684,16 +681,16 @@ void processStackElement(int index) {
 			poppedStackElement = pop();
 			return;
 	}
+
 	stack[index].phase++;
-	return;	// Only process one phase per processStackElement() invocation
+	return;
 }
 
 vec3 raytrace(Ray intersectRay) {
 	push(intersectRay, 0, RAY_TYPE_REFLECTION);
 
 	while (stackPointer >= 0) {
-		int element_index = stackPointer;
-		processStackElement(element_index);
+		processStackElement(stackPointer);
 	}
 
 	return poppedStackElement.colorCalcualted;
@@ -702,21 +699,19 @@ vec3 raytrace(Ray intersectRay) {
 // ---------------------------------------------------------------------------------------
 
 void main() {
-	int width = int(gl_NumWorkGroups.x);
-	int height = int(gl_NumWorkGroups.y);
 	ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
 
-	// convert this pixels screen space location to world space
-	float x_pixel = 2.0 * pixel.x/width - 1.0;
-	float y_pixel = 2.0 * pixel.y/height - 1.0;
+	// Convert the pixel position to world-space. Using the work groups to get the screen dimensions.
+	float xPixel = 2.0 * pixel.x / int(gl_NumWorkGroups.x) - 1.0;
+	float yPixel = 2.0 * pixel.y / int(gl_NumWorkGroups.y) - 1.0;
 	
-	// Get this pixels world-space ray
-	Ray world_ray;
-	world_ray.start = vec3(0.0, 0.0, cameraDistance);
-	vec4 world_ray_end = vec4(x_pixel, y_pixel, cameraDistance-1.0, 1.0);
-	world_ray.dir = normalize(world_ray_end.xyz - world_ray.start);
+	// Get the pixel's world-space ray
+	Ray worldRay;
+	worldRay.start = vec3(0.0, 0.0, cameraDistance);
+	vec4 worldRayEnd = vec4(xPixel, yPixel, cameraDistance - 1.0, 1.0);
+	worldRay.dir = normalize(worldRayEnd.xyz - worldRay.start);
 
-	// Cast the ray out into the world and intersect the ray with objects
-	vec3 color = raytrace(world_ray);
-	imageStore(output_texture, pixel, vec4(color,1.0));
+	// Run ray cast to get color at the pixel location
+	vec3 pixelColor = raytrace(worldRay);
+	imageStore(renderTextureOutput, pixel, vec4(pixelColor, 1.0));
 }
