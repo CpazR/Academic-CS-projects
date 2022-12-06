@@ -44,6 +44,15 @@ unsigned char* displayRenderTexture;
 // If render is not animation, don't repeatedly render to preserve resources.
 bool isAnimation = false;
 
+void windowSizeCallback(GLFWwindow* win, int newWidth, int newHeight) {
+    glViewport(0, 0, newWidth, newHeight);
+}
+
+void displayScene() {
+    // Output rendered texture to screen
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
 void init() {
     Utils::displayComputeShaderLimits();
 
@@ -55,7 +64,7 @@ void init() {
     for (int i = 0; i < WINDOW_HEIGHT; i++) {
         for (int j = 0; j < WINDOW_WIDTH; j++) {
             // Iterate through texture and manually set its RGBA values
-            int pixelNum = i * WINDOW_WIDTH * 4 + j * 4;
+            const int pixelNum = i * WINDOW_WIDTH * 4 + j * 4;
             displayRenderTexture[pixelNum + 0] = 0;
             displayRenderTexture[pixelNum + 1] = 255;
             displayRenderTexture[pixelNum + 2] = 255;
@@ -109,21 +118,12 @@ void init() {
     glEnableVertexAttribArray(1);
 }
 
-void displayScene() {
-    // Render texture to screen
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void windowSizeCallback(GLFWwindow* win, int newWidth, int newHeight) {
-    glViewport(0, 0, newWidth, newHeight);
-}
-
 int main(int, char**) {
     // GLFW initialization
     if (!glfwInit()) { return -1; }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Programming Assignment 3 - Nicholas Reel", NULL, NULL);
+    GLFWwindow* appWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "CS535 - PA2 - N. Reel", NULL, NULL);
     glfwMakeContextCurrent(appWindow);
     if (glewInit() != GLEW_OK) { exit(EXIT_FAILURE); }
     glfwSwapInterval(1); // vsync enabled

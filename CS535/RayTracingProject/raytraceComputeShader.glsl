@@ -3,6 +3,7 @@
 #define FLT_MAX 3.402823466e+38
 #define FLT_MIN 1.175494351e-38
 
+// Shape constants. Since GLSL does not have enums.
 #define SHAPE_SPHERE 0
 #define SHAPE_BOX 1
 #define SHAPE_PLANE 2
@@ -78,7 +79,7 @@ const float tableWindowSize = 2.5;
 const float glassTableSize = 2.0;
 const float glassTableLegSize = .2;
 const float fanFinSize = .1;
-const float fanFinLength = 2.5;
+const float fanFinLength = 2.33;
 
 // Rough recreation of room from project 2 with new furnature.
 Object[] objects = {
@@ -197,24 +198,24 @@ Object[] objects = {
 	/// ---
 	{
 		SHAPE_BOX, 0, vec3(-0.15, 0.0, -0.15), vec3(0.15, 3.3, 0.15), vec3(0.0, 45.0, 0.0), worldOrigin + vec3(5.3, 0, -5.2),
-		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		true, false, true, vec3(0.7, 0.5, 0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	{
 		SHAPE_SPHERE, 0.4, vec3(0), vec3(0), vec3(0.0, 0.0, 0.0), worldOrigin + vec3(5.3, 3.5, -5.2),
-		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		true, false, true, vec3(0.65, 0.5, 0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Base
 	{
 		SHAPE_BOX, 0, vec3(-0.3, 0.0, -0.3), vec3(0.3, .3, 0.3), vec3(0.0, 45.0, 0.0), worldOrigin + vec3(5.3, 0, -5.2),
-		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		true, false, true, vec3(0.7, 0.7, 0.7), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fin hinge
 	{
 		SHAPE_BOX, 0, vec3(-fanFinSize, 0, -fanFinSize), vec3(fanFinSize, .5, fanFinSize), vec3(0.0, 45.0, 90.0), worldOrigin + vec3(5.3, 3.5, -5.2),
-		true, false, true, vec3(0.5, 0.5, 0.5), 0, 0, 0,
+		true, false, true, vec3(0.6, 0.5, 0), 0, 0, 0,
 		vec4(0.5, 0.5, 0.5, 1.0), vec4(1,1,1,1), vec4(1,1,1,1), 80.0
 	},
 	// Fan fin 1/4
