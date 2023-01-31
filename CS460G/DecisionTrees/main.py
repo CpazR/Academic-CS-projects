@@ -1,3 +1,4 @@
+import math
 import os
 import pandas
 
@@ -6,10 +7,11 @@ legendaryClassLabel = pandas.read_csv(os.getcwd() + '/data/pokemonLegendary.csv'
 
 syntheticData = pandas.read_csv(os.getcwd() + '/data/synthetic-1.csv')
 
+
 class DecisionTree:
     class Node:
         feature = 0
-        predition = 0
+        prediction = 0
 
         # feature val: child node
         children = dict()
@@ -30,12 +32,21 @@ class DecisionTree:
         # So: thresholdOffset = (upperRange - lowerRange) / k
         # threshValues = list of size k - 1
         # EX: k = 5. threshValues = [2, 4, 6, 8]
+
     # end discretize
 
-    def entropy(self, x):
+    def entropy(self, dataset: list):
         print('todo')
         # Sum of - (# of i examples / total examples) * log2(# of i examples / total examples)
+
+        dataQuantity = len(dataset)
+
+        for i in range(dataQuantity):
+            print(dataset[i])
+            # math.log2()
+
         return 0
+
     # end entropy
 
     def informationGain(self, pCurrent):
@@ -44,10 +55,16 @@ class DecisionTree:
         entropyChildren = 0
 
         return entropyPCurrent - entropyChildren
+
     # end informationGain
 
     def plot(self):
         print('todo')
     # end plot
 
+
 # end DecisionTree
+
+tree = DecisionTree()
+
+tree.entropy(syntheticData)
