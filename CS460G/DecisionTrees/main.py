@@ -26,6 +26,16 @@ class DecisionTree:
     # Equidistant
     def discretize(self, thresholdCount):
         print('todo')
+        thresholdRange = [0, 10] # array of min and max values for thresholds
+        thresholdDelta = (thresholdRange[1] - thresholdRange[0]) / thresholdCount
+
+        for dx in range(thresholdCount):
+            lowerRange = thresholdDelta * dx
+            upperRange = (thresholdDelta * dx) + thresholdDelta
+            someVal = 0
+            if lowerRange < someVal < upperRange:
+                print("In range")
+
         # In some range, define thresholds
         # Decide how many values you want to express in range
         # k values. Find thresholds so that distance between each thresh is equal.
@@ -42,7 +52,7 @@ class DecisionTree:
         dataQuantity = len(dataset)
 
         for i in range(dataQuantity):
-            print(dataset[i])
+            # print(dataset[i])
             # math.log2()
 
         return 0
