@@ -22,16 +22,28 @@ class DecisionTree:
     class Node:
         feature = ''
         prediction = 'Root'
-        children = set()
+        children: set
 
         # If level == 0, then root node. If level == maxDepth, cannot split any deeper.
         level = 0
 
-        # feature val: child node
+        def __str__(self):
+            returnedString: str = ""
+
+            if self.level > 0:
+                for i in range(self.level):
+                    returnedString += '--'
+
+            returnedString += str(self.feature) + ": " + str(self.prediction) + '\n'
+
+            for child in self.children:
+                returnedString += str(child)
+
+            return returnedString
 
         ### Functions for training
 
-        def entropy(self, classLabelSubset: pandas.Series, classLabelColumn: pandas.Series):
+        def entropy(self, classLabelSubset: pandas.Series):
             # Sum of - (# of i examples / total examples) * log2(# of i examples / total examples)
             # if (# of i examples / total examples)tree is 50/50, then skip calculation and default to 1
             # Calculate frequency of all values
@@ -66,8 +78,8 @@ class DecisionTree:
         def informationGain(self, data: pandas.DataFrame, targetFeature: str, classLabel: str):
             # Calculate parent entropy
             classLabelColumn = data[classLabel]
-            parentEntropy = self.entropy(data[classLabel], classLabelColumn)
-            print("Parent entropy: ", parentEntropy)
+            parentEntropy = self.entropy(data[classLabel])
+            # print("Parent entropy: ", parentEntropy)
 
             # Store the frequency of each bin for the target feature
             binDataCount = data[targetFeature].value_counts()
@@ -79,13 +91,13 @@ class DecisionTree:
             for interval, count in binDataCount.items():
                 # Get data within given intervals
                 subset = data.loc[data[targetFeature] == interval]
-                subsetEntropy = self.entropy(subset[classLabel], classLabelColumn)
+                subsetEntropy = self.entropy(subset[classLabel])
 
                 childProbability = count / len(data)
                 childEntropy = childProbability * subsetEntropy
                 childrenEntropy += childEntropy
 
-            print("Children entropy: ", childrenEntropy)
+            # print("Children entropy: ", childrenEntropy)
             #  Finish information gain calculation
             return parentEntropy - childrenEntropy
 
@@ -93,6 +105,10 @@ class DecisionTree:
 
         # Run recursive ID3 algorithm on constructing
         def __init__(self, prediction, level: int, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
+            # Defaulf feature to "leaf" to indicate bottom of tree
+            self.feature = 'leaf'
+            # Create instance level child set
+            self.children = set()
             self.prediction = prediction
             self.level = level
 
@@ -119,23 +135,27 @@ class DecisionTree:
                 for interval in featureIntervals:
                     featureSubset = data.loc[data[greatestGainFeature] == interval]
 
+                    featuresForChild = list()
                     if len(featureSubset) == 0:
-                        # Child attribute
-                        childAttribute = data[classLabels[0]].value_counts().idxmax()
-                        self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, dataSetFeatures))
+                        # Child feature
+                        featuresForChild.append(data[classLabels[0]].value_counts().idxmax())
                     else:
-                        featuresForChild = list()
                         for feature in dataSetFeatures:
-                            if feature == self.feature:
+                            if feature != self.feature:
                                 featuresForChild.append(feature)
 
-                        self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, dataSetFeatures))
+                    self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, featuresForChild))
         # end Node
 
     root: Node
 
     def __init__(self, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
         self.root = self.Node('root', 0, data, classLabels, dataSetFeatures)
+
+    def print(self):
+        print(self.root)
+
+
 
     def plot(self):
         print('todo')
@@ -182,8 +202,12 @@ def discretize(column: pandas.Series):
 # Run decision trees for each iteration of synthetic data
 currentDataset = 1
 
-# TODO:  Get list of features and class labels
-syntheticDatasets[currentDataset]['a'] = discretize(syntheticDatasets[currentDataset]['a'])
-syntheticDatasets[currentDataset]['b'] = discretize(syntheticDatasets[currentDataset]['b'])
+for currentDataset in range(len(syntheticDatasets)):
+    # TODO:  Get list of features and class labels
+    syntheticDatasets[currentDataset]['a'] = discretize(syntheticDatasets[currentDataset]['a'])
+    syntheticDatasets[currentDataset]['b'] = discretize(syntheticDatasets[currentDataset]['b'])
 
-syntheticTree = DecisionTree(syntheticDatasets[currentDataset], ['c'], ['a', 'b'])
+    syntheticTree = DecisionTree(syntheticDatasets[currentDataset], ['c'], ['a', 'b'])
+
+    print('Synthetic tree #' + str(currentDataset))
+    syntheticTree.print()
