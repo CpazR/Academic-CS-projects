@@ -20,14 +20,14 @@ maxTreeDepth = 3
 
 class DecisionTree:
     class Node:
-        feature = 0
-        prediction = 0
+        feature = ''
+        prediction = 'Root'
+        children = set()
 
         # If level == 0, then root node. If level == maxDepth, cannot split any deeper.
         level = 0
 
         # feature val: child node
-        children = dict()
 
         ### Functions for training
 
@@ -62,15 +62,15 @@ class DecisionTree:
         # end entropy
 
         # Given a target column and a class label column to split on, run information gain
-        # Note that the target attribute column has the class label included to process the category more easily
-        def informationGain(self, data: pandas.DataFrame, targetAttribute: str, classLabel: str):
+        # Note that the target feature column has the class label included to process the category more easily
+        def informationGain(self, data: pandas.DataFrame, targetFeature: str, classLabel: str):
             # Calculate parent entropy
             classLabelColumn = data[classLabel]
             parentEntropy = self.entropy(data[classLabel], classLabelColumn)
             print("Parent entropy: ", parentEntropy)
 
-            # Store the frequency of each bin for the target attribute
-            binDataCount = data[targetAttribute].value_counts()
+            # Store the frequency of each bin for the target feature
+            binDataCount = data[targetFeature].value_counts()
 
             # Calculate the wighted average entropy of children
             childrenEntropy = 0
@@ -78,7 +78,7 @@ class DecisionTree:
             # For each bin (or "child"), calculate the entropy and determine the average
             for interval, count in binDataCount.items():
                 # Get data within given intervals
-                subset = data.loc[data[targetAttribute] == interval]
+                subset = data.loc[data[targetFeature] == interval]
                 subsetEntropy = self.entropy(subset[classLabel], classLabelColumn)
 
                 childProbability = count / len(data)
@@ -91,33 +91,51 @@ class DecisionTree:
 
         # end informationGain
 
-        def __init__(self, level: int, data: pandas.DataFrame, classLabels: list, dataSetAttributes: list):
+        # Run recursive ID3 algorithm on constructing
+        def __init__(self, prediction, level: int, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
+            self.prediction = prediction
             self.level = level
-            # Store information gains of each attribute in a dictionary. This is primarily for debugging purposes.
-            informationGains = dict()
-            greatestGainAttribute = dataSetAttributes[0]
 
-            # Determine feature with most discriminatory power
-            for attribute in dataSetAttributes:
-                targetAndClassColumn = data[[attribute, classLabels[0]]]
-                informationGains[attribute] = self.informationGain(data, attribute, classLabels[0])
+            if len(dataSetFeatures) > 0 and level < maxTreeDepth:
 
-                if informationGains[greatestGainAttribute] < informationGains[attribute]:
-                    greatestGainAttribute = attribute
+                # Store information gains of each feature in a dictionary. This is primarily for debugging purposes.
+                informationGains = dict()
+                greatestGainFeature = dataSetFeatures[0]
 
-            print(informationGains)
-            print("Greatest information gain: ", informationGains[greatestGainAttribute])
+                # Determine feature with most discriminatory power
+                for feature in dataSetFeatures:
+                    informationGains[feature] = self.informationGain(data, feature, classLabels[0])
 
-    # end Node
+                    if informationGains[greatestGainFeature] < informationGains[feature]:
+                        greatestGainFeature = feature
+
+                # Debugging printing
+                # print(informationGains)
+                # print("Feature with greatest information gain: ", greatestGainFeature)
+
+                self.feature = greatestGainFeature
+                featureIntervals = data[greatestGainFeature].unique()
+
+                for interval in featureIntervals:
+                    featureSubset = data.loc[data[greatestGainFeature] == interval]
+
+                    if len(featureSubset) == 0:
+                        # Child attribute
+                        childAttribute = data[classLabels[0]].value_counts().idxmax()
+                        self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, dataSetFeatures))
+                    else:
+                        featuresForChild = list()
+                        for feature in dataSetFeatures:
+                            if feature == self.feature:
+                                featuresForChild.append(feature)
+
+                        self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, dataSetFeatures))
+        # end Node
 
     root: Node
 
-    def __init__(self, data: pandas.DataFrame, classLabels: list, dataSetAttributes: list):
-        root = self.Node(0, data, classLabels, dataSetAttributes)
-
-    # Using ID3 algorithm
-    def trainTree(self):
-        print("TODO")
+    def __init__(self, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
+        self.root = self.Node('root', 0, data, classLabels, dataSetFeatures)
 
     def plot(self):
         print('todo')
@@ -164,6 +182,7 @@ def discretize(column: pandas.Series):
 # Run decision trees for each iteration of synthetic data
 currentDataset = 1
 
+# TODO:  Get list of features and class labels
 syntheticDatasets[currentDataset]['a'] = discretize(syntheticDatasets[currentDataset]['a'])
 syntheticDatasets[currentDataset]['b'] = discretize(syntheticDatasets[currentDataset]['b'])
 
