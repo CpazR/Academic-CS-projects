@@ -1,6 +1,8 @@
 import math
 import os
 import pandas
+import numpy
+import matplotlib.pyplot
 
 sourceData = pandas.read_csv(os.getcwd() + '/data/pokemonStats.csv').iloc[0]
 
@@ -20,10 +22,6 @@ maxTreeDepth = 3
 
 class DecisionTree:
     class Node:
-        feature = ''
-        prediction = 'Root'
-        children: set
-
         # If level == 0, then root node. If level == maxDepth, cannot split any deeper.
         level = 0
 
@@ -32,9 +30,9 @@ class DecisionTree:
 
             if self.level > 0:
                 for i in range(self.level):
-                    returnedString += '--'
+                    returnedString += '\t'
 
-            returnedString += str(self.feature) + ": " + str(self.prediction) + '\n'
+            returnedString += 'Feature: ' + str(self.feature) + '\t Interval: ' + str(self.prediction) + '\n'
 
             for child in self.children:
                 returnedString += str(child)
@@ -105,8 +103,6 @@ class DecisionTree:
 
         # Run recursive ID3 algorithm on constructing
         def __init__(self, prediction, level: int, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
-            # Defaulf feature to "leaf" to indicate bottom of tree
-            self.feature = 'leaf'
             # Create instance level child set
             self.children = set()
             self.prediction = prediction
@@ -139,26 +135,95 @@ class DecisionTree:
                     if len(featureSubset) == 0:
                         # Child feature
                         featuresForChild.append(data[classLabels[0]].value_counts().idxmax())
+                        print(featuresForChild)
                     else:
                         for feature in dataSetFeatures:
                             if feature != self.feature:
                                 featuresForChild.append(feature)
 
                     self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, featuresForChild))
+            else:
+                self.feature = data[classLabels[0]].value_counts().idxmax()
         # end Node
 
     root: Node
+    sourceDataSet: pandas.DataFrame
 
     def __init__(self, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
+        self.sourceDataSet = data
         self.root = self.Node('root', 0, data, classLabels, dataSetFeatures)
 
     def print(self):
         print(self.root)
 
+    # Returns the % accuracy of tree based on test data
+    def test(self, testData: pandas.DataFrame, classLabel: str):
+        correctGuessCount = 0
 
+        for index, data in testData.iterrows():
+            if data[classLabel] == self.predictFeature(data, self.root):
+                correctGuessCount += 1
 
-    def plot(self):
-        print('todo')
+        return correctGuessCount / len(testData)
+
+    # Recursively predict a node's feature based on a given dataset
+    def predictFeature(self, data, node: Node):
+        prediction = ''
+        if not node.children:
+            prediction = node.feature
+
+        for child in node.children:
+            if data[node.feature] in child.prediction or data[node.feature] == child.prediction:
+                prediction = self.predictFeature(data, child)
+
+        return prediction
+
+    # End predictFeature
+
+    def plot(self, graphTitle: str, position: int, srcData: pandas.DataFrame, classLabel: str, xFeature: str,
+             yFeature: str):
+        ax: matplotlib.pyplot.Axes = matplotlib.pyplot.subplot(position)
+
+        # Plot the decision boundary
+        xMin = srcData[xFeature].min() - 1
+        xMax = srcData[xFeature].max() + 1
+        yMin = srcData[yFeature].min() - 1
+        yMax = srcData[yFeature].max() + 1
+
+        x = srcData[xFeature]
+        y = srcData[yFeature]
+
+        step = 0.1
+
+        xMesh, yMesh = numpy.meshgrid(numpy.arange(xMin, xMax, step), numpy.arange(yMin, yMax, step))
+
+        meshData = pandas.DataFrame(numpy.c_[xMesh.ravel(), yMesh.ravel()], columns=[xFeature, yFeature])
+
+        # Establish plotted data shape
+        zShape = []
+        for index, data in meshData.iterrows():
+            currentPrediction = self.predictFeature(data, self.root)
+
+            if currentPrediction:
+                zShape.append(currentPrediction)
+            else:
+                zShape.append(0)
+
+        zShape = numpy.reshape(zShape, xMesh.shape)
+
+        ax.contour(xMesh, yMesh, zShape)
+
+        matplotlib.pyplot.xlabel(xFeature, fontsize=20)
+        matplotlib.pyplot.ylabel(yFeature, fontsize=20)
+
+        classLabelFalsyData = srcData.loc[srcData[classLabel] == 0]
+        classLabelTruthyData = srcData.loc[srcData[classLabel] == 1]
+        ax.scatter(classLabelFalsyData[xFeature], classLabelFalsyData[yFeature], label='0', edgecolor='black', c='r')
+        ax.scatter(classLabelTruthyData[xFeature], classLabelTruthyData[yFeature], label='1', edgecolor='black', c='b')
+
+        ax.axis('tight')
+        ax.set_title(graphTitle, fontsize=25)
+        ax.legend(fontsize=10)
 
     # end plot
 
@@ -169,45 +234,37 @@ class DecisionTree:
 def discretize(column: pandas.Series):
     # Array of min and max values for thresholds
     thresholdRange = [min(column), max(column)]
-    # In some range, define thresholds
-    # Decide how many values you want to express in range
-    # k values. Find thresholds so that distance between each thresh is equal.
-    # So: thresholdOffset = (upperRange - lowerRange) / k
-    # threshValues = list of size k - 1
-    # EX: k = 5. threshValues = [2, 4, 6, 8]
 
     # Default to 3 bins. Downsize depending on datatype.
-
     if thresholdRange[1] - thresholdRange[0] == 1:
         binCount = 2
     else:
         binCount = 3
 
-    """
-    thresholdRange = [0, 10]  # array of min and max values for thresholds
-    thresholdDelta = (thresholdRange[1] - thresholdRange[0]) / binCount
-
-    for dx in range(binCount):
-        lowerRange = thresholdDelta * dx
-        upperRange = (thresholdDelta * dx) + thresholdDelta
-        someVal = 0
-        if lowerRange < someVal < upperRange:
-            print("In range")
-    """
     return pandas.qcut(column, binCount)
 
 
 # end discretize
 
 # Run decision trees for each iteration of synthetic data
-currentDataset = 1
-
+figure: matplotlib.pyplot.Figure = matplotlib.pyplot.figure(figsize=(30, 15))
 for currentDataset in range(len(syntheticDatasets)):
-    # TODO:  Get list of features and class labels
-    syntheticDatasets[currentDataset]['a'] = discretize(syntheticDatasets[currentDataset]['a'])
-    syntheticDatasets[currentDataset]['b'] = discretize(syntheticDatasets[currentDataset]['b'])
+    discretizedData = syntheticDatasets[currentDataset].copy()
 
-    syntheticTree = DecisionTree(syntheticDatasets[currentDataset], ['c'], ['a', 'b'])
+    discretizedData['a'] = discretize(syntheticDatasets[currentDataset]['a'])
+    discretizedData['b'] = discretize(syntheticDatasets[currentDataset]['b'])
 
-    print('Synthetic tree #' + str(currentDataset))
-    syntheticTree.print()
+    syntheticTree = DecisionTree(discretizedData, ['c'], ['a', 'b'])
+
+    # Print tree for debugging purposes
+    # syntheticTree.print()
+
+    treeAccuracy = syntheticTree.test(syntheticDatasets[currentDataset], 'c')
+    print('Synthetic Tree #' + str(currentDataset) + ' accuracy: ' + str(treeAccuracy))
+
+    syntheticTree.plot('Synthetic Data ' + str(currentDataset), 220 + (currentDataset + 1),
+                       syntheticDatasets[currentDataset], 'c', 'a', 'b')
+
+matplotlib.pyplot.show()
+matplotlib.pyplot.suptitle('Decision Tree Plots', fontsize=30)
+figure.savefig('decisionTreePlots.png')
