@@ -4,11 +4,6 @@ import pandas
 import numpy
 import matplotlib.pyplot
 
-sourceData = pandas.read_csv(os.getcwd() + '/data/pokemonStats.csv').iloc[0]
-
-# Used for testing against results
-legendaryActualData = pandas.read_csv(os.getcwd() + '/data/pokemonLegendary.csv')
-
 # Synthetic data sets
 syntheticDatasets: list[pandas.DataFrame] = [
     pandas.read_csv('data/synthetic-1.csv', names=['a', 'b', 'c']),
@@ -16,6 +11,10 @@ syntheticDatasets: list[pandas.DataFrame] = [
     pandas.read_csv('data/synthetic-3.csv', names=['a', 'b', 'c']),
     pandas.read_csv('data/synthetic-4.csv', names=['a', 'b', 'c'])
 ]
+
+# Pokemon data sets
+pokemonStatData = pandas.read_csv(os.getcwd() + '/data/pokemonStats.csv')
+legendaryClassData = pandas.read_csv(os.getcwd() + '/data/pokemonLegendary.csv')
 
 maxTreeDepth = 3
 
@@ -101,29 +100,29 @@ class DecisionTree:
 
         # end informationGain
 
-        # Run recursive ID3 algorithm on constructing
+        # Run recursive ID3 algorithm on constructing node
         def __init__(self, prediction, level: int, data: pandas.DataFrame, classLabels: list, dataSetFeatures: list):
             # Create instance level child set
             self.children = set()
             self.prediction = prediction
             self.level = level
 
-            if len(dataSetFeatures) > 0 and level < maxTreeDepth:
+            if level < maxTreeDepth and len(data[classLabels[0]].unique()) > 1 and len(dataSetFeatures) > 0:
 
                 # Store information gains of each feature in a dictionary. This is primarily for debugging purposes.
                 informationGains = dict()
-                greatestGainFeature = dataSetFeatures[0]
 
                 # Determine feature with most discriminatory power
+                greatestGainFeature = dataSetFeatures[0]
                 for feature in dataSetFeatures:
                     informationGains[feature] = self.informationGain(data, feature, classLabels[0])
 
                     if informationGains[greatestGainFeature] < informationGains[feature]:
                         greatestGainFeature = feature
 
-                # Debugging printing
+                # Debugging logging
                 # print(informationGains)
-                # print("Feature with greatest information gain: ", greatestGainFeature)
+                # print("Feature with the greatest information gain: ", greatestGainFeature)
 
                 self.feature = greatestGainFeature
                 featureIntervals = data[greatestGainFeature].unique()
@@ -131,19 +130,24 @@ class DecisionTree:
                 for interval in featureIntervals:
                     featureSubset = data.loc[data[greatestGainFeature] == interval]
 
+                    # Use the most frequent class label for child node if there are no features remaining
                     featuresForChild = list()
                     if len(featureSubset) == 0:
-                        # Child feature
-                        featuresForChild.append(data[classLabels[0]].value_counts().idxmax())
+                        frequentClassLabel = data[classLabels[0]].value_counts().idxmax()
+                        featuresForChild.append(frequentClassLabel)
                         print(featuresForChild)
                     else:
                         for feature in dataSetFeatures:
                             if feature != self.feature:
                                 featuresForChild.append(feature)
 
-                    self.children.add(DecisionTree.Node(interval, level + 1, data, classLabels, featuresForChild))
+                    self.children.add(
+                        DecisionTree.Node(interval, level + 1, featureSubset, classLabels, featuresForChild))
             else:
-                self.feature = data[classLabels[0]].value_counts().idxmax()
+                # If the tree is at the max depth, has no more features or only has one class label value to split on
+                # Use most frequent class label for feature
+                frequentClassLabel = data[classLabels[0]].value_counts().idxmax()
+                self.feature = frequentClassLabel
         # end Node
 
     root: Node
@@ -173,6 +177,7 @@ class DecisionTree:
             prediction = node.feature
 
         for child in node.children:
+            # Account for testing on non-discretized and discretized data
             if data[node.feature] in child.prediction or data[node.feature] == child.prediction:
                 prediction = self.predictFeature(data, child)
 
@@ -180,8 +185,8 @@ class DecisionTree:
 
     # End predictFeature
 
-    def plot(self, graphTitle: str, position: int, srcData: pandas.DataFrame, classLabel: str, xFeature: str,
-             yFeature: str):
+    def plot(self, graphTitle: str, position: int, srcData: pandas.DataFrame,
+             classLabel: str, xFeature: str, yFeature: str):
         ax: matplotlib.pyplot.Axes = matplotlib.pyplot.subplot(position)
 
         # Plot the decision boundary
@@ -189,9 +194,6 @@ class DecisionTree:
         xMax = srcData[xFeature].max() + 1
         yMin = srcData[yFeature].min() - 1
         yMax = srcData[yFeature].max() + 1
-
-        x = srcData[xFeature]
-        y = srcData[yFeature]
 
         step = 0.1
 
@@ -211,19 +213,20 @@ class DecisionTree:
 
         zShape = numpy.reshape(zShape, xMesh.shape)
 
-        ax.contour(xMesh, yMesh, zShape)
+        ax.contour(xMesh, yMesh, zShape, levels=1, colors=['coral', 'skyblue'])
 
         matplotlib.pyplot.xlabel(xFeature, fontsize=20)
         matplotlib.pyplot.ylabel(yFeature, fontsize=20)
 
         classLabelFalsyData = srcData.loc[srcData[classLabel] == 0]
         classLabelTruthyData = srcData.loc[srcData[classLabel] == 1]
+
         ax.scatter(classLabelFalsyData[xFeature], classLabelFalsyData[yFeature], label='0', edgecolor='black', c='r')
         ax.scatter(classLabelTruthyData[xFeature], classLabelTruthyData[yFeature], label='1', edgecolor='black', c='b')
 
         ax.axis('tight')
         ax.set_title(graphTitle, fontsize=25)
-        ax.legend(fontsize=10)
+        ax.legend(fontsize=20)
 
     # end plot
 
@@ -232,39 +235,56 @@ class DecisionTree:
 
 # Preprocess data
 def discretize(column: pandas.Series):
-    # Array of min and max values for thresholds
-    thresholdRange = [min(column), max(column)]
-
-    # Default to 3 bins. Downsize depending on datatype.
-    if thresholdRange[1] - thresholdRange[0] == 1:
-        binCount = 2
-    else:
-        binCount = 3
+    binCount = 4
 
     return pandas.qcut(column, binCount)
 
 
 # end discretize
 
+# """
 # Run decision trees for each iteration of synthetic data
 figure: matplotlib.pyplot.Figure = matplotlib.pyplot.figure(figsize=(30, 15))
 for currentDataset in range(len(syntheticDatasets)):
+    # Make sure original data is preserved for plotting purposes
     discretizedData = syntheticDatasets[currentDataset].copy()
 
-    discretizedData['a'] = discretize(syntheticDatasets[currentDataset]['a'])
-    discretizedData['b'] = discretize(syntheticDatasets[currentDataset]['b'])
+    features = ['a', 'b']
+    classLabel = 'c'
 
-    syntheticTree = DecisionTree(discretizedData, ['c'], ['a', 'b'])
+    discretizedData[features[0]] = discretize(syntheticDatasets[currentDataset][features[0]])
+    discretizedData[features[1]] = discretize(syntheticDatasets[currentDataset][features[1]])
+
+    syntheticTree = DecisionTree(discretizedData, [classLabel], features)
 
     # Print tree for debugging purposes
-    # syntheticTree.print()
+    syntheticTree.print()
 
-    treeAccuracy = syntheticTree.test(syntheticDatasets[currentDataset], 'c')
-    print('Synthetic Tree #' + str(currentDataset) + ' accuracy: ' + str(treeAccuracy))
+    treeAccuracy = syntheticTree.test(syntheticDatasets[currentDataset], classLabel)
+    print('Synthetic Tree #' + str(currentDataset) + ' Accuracy: ' + str(treeAccuracy))
 
     syntheticTree.plot('Synthetic Data ' + str(currentDataset), 220 + (currentDataset + 1),
-                       syntheticDatasets[currentDataset], 'c', 'a', 'b')
+                       syntheticDatasets[currentDataset], classLabel, features[0], features[1])
 
 matplotlib.pyplot.show()
 matplotlib.pyplot.suptitle('Decision Tree Plots', fontsize=30)
-figure.savefig('decisionTreePlots.png')
+figure.savefig('decisionTreePlotsEqualBins.png')
+# """
+
+# Run decision tree for legendary pokemon data
+legendaryClassLabel = 'Legendary'
+discritizedFeatures = ["Total", "HP", "Attack", "Defense", "Sp. Atk", "Sp. Def", "Speed"]
+pokemonData = pandas.concat([pokemonStatData, legendaryClassData], axis=1)
+
+statFeatures = pokemonData.columns.tolist()
+
+discretizedPokemonData = pokemonData.copy()
+for feature in discritizedFeatures:
+    discretizedPokemonData[feature] = discretize(pokemonData[feature])
+
+legendaryDecisionTree = DecisionTree(discretizedPokemonData, [legendaryClassLabel], discritizedFeatures)
+
+legendaryDecisionTree.print()
+
+treeAccuracy = legendaryDecisionTree.test(pokemonData, legendaryClassLabel)
+print('Legendary Pokemon Tree Accuracy: ' + str(treeAccuracy))
