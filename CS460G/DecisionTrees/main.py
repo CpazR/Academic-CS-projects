@@ -163,12 +163,15 @@ class DecisionTree:
     # Returns the % accuracy of tree based on test data
     def test(self, testData: pandas.DataFrame, classLabel: str):
         correctGuessCount = 0
+        falseGuessCount = 0
 
         for index, data in testData.iterrows():
             if data[classLabel] == self.predictFeature(data, self.root):
                 correctGuessCount += 1
+            else:
+                falseGuessCount += 1
 
-        return correctGuessCount / len(testData)
+        return (correctGuessCount / len(testData), falseGuessCount / len(testData))
 
     # Recursively predict a node's feature based on a given dataset
     def predictFeature(self, data, node: Node):
@@ -212,11 +215,11 @@ class DecisionTree:
                 zShape.append(0)
 
         zShape = numpy.reshape(zShape, xMesh.shape)
-
-        ax.contour(xMesh, yMesh, zShape, levels=1, colors=['coral', 'skyblue'])
+        ax.contourf(xMesh, yMesh, zShape, levels=1, colors=['lightcoral', 'skyblue'])
 
         matplotlib.pyplot.xlabel(xFeature, fontsize=20)
         matplotlib.pyplot.ylabel(yFeature, fontsize=20)
+        matplotlib.pyplot.axis('tight')
 
         classLabelFalsyData = srcData.loc[srcData[classLabel] == 0]
         classLabelTruthyData = srcData.loc[srcData[classLabel] == 1]
@@ -260,8 +263,8 @@ for currentDataset in range(len(syntheticDatasets)):
     # Print tree for debugging purposes
     syntheticTree.print()
 
-    treeAccuracy = syntheticTree.test(syntheticDatasets[currentDataset], classLabel)
-    print('Synthetic Tree #' + str(currentDataset) + ' Accuracy: ' + str(treeAccuracy))
+    treeAccuracy, treeError = syntheticTree.test(syntheticDatasets[currentDataset], classLabel)
+    print('Synthetic Tree #' + str(currentDataset) + ' Accuracy: ' + str(treeAccuracy) + '\t Error: ' + str(treeError))
 
     syntheticTree.plot('Synthetic Data ' + str(currentDataset), 220 + (currentDataset + 1),
                        syntheticDatasets[currentDataset], classLabel, features[0], features[1])
@@ -286,5 +289,5 @@ legendaryDecisionTree = DecisionTree(discretizedPokemonData, [legendaryClassLabe
 
 legendaryDecisionTree.print()
 
-treeAccuracy = legendaryDecisionTree.test(pokemonData, legendaryClassLabel)
-print('Legendary Pokemon Tree Accuracy: ' + str(treeAccuracy))
+treeAccuracy, treeError = legendaryDecisionTree.test(pokemonData, legendaryClassLabel)
+print('Legendary Pokemon Tree Accuracy: ' + str(treeAccuracy) + '\t Error: ' + str(treeError))
