@@ -5,6 +5,8 @@ import pandas
 import numpy
 import matplotlib.pyplot as plt
 
+numpy.random.seed(0)
+
 # When taking in data, use matrices for data operations
 
 trainData: list[pandas.DataFrame] = [
@@ -20,7 +22,7 @@ testData: list[pandas.DataFrame] = [
 
 
 def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
+    return 1 / (1 + math.pow(math.e, -x))
 
 
 class Perceptron:
@@ -32,22 +34,21 @@ class Perceptron:
     biases: dict
 
     # Initialize with given training data
-    def __init__(self, data: pandas.DataFrame, layerCount):
-        # TODO: Start with single test data set
+    def __init__(self, data: pandas.DataFrame, learningRate: float, epochCount: int):
+
         trainingDataMap = self.normalizeData(data)
 
-        learningRate = 0.5
-        epochCount = 200
-
-        # Setup initial weights and biases
+        # Setup initial weights
         hiddenLayerInitialWeights = []
         for i in range(self.nodesPerLayer[0]):
             hiddenLayerInitialWeights.append(list(numpy.random.uniform(-1, 1, self.nodesPerLayer[1])))
-        hiddenLayerInitialBias = numpy.random.uniform(0, 1, self.nodesPerLayer[1]).tolist()
 
         outputLayerInitialWeights = []
         for i in range(self.nodesPerLayer[1]):
             outputLayerInitialWeights.append(numpy.random.uniform(-1, 1))
+
+        # Setup initial biases
+        hiddenLayerInitialBias = numpy.random.uniform(0, 1, self.nodesPerLayer[1]).tolist()
         outputLayerInitialBias = numpy.random.uniform(0, 1, self.nodesPerLayer[2]).tolist()
 
         # Run backpropagation
@@ -73,29 +74,29 @@ class Perceptron:
     # end normalizeData
 
     def backpropagation(self, epochs: int, trainDataMap: dict, learningRate: float, hiddenLayerWeights: list,
-                        outputLayerWeights: list, hiddenLayerBias: list, outputLayerBias: list) -> tuple[
-        dict[str, list | list[Any] | Any], dict[str, list | Any]]:  # Weights, Biases
+                        outputLayerWeights: list, hiddenLayerBias: list, outputLayerBias: list):
         for epoch in range(epochs):
             for index, xData in enumerate(trainDataMap['x']):
                 # Get error of output layer
-                predictionOutputInput, hiddenLayerInput, predictionOutput, hiddenLayer = \
+                predictionOutputInput, hiddenLayerInput, outputGradiant, hiddenGradiant = \
                     self.forwardPass(xData, hiddenLayerWeights, outputLayerWeights, hiddenLayerBias, outputLayerBias)
 
                 yData = trainDataMap['y'][index]
 
-                error = yData - predictionOutput
+                error = yData - outputGradiant
 
                 # Derivative of sigmoid(x)
                 sigmoidPrime = lambda x: sigmoid(x) * (1 - sigmoid(x))
 
                 outputDelta = error * sigmoidPrime(predictionOutputInput)
-                hiddenDelta = numpy.multiply(numpy.dot(outputLayerWeights, outputDelta),
-                                             list(map(sigmoidPrime, hiddenLayerInput)))
+                sigmoidPrimeResults = list(map(sigmoidPrime, hiddenLayerInput))
+                hiddenDelta = numpy.multiply(numpy.dot(outputLayerWeights, outputDelta), sigmoidPrimeResults)
 
                 # Update weights and biases
-                outputLayerWeights = outputLayerWeights + learningRate * numpy.dot(hiddenLayer, outputDelta)
+                outputLayerWeights = outputLayerWeights + learningRate * numpy.dot(hiddenGradiant, outputDelta)
                 outputLayerBias = outputLayerBias + numpy.array(learningRate * outputDelta)
-                hiddenLayerWeights = hiddenLayerWeights + learningRate * numpy.dot(hiddenLayer, hiddenDelta)
+                hiddenLayerWeights = hiddenLayerWeights + learningRate * \
+                                     numpy.outer(xData, numpy.array(hiddenDelta).transpose())
                 hiddenLayerBias = hiddenLayerBias + numpy.array(learningRate * hiddenDelta)
             # end inner for
         # end outer for
@@ -109,14 +110,16 @@ class Perceptron:
                     hiddenLayerBias: list, outputLayerBias: list):
         # TODO: Generalize forwardPass
         # hidden layer
-        hiddenLayerInput = numpy.dot(numpy.array(hiddenLayerWeights).transpose(), batchInput) + hiddenLayerBias
-        hiddenLayer = list(map(sigmoid, hiddenLayerInput))
+        hiddenLayerInput = numpy.dot(numpy.array(hiddenLayerWeights).transpose(), batchInput)
+        hiddenLayerInput = numpy.add(hiddenLayerBias, hiddenLayerInput)
+        hiddenLayerGradiant = list(map(sigmoid, hiddenLayerInput))
 
         # output layer
-        outputLayerInput = numpy.dot(numpy.array(outputLayerWeights).transpose(), hiddenLayer) + outputLayerBias
-        outputLayer = sigmoid(outputLayerInput)
+        outputLayerInput = numpy.dot(numpy.array(outputLayerWeights).transpose(), hiddenLayerGradiant)
+        outputLayerInput = numpy.add(outputLayerBias, outputLayerInput)
+        outputLayerGradiant = sigmoid(outputLayerInput)
 
-        return outputLayerInput, hiddenLayerInput, outputLayer, hiddenLayer
+        return outputLayerInput, hiddenLayerInput, outputLayerGradiant, hiddenLayerGradiant
 
     # end forwardPass
 
@@ -143,7 +146,8 @@ class Perceptron:
 
 
 # end Perceptron
+print("Training neural net...")
+multiLaterPerceptron = Perceptron(trainData[0], 0.5, 200)
 
-multiLaterPerceptron = Perceptron(trainData[0], 3)
-
+print("Testing neural net...")
 multiLaterPerceptron.test(testData[0])
