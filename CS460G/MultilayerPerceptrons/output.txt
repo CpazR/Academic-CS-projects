@@ -1,0 +1,15 @@
+Training neural net (0 - 1)...
+Testing neural net (0 - 1)...
+Total predictions:  2114
+Correct predictions:  2111
+Accuracy:  99.85808893093662 %
+
+----------------
+
+Training neural net (0 - 4)...
+Testing neural net (0 - 4)...
+Total predictions:  5138
+Correct predictions:  2097
+Accuracy:  40.81354612689763 %
+
+Process finished with exit code 0

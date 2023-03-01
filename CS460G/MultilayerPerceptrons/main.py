@@ -5,7 +5,7 @@ import pandas
 import numpy
 import matplotlib.pyplot as plt
 
-numpy.random.seed(0)
+# numpy.random.seed(0)
 
 # When taking in data, use matrices for data operations
 
@@ -22,104 +22,107 @@ testData: list[pandas.DataFrame] = [
 
 
 def sigmoid(x):
-    return 1 / (1 + math.pow(math.e, -x))
+    try:
+        return 1 / (1 + math.pow(math.e, -x))
+    except:
+        # Account for potential overflow error
+        return x > 0 if 1 else 0
 
 
-class Perceptron:
-    # a lit of 2d vectors
-    layers = list()
+class NeuralNetPerceptron:
     featuresCount = 784
-    nodesPerLayer = [featuresCount, 50, 1]
-    weights: dict
-    biases: dict
+    hiddenLayerNodes = 20
+    # For the purposes of this assignment, only one node for output layer
+    nodesPerLayer = [featuresCount, hiddenLayerNodes, 1]
+    weights = {}
+    biases = {}
 
     # Initialize with given training data
     def __init__(self, data: pandas.DataFrame, learningRate: float, epochCount: int):
-
         trainingDataMap = self.normalizeData(data)
 
         # Setup initial weights
         hiddenLayerInitialWeights = []
+        outputNodeInitialWeights = []
         for i in range(self.nodesPerLayer[0]):
             hiddenLayerInitialWeights.append(list(numpy.random.uniform(-1, 1, self.nodesPerLayer[1])))
-
-        outputLayerInitialWeights = []
         for i in range(self.nodesPerLayer[1]):
-            outputLayerInitialWeights.append(numpy.random.uniform(-1, 1))
+            outputNodeInitialWeights.append(numpy.random.uniform(-1, 1))
+
+        self.weights['hidden'] = hiddenLayerInitialWeights
+        self.weights['output'] = outputNodeInitialWeights
 
         # Setup initial biases
-        hiddenLayerInitialBias = numpy.random.uniform(0, 1, self.nodesPerLayer[1]).tolist()
-        outputLayerInitialBias = numpy.random.uniform(0, 1, self.nodesPerLayer[2]).tolist()
+        self.biases['hidden'] = numpy.random.uniform(0, 1, self.nodesPerLayer[1]).tolist()
+        self.biases['output'] = numpy.random.uniform(0, 1, self.nodesPerLayer[2]).tolist()
 
-        # Run backpropagation
-        newWeights, newBiases = self.backpropagation(epochCount, trainingDataMap, learningRate,
-                                                     hiddenLayerInitialWeights, outputLayerInitialWeights,
-                                                     hiddenLayerInitialBias, outputLayerInitialBias)
-
-        # Store weights and biases in perceptron class
-        for layerKey, weights in enumerate(newWeights):
-            self.weights[layerKey] = weights
-        for layerKey, biases in enumerate(newBiases):
-            self.biases[layerKey] = biases
+        # Run backpropagation to train neural net
+        self.backpropagation(epochCount, trainingDataMap, learningRate)
 
     # end init
 
     # Normalize a given dataframe into x and y dimensions
     def normalizeData(self, data: pandas.DataFrame) -> dict:
         return {
-            'x': list(map(lambda x: x / 255, data.iloc[:, 1:].to_numpy())),
-            'y': list(data.iloc[:, 0])
+            'alphaValues': list(map(lambda x: x / 255, data.iloc[:, 1:].to_numpy())),
+            'labels': list(data.iloc[:, 0])
         }
 
     # end normalizeData
 
-    def backpropagation(self, epochs: int, trainDataMap: dict, learningRate: float, hiddenLayerWeights: list,
-                        outputLayerWeights: list, hiddenLayerBias: list, outputLayerBias: list):
+    def backpropagation(self, epochs: int, trainDataMap: dict, learningRate: float):
+        hiddenLayerWeights = self.weights['hidden']
+        outputNodeWeights = self.weights['output']
+        hiddenLayerBias = self.biases['hidden']
+        outputNodeBias = self.biases['output']
+
         for epoch in range(epochs):
-            for index, xData in enumerate(trainDataMap['x']):
+            for index, alphaBatch in enumerate(trainDataMap['alphaValues']):
                 # Get error of output layer
-                predictionOutputInput, hiddenLayerInput, outputGradiant, hiddenGradiant = \
-                    self.forwardPass(xData, hiddenLayerWeights, outputLayerWeights, hiddenLayerBias, outputLayerBias)
+                outputNodeInput, hiddenLayerInput, outputNodeOutput, hiddenLayerOutput = \
+                    self.forwardPass(alphaBatch, hiddenLayerWeights, outputNodeWeights, hiddenLayerBias, outputNodeBias)
 
-                yData = trainDataMap['y'][index]
+                yData = trainDataMap['labels'][index]
 
-                error = yData - outputGradiant
+                error = yData - outputNodeOutput
 
                 # Derivative of sigmoid(x)
                 sigmoidPrime = lambda x: sigmoid(x) * (1 - sigmoid(x))
 
-                outputDelta = error * sigmoidPrime(predictionOutputInput)
-                sigmoidPrimeResults = list(map(sigmoidPrime, hiddenLayerInput))
-                hiddenDelta = numpy.multiply(numpy.dot(outputLayerWeights, outputDelta), sigmoidPrimeResults)
+                outputDelta = error * sigmoidPrime(outputNodeInput)
+                hiddenDelta = numpy.dot(outputNodeWeights, outputDelta)
+                hiddenLayerGradients = numpy.outer(alphaBatch, numpy.array(hiddenDelta))
 
                 # Update weights and biases
-                outputLayerWeights = outputLayerWeights + learningRate * numpy.dot(hiddenGradiant, outputDelta)
-                outputLayerBias = outputLayerBias + numpy.array(learningRate * outputDelta)
-                hiddenLayerWeights = hiddenLayerWeights + learningRate * \
-                                     numpy.outer(xData, numpy.array(hiddenDelta).transpose())
+                outputNodeWeights = outputNodeWeights + learningRate * numpy.dot(hiddenLayerOutput, outputDelta)
+                outputNodeBias = outputNodeBias + numpy.array(learningRate * outputDelta)
+                hiddenLayerWeights = hiddenLayerWeights + learningRate * hiddenLayerGradients
                 hiddenLayerBias = hiddenLayerBias + numpy.array(learningRate * hiddenDelta)
             # end inner for
         # end outer for
-        return {'output': outputLayerWeights, 'hidden': hiddenLayerWeights}, \
-            {'output': outputLayerBias, 'hidden': hiddenLayerBias}
+
+        # Apply updated weights and biases to neural net dictionaries
+        self.weights['hidden'] = hiddenLayerWeights
+        self.weights['output'] = outputNodeWeights
+        self.biases['hidden'] = hiddenLayerBias
+        self.biases['output'] = outputNodeBias
 
     # end backPropagation
 
     #
-    def forwardPass(self, batchInput: numpy.ndarray, hiddenLayerWeights: list, outputLayerWeights: list,
-                    hiddenLayerBias: list, outputLayerBias: list):
-        # TODO: Generalize forwardPass
+    def forwardPass(self, batchInput: numpy.ndarray, hiddenLayerWeights: list, outputNodeWeights: list,
+                    hiddenLayerBias: list, outputNodeBias: list):
         # hidden layer
         hiddenLayerInput = numpy.dot(numpy.array(hiddenLayerWeights).transpose(), batchInput)
         hiddenLayerInput = numpy.add(hiddenLayerBias, hiddenLayerInput)
-        hiddenLayerGradiant = list(map(sigmoid, hiddenLayerInput))
+        hiddenLayerOutput = list(map(sigmoid, hiddenLayerInput))
 
         # output layer
-        outputLayerInput = numpy.dot(numpy.array(outputLayerWeights).transpose(), hiddenLayerGradiant)
-        outputLayerInput = numpy.add(outputLayerBias, outputLayerInput)
-        outputLayerGradiant = sigmoid(outputLayerInput)
+        outputNodeInput = numpy.dot(numpy.array(outputNodeWeights).transpose(), hiddenLayerOutput)
+        outputNodeInput = numpy.add(outputNodeBias, outputNodeInput)
+        outputNodeOutput = sigmoid(outputNodeInput)
 
-        return outputLayerInput, hiddenLayerInput, outputLayerGradiant, hiddenLayerGradiant
+        return outputNodeInput, hiddenLayerInput, outputNodeOutput, hiddenLayerOutput
 
     # end forwardPass
 
@@ -127,27 +130,38 @@ class Perceptron:
     def test(self, testData: pandas.DataFrame):
         normalizedTestData = self.normalizeData(testData)
         correctPredictionCount = 0
+        totalPredictions = len(normalizedTestData['labels'])
 
-        for index, xData in enumerate(normalizedTestData['x']):
+        for index, alphaBatch in enumerate(normalizedTestData['alphaValues']):
             predictionOutputInput, hiddenLayerInput, predictionOutput, hiddenLayer = \
-                self.forwardPass(xData, self.weights['hidden'], self.weights['output'],
+                self.forwardPass(alphaBatch, self.weights['hidden'], self.weights['output'],
                                  self.biases['hidden'], self.biases['output'])
 
             roundedPrediction = round(predictionOutput)
 
-            if roundedPrediction == normalizedTestData['y'][index]:
+            if roundedPrediction == normalizedTestData['labels'][index]:
                 correctPredictionCount += 1
 
         # end for
 
+        print('Total predictions: ', totalPredictions)
         print('Correct predictions: ', correctPredictionCount)
-        print('Accuracy: ', (correctPredictionCount / len(normalizedTestData['y'])) * 100, '%')
+        print('Accuracy: ', (correctPredictionCount / totalPredictions) * 100, '%')
     # end test
 
 
 # end Perceptron
-print("Training neural net...")
-multiLaterPerceptron = Perceptron(trainData[0], 0.5, 200)
 
-print("Testing neural net...")
+print("Training neural net (0 - 1)...")
+multiLaterPerceptron = NeuralNetPerceptron(trainData[0], 0.5, 50)
+
+print("Testing neural net (0 - 1)...")
 multiLaterPerceptron.test(testData[0])
+
+print("\n----------------\n")
+
+print("Training neural net (0 - 4)...")
+multiLaterPerceptron = NeuralNetPerceptron(trainData[1], 0.5, 50)
+
+print("Testing neural net (0 - 4)...")
+multiLaterPerceptron.test(testData[1])
