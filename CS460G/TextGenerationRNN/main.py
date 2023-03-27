@@ -51,6 +51,7 @@ class RNNModel(nn.Module):
     def forward(self, x):
         hiddenState = torch.zeros(self.layerCount, 1, self.hiddenSize)
         output, hiddenState = self.rnn(x, hiddenState)
+        output = output.contiguous().view(-1, self.hiddenSize)
         output = self.fc(output)
 
         return output, hiddenState
@@ -66,20 +67,25 @@ class RNNModel(nn.Module):
             for i in range(len(input)):
                 optimizer.zero_grad()
 
-                x = torch.from_numpy(oneHotGeneration(input[i], vocabularySize))
-                y = torch.Tensor(output[i])
+                # Not ideal way to do this, but works for this data set
+                if len(input[i]) > 0:
+                    x = torch.from_numpy(oneHotGeneration(input[i], vocabularySize))
+                    y = torch.Tensor(output[i])
 
-                modelOutput, hidden = model(x)
+                    modelOutput, hidden = model(x)
 
-                lossValue = loss(modelOutput, y.view(-1).long())
-                lossValue.backward()
-                optimizer.step()
+                    yLoss = y.view(-1).long()
+
+                    lossValue = loss(modelOutput, yLoss)
+                    lossValue.backward()
+                    optimizer.step()
 
         print("Loss: {:.4f}".format(lossValue.item()))
 
     def predict(self, character):
         characterInput = np.array([characterIntegers[c] for c in character])
         characterInput = oneHotGeneration(characterInput, vocabularySize)
+        characterInput = torch.from_numpy(characterInput)
         out, hidden = model(characterInput)
 
         probability = nn.functional.softmax(out[-1], dim=0).data
@@ -87,7 +93,7 @@ class RNNModel(nn.Module):
 
         return integerCharacters[characterIndex], hidden
 
-    def sample(self, outputLength, start='Dursley'):
+    def sample(self, outputLength, start='Citizen'):
         characters = [ch for ch in start]
         currentSize = outputLength - len(characters)
         for i in range(currentSize):
@@ -104,4 +110,5 @@ model = RNNModel(vocabularySize, vocabularySize, 100, 1)
 model.trainModel(inputSequence, outputSequence, 50)
 
 # Test model through predictions
-print(model.sample(50))
+print("Model trained. Testing sample output:")
+print(model.sample(100))
