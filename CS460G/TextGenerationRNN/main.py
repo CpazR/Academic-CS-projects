@@ -1,11 +1,10 @@
-import numpy
 import numpy as np
 import torch
 from torch import nn
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-shakespeareText = open('tiny-shakespeare.txt', 'r')
+shakespeareText = open('tiny-shakespeare.txt')
 
 # Replace all newlines with plain whitespace then split based on sentence
 lines = shakespeareText.readlines()
@@ -99,7 +98,7 @@ class RNNModel(nn.Module):
 
         return integerCharacters[characterIndex], hidden
 
-    def sample(self, outputLength, start='Citizen'):
+    def sample(self, outputLength, start='QUEEN'):
         characters = [ch for ch in start]
         currentSize = outputLength - len(characters)
         for i in range(currentSize):
