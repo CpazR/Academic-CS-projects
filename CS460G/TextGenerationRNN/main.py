@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from torch import nn
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 shakespeareText = open('tiny-shakespeare.txt', 'r')
 
 # Replace all newlines with plain whitespace then split based on sentence
@@ -50,6 +52,8 @@ class RNNModel(nn.Module):
 
     def forward(self, x):
         hiddenState = torch.zeros(self.layerCount, 1, self.hiddenSize)
+        hiddenState = hiddenState.to(device)
+
         output, hiddenState = self.rnn(x, hiddenState)
         output = output.contiguous().view(-1, self.hiddenSize)
         output = self.fc(output)
@@ -79,13 +83,15 @@ class RNNModel(nn.Module):
                     lossValue = loss(modelOutput, yLoss)
                     lossValue.backward()
                     optimizer.step()
-
         print("Loss: {:.4f}".format(lossValue.item()))
 
     def predict(self, character):
         characterInput = np.array([characterIntegers[c] for c in character])
         characterInput = oneHotGeneration(characterInput, vocabularySize)
+
         characterInput = torch.from_numpy(characterInput)
+        characterInput = characterInput.to(device)
+
         out, hidden = model(characterInput)
 
         probability = nn.functional.softmax(out[-1], dim=0).data
