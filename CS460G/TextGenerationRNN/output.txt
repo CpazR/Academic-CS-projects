@@ -1,0 +1,29 @@
+50 epochs "Citizens"
+C:\Python311\python.exe C:/Users/nicky/AppData/Local/JetBrains/Toolbox/apps/PyCharm-P/ch-0/223.8617.48/plugins/python/helpers/pydev/pydevd.py --cmd-line --multiprocess --qt-support=auto --client 127.0.0.1 --port 55940 --file "F:\Backup DO NOT DELETE\git\Academic-CS-projects\CS460G\TextGenerationRNN\main.py"
+Connected to pydev debugger (build 223.8617.48)
+Training model over  50  epochs:
+Loss: 1.5598
+Model trained. Testing sample output:
+Citizens the son so son the son so son the son so son the son so son the son so son the son so son t
+import sys; print('Python %s on %s' % (sys.version, sys.platform))
+
+10 epochs "QUEEN"
+C:\Python311\python.exe C:/Users/nicky/AppData/Local/JetBrains/Toolbox/apps/PyCharm-P/ch-0/223.8617.48/plugins/python/helpers/pydev/pydevconsole.py --mode=client --host=127.0.0.1 --port=63633
+import sys; print('Python %s on %s' % (sys.version, sys.platform))
+sys.path.extend(['F:\\Backup DO NOT DELETE\\git\\Academic-CS-projects\\CS460G\\TextGenerationRNN'])
+PyDev console: starting.
+Python 3.11.2 (tags/v3.11.2:878ead1, Feb  7 2023, 16:38:35) [MSC v.1934 64 bit (AMD64)] on win32
+runfile('F:\\Backup DO NOT DELETE\\git\\Academic-CS-projects\\CS460G\\TextGenerationRNN\\main.py', wdir='F:\\Backup DO NOT DELETE\\git\\Academic-CS-projects\\CS460G\\TextGenerationRNN')
+Training model over  10  epochs:
+Loss: 1.4624
+Model trained. Testing sample output:
+QUEEN:O: VINCPALINA: O, VIO:: O PRINRINE: VINC: VIANDOLO: VIman so speak and so speak and so speak a
+
+50 epochs "QUEEN"
+C:\Python311\python.exe C:/Users/nicky/AppData/Local/JetBrains/Toolbox/apps/PyCharm-P/ch-0/223.8617.48/plugins/python/helpers/pydev/pydevd.py --cmd-line --multiprocess --qt-support=auto --client 127.0.0.1 --port 51365 --file "F:\Backup DO NOT DELETE\git\Academic-CS-projects\CS460G\TextGenerationRNN\main.py"
+Connected to pydev debugger (build 223.8617.48)
+Training model over  50  epochs:
+Loss: 1.5815
+Model trained. Testing sample output:
+QUEENAND:RWACA:: OE AENERD:: SVONANA: ANANAANTA: DVANANA: ANANANDE: SCRIOH: VINCENTIO: AVANDONA: IEN
+import sys; print('Python %s on %s' % (sys.version, sys.platform))
