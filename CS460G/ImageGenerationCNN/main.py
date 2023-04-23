@@ -10,31 +10,106 @@ import torch.nn.functional as F
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+# A class containing various information about the training set
+class DataSet(object):
+
+    def __init__(self, images, labels, img_names, cls):
+        self._num_examples = images.shape[0]
+
+        self._images = images
+        self._labels = labels
+        self._img_names = img_names
+        self._cls = cls
+        self._epochs_done = 0
+        self._index_in_epoch = 0
+
+        self.xData = torch.from_numpy(self._images).float()
+        self.yData = torch.max(torch.from_numpy(self._labels).float(), 1)[1]
+        self.sampleCount = self._labels[0].shape
+
+    def __getitem__(self, index):
+        return self.xData[index], self.yData[index]
+
+    def __len__(self):
+        return self.sampleCount
+
+    # Return the set of images
+    @property
+    def images(self):
+        return self[0:][0]
+
+    # Return the set of 1-hot class vectors
+    @property
+    def labels(self):
+        return self[0:][1]
+
+    # Return the set of image filenames
+    @property
+    def img_names(self):
+        return self._img_names
+
+    # Return the set of class labels
+    @property
+    def cls(self):
+        return self._cls
+
+    # Return the number of examples in the training set
+    @property
+    def num_examples(self):
+        return self._num_examples
+
+    # Return the number of epochs that have been completed
+    @property
+    def epochs_done(self):
+        return self._epochs_done
+
+    # Retrieve the next batch of data to pass to the neural network
+    # Inputs:
+    # batch_size: The number of training examples to return in a batch
+    # Outputs:
+    # the images in the next batch, the 1-hot class vectors for the next batch, the filenames in the next batch, and the class labels in the next batch
+    def next_batch(self, batch_size):
+        start = self._index_in_epoch
+        self._index_in_epoch += batch_size
+
+        if self._index_in_epoch > self._num_examples:
+            self._epochs_done += 1
+            start = 0
+            self._index_in_epoch = batch_size
+            assert batch_size <= self._num_examples
+        end = self._index_in_epoch
+
+        return self._images[start:end], self._labels[start:end], self._img_names[start:end], self._cls[start:end]
+
+
+class DataSets(object):
+    train: DataSet
+    valid: DataSet
+
+
 class CNNModel(nn.Module):
-    def __init__(self, dataSet):
+    def __init__(self):
         super(CNNModel, self).__init__()
 
-        self.conv_01 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1)
+        # Three convolutional layers in total
+        self.conv_01 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), stride=1, padding=1)
         self.norm_01 = nn.BatchNorm2d(32)
-        self.conv_02 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
-        self.norm_02 = nn.BatchNorm2d(64)
-        self.conv_02 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)
-        self.norm_02 = nn.BatchNorm2d(128)
+        self.conv_02 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), stride=1, padding=0)
+        self.norm_02 = nn.BatchNorm2d(32)
+        self.conv_03 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=0)
+        self.norm_03 = nn.BatchNorm2d(64)
+        self.pool = nn.MaxPool2d(2, 2)
 
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc_01 = nn.Linear(128 * 7 * 7, 4096)
-        self.fc_02 = nn.Linear(4096, 133)
-        self.dropout = nn.Dropout(0.5)
+        self.fc_01 = nn.Linear(64 * 40 * 40, 128)
+        self.fc_02 = nn.Linear(128, 2)
 
     def forward(self, x):
         x = self.pool(F.relu(self.norm_01(self.conv_01(x))))
         x = self.pool(F.relu(self.norm_02(self.conv_02(x))))
         x = self.pool(F.relu(self.norm_03(self.conv_03(x))))
 
-        x = x.view(-1, 7 * 7 * 128)
-        x = self.dropout(x)
+        x = x.view(-1, 64 * 40 * 40)
         x = F.relu(self.fc_01(x))
-        x = self.dropout(x)
         x = self.fc_02(x)
 
         return x
@@ -42,24 +117,22 @@ class CNNModel(nn.Module):
     def trainModel(self, input, epochs):
         loss = nn.CrossEntropyLoss()
         lossValue = 0
-
-        optimizer = torch.optim.Adam(self.parameters())
+        optimizer = torch.optim.SGD(self.parameters(), lr=0.0000001)
 
         print('Training model over ', epochs, ' epochs:')
         for epoch in range(epochs):
-            for batch, item in enumerate(input):
-                images = item['image'].to(device)
-                labels = item['label'].to(device)
-
-                outputs = self.forward(images)
-                lossValue = loss(outputs, labels)
-
+            for i in range(73):
                 optimizer.zero_grad()
+                images, clazz = input.train[i * 4:4 * i + 4]
+
+                outputs = self(images)
+                lossValue = loss(outputs, clazz)
+
                 lossValue.backwards()
                 optimizer.step()
 
         print("Loss: {:.4f}".format(lossValue.item()))
-        print("TO BE IMPLEMENTED")
+        torch.save(self.state_dict(), './output.pth')
 
     def predict(self):
         print("TO BE IMPLEMENTED")
@@ -99,62 +172,6 @@ def load_train(train_path, image_size, classes):
     return images, labels, img_names, cls
 
 
-# A class containing various information about the training set
-class DataSet(object):
-
-    def __init__(self, images, labels, img_names, cls):
-        self._num_examples = images.shape[0]
-
-        self._images = images
-        self._labels = labels
-        self._img_names = img_names
-        self._cls = cls
-        self._epochs_done = 0
-        self._index_in_epoch = 0
-
-    # Return the set of images
-    def images(self):
-        return self._images
-
-    # Return the set of 1-hot class vectors
-    def labels(self):
-        return self._labels
-
-    # Return the set of image filenames
-    def img_names(self):
-        return self._img_names
-
-    # Return the set of class labels
-    def cls(self):
-        return self._cls
-
-    # Return the number of examples in the training set
-    def num_examples(self):
-        return self._num_examples
-
-    # Return the number of epochs that have been completed
-    def epochs_done(self):
-        return self._epochs_done
-
-    # Retrieve the next batch of data to pass to the neural network
-    # Inputs:
-    # batch_size: The number of training examples to return in a batch
-    # Outputs:
-    # the images in the next batch, the 1-hot class vectors for the next batch, the filenames in the next batch, and the class labels in the next batch
-    def next_batch(self, batch_size):
-        start = self._index_in_epoch
-        self._index_in_epoch += batch_size
-
-        if self._index_in_epoch > self._num_examples:
-            self._epochs_done += 1
-            start = 0
-            self._index_in_epoch = batch_size
-            assert batch_size <= self._num_examples
-        end = self._index_in_epoch
-
-        return self._images[start:end], self._labels[start:end], self._img_names[start:end], self._cls[start:end]
-
-
 # Code to read in training data and put it in a decent format for learning
 # Inputs:
 # train_path: a string containing the path to the training data
@@ -164,9 +181,6 @@ class DataSet(object):
 # Returns:
 # data_sets: a DataSet object containing images, labels, 1-hot label vectors, filenames, as well as training and validation data.
 def read_train_sets(train_path, image_size, classes, validation_size):
-    class DataSets(object):
-        pass
-
     data_sets = DataSets()
 
     images, labels, img_names, cls = load_train(train_path, image_size, classes)
@@ -191,8 +205,12 @@ def read_train_sets(train_path, image_size, classes, validation_size):
     return data_sets
 
 
-dataSet = read_train_sets("data/training_data", 300, ['pembroke', 'cardigan'], 0.5)
+dataSets = read_train_sets("data/training_data", 332, ['pembroke', 'cardigan'], 1)
 
-model = CNNModel(dataSet)
+dataSets.train.images.to(device)
+dataSets.train.labels.to(device)
 
-model.trainModel(dataSet, 10)
+model = CNNModel().to(device)
+mode = model.float()
+
+model.trainModel(dataSets, 10)
