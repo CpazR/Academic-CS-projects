@@ -3,11 +3,7 @@ import os
 import glob
 from sklearn.utils import shuffle
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import tensorflow as tf
 
 
 # A class containing various information about the training set
@@ -22,16 +18,6 @@ class DataSet(object):
         self._cls = cls
         self._epochs_done = 0
         self._index_in_epoch = 0
-
-        self.xData = torch.from_numpy(self._images).float()
-        self.yData = torch.max(torch.from_numpy(self._labels).float(), 1)[1]
-        self.sampleCount = self._labels[0].shape
-
-    def __getitem__(self, index):
-        return self.xData[index], self.yData[index]
-
-    def __len__(self):
-        return self.sampleCount
 
     # Return the set of images
     @property
@@ -87,55 +73,121 @@ class DataSets(object):
     valid: DataSet
 
 
-class CNNModel(nn.Module):
-    def __init__(self):
-        super(CNNModel, self).__init__()
+class CNNModel:
+    def __init__(self, imageSize, imageChannelCount):
+        tf.compat.v1.disable_eager_execution()
+        # Convolutional layer properties
+        self.convSize01 = 3
+        self.filterCount01 = 32
 
-        # Three convolutional layers in total
-        self.conv_01 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), stride=1, padding=1)
-        self.norm_01 = nn.BatchNorm2d(32)
-        self.conv_02 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), stride=1, padding=0)
-        self.norm_02 = nn.BatchNorm2d(32)
-        self.conv_03 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=1, padding=0)
-        self.norm_03 = nn.BatchNorm2d(64)
-        self.pool = nn.MaxPool2d(2, 2)
+        self.convSize02 = 3
+        self.filterCount02 = 32
 
-        self.fc_01 = nn.Linear(64 * 40 * 40, 128)
-        self.fc_02 = nn.Linear(128, 2)
+        self.convSize03 = 3
+        self.filterCount03 = 64
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.norm_01(self.conv_01(x))))
-        x = self.pool(F.relu(self.norm_02(self.conv_02(x))))
-        x = self.pool(F.relu(self.norm_03(self.conv_03(x))))
+        # Fully connected layer properties
+        self.connectedLayerSize = 128
 
-        x = x.view(-1, 64 * 40 * 40)
-        x = F.relu(self.fc_01(x))
-        x = self.fc_02(x)
+        self.classCount = 2
 
-        return x
+        self.imageDimensions = imageSize ** 2 * imageChannelCount
+        xVal = tf.compat.v1.placeholder(tf.float32, shape=[None, self.imageDimensions], name='x')
+        x_image = tf.reshape(xVal, [-1, imageSize, imageSize, imageChannelCount])
 
-    def trainModel(self, input, epochs):
-        loss = nn.CrossEntropyLoss()
+        # Generate layers
+        self.convLayer01, self.convWeights01 = self.generateConvLayer(input=x_image,
+                                                                      channelCount=imageChannelCount,
+                                                                      size=self.convSize01,
+                                                                      filterCount=self.filterCount01)
+        self.convLayer02, self.convWeights02 = self.generateConvLayer(input=self.convLayer01,
+                                                                      channelCount=self.convSize01,
+                                                                      size=self.convSize02,
+                                                                      filterCount=self.filterCount02)
+        self.convLayer03, self.convWeights03 = self.generateConvLayer(input=self.convLayer02,
+                                                                      channelCount=self.convSize02,
+                                                                      size=self.convSize03,
+                                                                      filterCount=self.filterCount03)
+        self.flattenedLayer, self.featureCount = self.flattenLayer(self.convLayer03)
+
+        self.connectedLayer01 = self.generateConnectedLayer(input=self.flattenedLayer, inputCount=self.featureCount,
+                                                            outputCount=self.connectedLayerSize, useRelu=True)
+        self.connectedLayer02 = self.generateConnectedLayer(input=self.connectedLayer01,
+                                                            inputCount=self.connectedLayerSize,
+                                                            outputCount=self.classCount, useRelu=False)
+        self.session = tf.compat.v1.Session()
+        self.session.run(tf.compat.v1.global_variables_initializer())
+
+    def endSession(self):
+        self.session.close()
+
+    def trainModel(self, input, epochs, batchSize):
+        y_true = tf.compat.v1.placeholder(tf.float32, shape=[None, self.classCount], name='y_true')
+
+        # Some optimizations
+        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.connectedLayer02, labels=y_true)
+        cost = tf.reduce_mean(crossEntropy)
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4).minimize(cost)
+
         lossValue = 0
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.0000001)
+        # Begin training
+        for i in range(epochs):
+            xBatch, yTrueBatch, _, clsBatch = input.train.next_batch(batchSize)
+            xValidBatch, yValidBatch, _, clsValidBatch = input.valid.next_batch(batchSize)
 
-        print('Training model over ', epochs, ' epochs:')
-        for epoch in range(epochs):
-            for i in range(73):
-                optimizer.zero_grad()
-                images, clazz = input.train[i * 4:4 * i + 4]
+            xBatch = xBatch.reshape(batchSize, self.imageDimensions)
+            xValidBatch = xValidBatch.reshape(batchSize, self.imageDimensions)
 
-                outputs = self(images)
-                lossValue = loss(outputs, clazz)
+            feedDictTrain = {x: xBatch, y_true: yTrueBatch}
+            feedDictValid = {x: xValidBatch, y_true: yValidBatch}
 
-                lossValue.backwards()
-                optimizer.step()
+            self.session.run(optimizer, feed_dict=feedDictTrain)
+            # Calculate loss
+            lossValue += self.session.run(cost, feed_dict=feedDictValid)
 
-        print("Loss: {:.4f}".format(lossValue.item()))
-        torch.save(self.state_dict(), './output.pth')
+        # Print loss
+        print("Total loss: " + str(lossValue))
 
     def predict(self):
         print("TO BE IMPLEMENTED")
+
+    def generateWeights(selfself, shape):
+        return tf.Variable(tf.random.truncated_normal(shape, stddev=0.05))
+
+    def generateBiases(self, length):
+        return tf.Variable(tf.constant(0.05, shape=[length]))
+
+    def generateConvLayer(self, input, channelCount, size, filterCount):
+        shape = [size, size, channelCount, filterCount]
+
+        weights = self.generateWeights(shape)
+        biases = self.generateBiases(length=filterCount)
+
+        newLayer = tf.nn.conv2d(input, filters=weights, strides=[1, 1, 1, 1], padding='SAME')
+        newLayer += biases
+        newLayer = tf.nn.max_pool(value=newLayer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        newLayer = tf.nn.relu(newLayer)
+
+        return newLayer, weights
+
+    def flattenLayer(self, layer):
+        layerShape = layer.shape()
+        featureCount = layerShape[1:4].num_elements()
+
+        flattenedLayer = tf.reshape(layer, [-1, featureCount])
+
+        return flattenedLayer, featureCount
+
+    def generateConnectedLayer(self, input, inputCount, outputCount, useRelu=True):
+        weights = self.generateWeights(shape=[inputCount, outputCount])
+        biases = self.generateBiases(length=outputCount)
+
+        newlyConnectedLayer = tf.matmul(input, weights) + biases
+
+        if useRelu:
+            newlyConnectedLayer = tf.nn.relu(newlyConnectedLayer)
+
+        return newlyConnectedLayer
 
 
 # Helper function to load in the training set of images and resize them all to the given size
@@ -205,12 +257,15 @@ def read_train_sets(train_path, image_size, classes, validation_size):
     return data_sets
 
 
-dataSets = read_train_sets("data/training_data", 332, ['pembroke', 'cardigan'], 1)
+# Image properties
+imageSize = 128
+channelCount = 3
 
-dataSets.train.images.to(device)
-dataSets.train.labels.to(device)
+batchSize = 32
+validationSize = 0.15
 
-model = CNNModel().to(device)
-mode = model.float()
+dataSets = read_train_sets("data/training_data", imageSize, ['pembroke', 'cardigan'], validationSize)
 
-model.trainModel(dataSets, 10)
+model = CNNModel(imageSize, channelCount)
+
+model.trainModel(dataSets, 10, batchSize)
