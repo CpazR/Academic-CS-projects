@@ -22,12 +22,12 @@ class DataSet(object):
     # Return the set of images
     @property
     def images(self):
-        return self[0:][0]
+        return self._images
 
     # Return the set of 1-hot class vectors
     @property
     def labels(self):
-        return self[0:][1]
+        return self._labels
 
     # Return the set of image filenames
     @property
@@ -75,8 +75,11 @@ class DataSets(object):
 
 class CNNModel:
     def __init__(self, imageSize, imageChannelCount):
+        self.optimizer = None
         self.session = None
         self.lossValues = []
+        self.accuracyValues = []
+        self.yTrue = None
 
         tf.compat.v1.disable_eager_execution()
         tf.compat.v1.disable_v2_behavior()
@@ -97,10 +100,10 @@ class CNNModel:
 
         self.imageDimensions = imageSize ** 2 * imageChannelCount
         self.xVal = tf.compat.v1.placeholder(tf.float32, shape=[None, self.imageDimensions], name='xVal')
-        x_image = tf.reshape(self.xVal, [-1, imageSize, imageSize, imageChannelCount])
+        initialImage = tf.reshape(self.xVal, [-1, imageSize, imageSize, imageChannelCount])
 
         # Generate layers
-        self.convLayer01, self.convWeights01 = self.generateConvLayer(input=x_image,
+        self.convLayer01, self.convWeights01 = self.generateConvLayer(input=initialImage,
                                                                       channelCount=imageChannelCount,
                                                                       filterSize=self.convFilterSize01,
                                                                       filterCount=self.convFilterCount01)
@@ -120,37 +123,64 @@ class CNNModel:
                                                             inputCount=self.connectedLayerSize,
                                                             outputCount=self.classCount, useRelu=False)
 
-    def trainModel(self, input, epochs, batchSize):
-        yTrue = tf.compat.v1.placeholder(tf.float32, shape=[None, self.classCount], name='yTrue')
+    def trainModel(self, trainInput, iterations, batchSize):
+        self.yTrue = tf.compat.v1.placeholder(tf.float32, shape=[None, self.classCount], name='yTrue')
 
         # Some optimizations
-        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.connectedLayer02, labels=yTrue)
+        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.connectedLayer02, labels=self.yTrue)
         cost = tf.reduce_mean(crossEntropy)
         optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4).minimize(cost)
+
         currentLoss = 0
 
         self.initSession()
+
         # Begin training
-        for i in range(epochs):
-            xBatch, yTrueBatch, _, clsBatch = input.train.next_batch(batchSize)
-            xValidBatch, yValidBatch, _, clsValidBatch = input.valid.next_batch(batchSize)
+        for i in range(iterations):
+            xBatch, yTrueBatch, _, clsBatch = trainInput.train.next_batch(batchSize)
+            xValidBatch, yValidBatch, _, clsValidBatch = trainInput.valid.next_batch(batchSize)
 
             xBatch = xBatch.reshape(batchSize, self.imageDimensions)
             xValidBatch = xValidBatch.reshape(batchSize, self.imageDimensions)
 
-            feedDictTrain = {self.xVal: xBatch, yTrue: yTrueBatch}
-            feedDictValid = {self.xVal: xValidBatch, yTrue: yValidBatch}
+            feedDictTrain = {self.xVal: xBatch, self.yTrue: yTrueBatch}
+            feedDictValid = {self.xVal: xValidBatch, self.yTrue: yValidBatch}
 
             self.session.run(optimizer, feed_dict=feedDictTrain)
+
             # Calculate loss and add to list
             currentLoss = self.session.run(cost, feed_dict=feedDictValid)
             self.lossValues.append(currentLoss)
 
-        # Print loss
         print("Final loss: " + str(currentLoss))
 
-    def predict(self):
-        print("TO BE IMPLEMENTED")
+    def testAgainstData(self, testInput: DataSet):
+        testCount = len(testInput._images)
+
+        yPrediction = tf.nn.softmax(self.connectedLayer02)
+        yPredictionClass = tf.argmax(yPrediction, axis=1)
+
+        classPredictions = np.zeros(shape=testCount, dtype=int)
+        batchSize = 1
+
+        # Test input data against existing model
+        for i in range(testCount):
+            image, label, _, imageClass = testInput.next_batch(batchSize)
+
+            image = image.reshape(batchSize, self.imageDimensions)
+            feedDictTest = {self.xVal: image, self.yTrue: label}
+
+            # Make predictions of test data against model and add class preditctions to a predictions array
+            classPrediction = self.session.run(yPredictionClass, feed_dict=feedDictTest)
+            np.put(classPredictions, i, classPrediction)
+
+        classTrue = np.array(testInput.cls)
+        totalPredictions = np.array([classes[x] for x in classPredictions])
+
+        correctPredictions = (classTrue == totalPredictions).sum()
+        totalAccuracy = float(correctPredictions) / testCount
+
+        print("Final accuracy: " + str(totalAccuracy))
 
     # High level helper methods
 
@@ -210,7 +240,7 @@ class CNNModel:
 
 # Helper function to load in the training set of images and resize them all to the given size
 
-def load_train(train_path, image_size, classes):
+def load_data(train_path, image_size, classes):
     images = []
     labels = []
     img_names = []
@@ -253,7 +283,7 @@ def load_train(train_path, image_size, classes):
 def read_train_sets(train_path, image_size, classes, validation_size):
     data_sets = DataSets()
 
-    images, labels, img_names, cls = load_train(train_path, image_size, classes)
+    images, labels, img_names, cls = load_data(train_path, image_size, classes)
     images, labels, img_names, cls = shuffle(images, labels, img_names, cls)
 
     if isinstance(validation_size, float):
@@ -280,10 +310,23 @@ imageSize = 128
 channelCount = 3
 
 batchSize = 32
-validationSize = 0.15
+validationSize = 0.2
 
-dataSets = read_train_sets("data/training_data", imageSize, ['pembroke', 'cardigan'], validationSize)
+classes = ['pembroke', 'cardigan']
 
+dataSets = read_train_sets("data/training_data", imageSize, classes, validationSize)
+testingDataset = DataSet(*load_data("data/testing_data", imageSize, classes))
+
+print("Initializing model...")
 model = CNNModel(imageSize, channelCount)
+print("Model initialized!")
 
-model.trainModel(dataSets, 100, batchSize)
+epochs = 500
+print('Training model over', epochs, 'epochs...')
+model.trainModel(dataSets, epochs, batchSize)
+
+print("Testing model...")
+model.testAgainstData(testingDataset)
+
+print("Ending session...")
+model.endSession()
