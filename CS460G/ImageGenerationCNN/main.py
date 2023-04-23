@@ -75,16 +75,20 @@ class DataSets(object):
 
 class CNNModel:
     def __init__(self, imageSize, imageChannelCount):
+        self.session = None
+        self.lossValues = []
+
         tf.compat.v1.disable_eager_execution()
+        tf.compat.v1.disable_v2_behavior()
         # Convolutional layer properties
-        self.convSize01 = 3
-        self.filterCount01 = 32
+        self.convFilterSize01 = 3
+        self.convFilterCount01 = 32
 
-        self.convSize02 = 3
-        self.filterCount02 = 32
+        self.convFilterSize02 = 3
+        self.convFilterCount02 = 32
 
-        self.convSize03 = 3
-        self.filterCount03 = 64
+        self.convFilterSize03 = 3
+        self.convFilterCount03 = 64
 
         # Fully connected layer properties
         self.connectedLayerSize = 128
@@ -92,22 +96,22 @@ class CNNModel:
         self.classCount = 2
 
         self.imageDimensions = imageSize ** 2 * imageChannelCount
-        xVal = tf.compat.v1.placeholder(tf.float32, shape=[None, self.imageDimensions], name='x')
-        x_image = tf.reshape(xVal, [-1, imageSize, imageSize, imageChannelCount])
+        self.xVal = tf.compat.v1.placeholder(tf.float32, shape=[None, self.imageDimensions], name='xVal')
+        x_image = tf.reshape(self.xVal, [-1, imageSize, imageSize, imageChannelCount])
 
         # Generate layers
         self.convLayer01, self.convWeights01 = self.generateConvLayer(input=x_image,
                                                                       channelCount=imageChannelCount,
-                                                                      size=self.convSize01,
-                                                                      filterCount=self.filterCount01)
+                                                                      filterSize=self.convFilterSize01,
+                                                                      filterCount=self.convFilterCount01)
         self.convLayer02, self.convWeights02 = self.generateConvLayer(input=self.convLayer01,
-                                                                      channelCount=self.convSize01,
-                                                                      size=self.convSize02,
-                                                                      filterCount=self.filterCount02)
+                                                                      channelCount=self.convFilterCount01,
+                                                                      filterSize=self.convFilterSize02,
+                                                                      filterCount=self.convFilterCount02)
         self.convLayer03, self.convWeights03 = self.generateConvLayer(input=self.convLayer02,
-                                                                      channelCount=self.convSize02,
-                                                                      size=self.convSize03,
-                                                                      filterCount=self.filterCount03)
+                                                                      channelCount=self.convFilterCount02,
+                                                                      filterSize=self.convFilterSize03,
+                                                                      filterCount=self.convFilterCount03)
         self.flattenedLayer, self.featureCount = self.flattenLayer(self.convLayer03)
 
         self.connectedLayer01 = self.generateConnectedLayer(input=self.flattenedLayer, inputCount=self.featureCount,
@@ -115,21 +119,17 @@ class CNNModel:
         self.connectedLayer02 = self.generateConnectedLayer(input=self.connectedLayer01,
                                                             inputCount=self.connectedLayerSize,
                                                             outputCount=self.classCount, useRelu=False)
-        self.session = tf.compat.v1.Session()
-        self.session.run(tf.compat.v1.global_variables_initializer())
-
-    def endSession(self):
-        self.session.close()
 
     def trainModel(self, input, epochs, batchSize):
-        y_true = tf.compat.v1.placeholder(tf.float32, shape=[None, self.classCount], name='y_true')
+        yTrue = tf.compat.v1.placeholder(tf.float32, shape=[None, self.classCount], name='yTrue')
 
         # Some optimizations
-        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.connectedLayer02, labels=y_true)
+        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.connectedLayer02, labels=yTrue)
         cost = tf.reduce_mean(crossEntropy)
         optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=1e-4).minimize(cost)
+        currentLoss = 0
 
-        lossValue = 0
+        self.initSession()
         # Begin training
         for i in range(epochs):
             xBatch, yTrueBatch, _, clsBatch = input.train.next_batch(batchSize)
@@ -138,40 +138,36 @@ class CNNModel:
             xBatch = xBatch.reshape(batchSize, self.imageDimensions)
             xValidBatch = xValidBatch.reshape(batchSize, self.imageDimensions)
 
-            feedDictTrain = {x: xBatch, y_true: yTrueBatch}
-            feedDictValid = {x: xValidBatch, y_true: yValidBatch}
+            feedDictTrain = {self.xVal: xBatch, yTrue: yTrueBatch}
+            feedDictValid = {self.xVal: xValidBatch, yTrue: yValidBatch}
 
             self.session.run(optimizer, feed_dict=feedDictTrain)
-            # Calculate loss
-            lossValue += self.session.run(cost, feed_dict=feedDictValid)
+            # Calculate loss and add to list
+            currentLoss = self.session.run(cost, feed_dict=feedDictValid)
+            self.lossValues.append(currentLoss)
 
         # Print loss
-        print("Total loss: " + str(lossValue))
+        print("Final loss: " + str(currentLoss))
 
     def predict(self):
         print("TO BE IMPLEMENTED")
 
-    def generateWeights(selfself, shape):
-        return tf.Variable(tf.random.truncated_normal(shape, stddev=0.05))
+    # High level helper methods
 
-    def generateBiases(self, length):
-        return tf.Variable(tf.constant(0.05, shape=[length]))
-
-    def generateConvLayer(self, input, channelCount, size, filterCount):
-        shape = [size, size, channelCount, filterCount]
+    def generateConvLayer(self, input, channelCount, filterSize, filterCount):
+        shape = [filterSize, filterSize, channelCount, filterCount]
 
         weights = self.generateWeights(shape)
         biases = self.generateBiases(length=filterCount)
 
-        newLayer = tf.nn.conv2d(input, filters=weights, strides=[1, 1, 1, 1], padding='SAME')
-        newLayer += biases
-        newLayer = tf.nn.max_pool(value=newLayer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+        newLayer = self.conv2d(input, weights) + biases
+        newLayer = self.maxPool2d(newLayer)
         newLayer = tf.nn.relu(newLayer)
 
         return newLayer, weights
 
     def flattenLayer(self, layer):
-        layerShape = layer.shape()
+        layerShape = layer.get_shape()
         featureCount = layerShape[1:4].num_elements()
 
         flattenedLayer = tf.reshape(layer, [-1, featureCount])
@@ -188,6 +184,28 @@ class CNNModel:
             newlyConnectedLayer = tf.nn.relu(newlyConnectedLayer)
 
         return newlyConnectedLayer
+
+    # Low level helper methods for tensorflow operations
+
+    def initSession(self):
+        # Init session
+        self.session = tf.compat.v1.Session()
+        self.session.run(tf.compat.v1.global_variables_initializer())
+
+    def endSession(self):
+        self.session.close()
+
+    def generateWeights(selfself, shape):
+        return tf.Variable(tf.random.truncated_normal(shape, stddev=0.1))
+
+    def generateBiases(self, length):
+        return tf.Variable(tf.constant(0.1, shape=[length]))
+
+    def conv2d(self, x, w):
+        return tf.nn.conv2d(input=x, filters=w, strides=[1, 1, 1, 1], padding='SAME')
+
+    def maxPool2d(self, x):
+        return tf.nn.max_pool(input=x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
 # Helper function to load in the training set of images and resize them all to the given size
@@ -268,4 +286,4 @@ dataSets = read_train_sets("data/training_data", imageSize, ['pembroke', 'cardig
 
 model = CNNModel(imageSize, channelCount)
 
-model.trainModel(dataSets, 10, batchSize)
+model.trainModel(dataSets, 100, batchSize)
