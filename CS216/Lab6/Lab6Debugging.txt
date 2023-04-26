@@ -1,0 +1,6 @@
+#4  0x0000000000404274 in analyzeCoActors (imdb=...) at Lab6.cpp:138
+#5  0x0000000000403e9e in main (argc=2, argv=0x7fffffffe568) at Lab6.cpp:105
+
+1: It going into an endless loop because "option" is an integer. A character or string.
+2: An empty string.
+3: When cin "fails", clear cin before getting the input_to_check.

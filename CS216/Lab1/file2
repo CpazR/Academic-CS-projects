@@ -1,0 +1,59 @@
+    1  man
+    2  1
+    3  man 1
+    4  clr
+    5  ls
+    6  cd documents
+    7  cd Documents
+    8  cd`
+    9  cd~
+   10  cd`
+   11  mkdir CS216
+   12  cd CS216
+   13  mkdir Lab1
+   14  ls
+   15  cd Lab1
+   16  pwd
+   17  pwd > file1
+   18  cd
+   19  cd CS216
+   20  cd Lab1
+   21  dir
+   22  cat file1
+   23  ls -l
+   24  ls -l >> file1
+   25  LS
+   26  cd
+   27  pwd
+   28  ls
+   29  cd CS216
+   30  pwd
+   31  ls
+   32  cd Lab1
+   33  ls
+   34  cat file1
+   35  LS
+   36  cowsay "Hello, Nahian. I'm Nicholas Reel!" >> file1
+   37  cat file1
+   38  echo shell
+   39  echo $shell
+   40  echo$SHELL
+   41  echo $SHELL
+   42  man ls
+   43  history > file2
+                                                                             
+ mmmmmm           "                          mmm   mmmm   mmmm  mmm      mmm 
+ #      m mm    mmm    mmm   m   m         m"   " #"   " "   "#   #    m"   "
+ #mmmmm #"  #     #   #" "#  "m m"         #      "#mmm      m"   #    #m""#m
+ #      #   #     #   #   #   #m#          #          "#   m"     #    #    #
+ #mmmmm #   #     #   "#m#"   "#            "mmm" "mmm#" m#mmmm mm#mm   #mm#"
+                  #           m"                                             
+                ""           ""                                              
+                                                                             
+   m                                                                         
+   #                                                                         
+   #                                                                         
+   "                                                                         
+   #                                                                         
+                                                                             
+                                                                             

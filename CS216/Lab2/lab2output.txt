@@ -1,0 +1,34 @@
+Star Wars: A Musical Journey (2005) (V)
+Star Wars: Episode II - Attack of the Clones (2002)
+Star Wars: Episode III - Revenge of the Sith (2005)
+Star Wars Episode V 1/2: The Han Solo Affair (2002)
+Star Wars Gangsta Rap (2000)
+Star Wars: Revelations (2005) (V)
+Star Wars: The Clone Wars (2008)
+Abendland (1999)
+A Dog of Flanders (1999)
+Backstreet Boys Homecoming: Live in Orlando (1999) (V)
+Clubland (1999)
+George's Island (1989)
+Hinterland (1999)
+Iron Maiden: Maiden England (1989) (V)
+Island (1989)
+Jackson Pollock: Love and Death on Long Island (1999) (V)
+Little Nemo: Adventures in Slumberland (1989)
+Schlaraffenland (1999)
+Sleepaway Camp III: Teenage Wasteland (1989)
+The Adventures of Elmo in Grouchland (1999)
+The Clandestine Marriage (1999)
+The Lost Treasure of Sawtooth Island (1999)
+The Wacky Adventures of Ronald McDonald: The Legend of Grimace Island (1999) (V)
+Wonderland (1999)
+  262  cat lab2output.txt
+  263  grep 'land.*19\(89\|99\)$' imdb.tx
+  264  grep 'land.*19\(89\|99\)$' imdb.txt
+  265  grep 'land.*19\(89)\|99)\)' imdb.txt
+  266  rm lab2output.txt
+  267  grep -e '^Star Wars.*200[0-9]' imdb.txt > lab2output.txt
+  268  cat lab2output.txt
+  269  grep 'land.*19\(89)\|99)\)' imdb.txt >> lab2output.txt
+  270  cat lab2output.txt
+  271  history | tail -10 >> lab2output.txt
